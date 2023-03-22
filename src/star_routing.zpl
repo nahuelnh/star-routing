@@ -1,4 +1,4 @@
-param dir := "resources/ejemplo2/";
+param dir := "resources/instance4/";
 
 
 #===============================================================================
