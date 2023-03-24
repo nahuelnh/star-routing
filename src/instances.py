@@ -67,7 +67,7 @@ def _get_grid(rows, cols):
     return graph
 
 
-def get_base_grid_instance(rows, cols):
+def get_base_grid_instance(rows, cols, vehicles):
     """
     returns an instance of M x N Grid city
     M rows, N columns
@@ -77,10 +77,10 @@ def get_base_grid_instance(rows, cols):
     total_edges = (rows + 1) * cols + rows * (cols + 1)
     total_nodes = (rows + 1) * (cols + 1)
     return Instance(
-        number_of_vehicles=2,
+        number_of_vehicles=vehicles,
         first=1,
         last=total_nodes,
-        capacity=100,
+        capacity=140,
         graph=graph,
         packages={
             1: 20,
@@ -89,6 +89,10 @@ def get_base_grid_instance(rows, cols):
             4: 20,
             8: 20,
             9: 20,
+            10: 20,
+            20: 20,
+            21: 20,
+            22: 20,
         },
         weights={i: 1 for i in range(1, total_edges + 1)},
     )

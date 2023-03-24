@@ -9,14 +9,14 @@ from instances import (
 
 INSTANCES = [
     simple_instance(),
-    get_base_grid_instance(rows=10, cols=10),
-    tanslate_from_tagliavini("../MSc-Thesis/src/instance/5_40.in"),
-    tanslate_from_tagliavini("../MSc-Thesis/src/instance/15_20.in"),
+    get_base_grid_instance(rows=10, cols=10, vehicles=2),
+    tanslate_from_tagliavini("../../MSc-Thesis/src/instance/5_40.in"),
+    tanslate_from_tagliavini("../../MSc-Thesis/src/instance/15_20.in"),
 ]
 
 
 def dir_naming_convention(idx):
-    return "src/resources/instance{}/".format(idx + 1)
+    return "resources/instance{}/".format(idx + 1)
 
 
 def generate_cases():
