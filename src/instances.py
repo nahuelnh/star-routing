@@ -1,37 +1,30 @@
 class Instance:
     def __init__(
-        self, number_of_vehicles, first, last, capacity, graph, packages, weights
+        self, name, number_of_vehicles, depot, capacity, graph, packages
     ):
+        self.name = name
         self.number_of_vehicles = number_of_vehicles
-        self.first = first
-        self.last = last
+        self.depot = depot
         self.capacity = capacity
-        # Represented as a dict: edge -> incident_nodes
-        self.graph = graph
+        self.graph = graph  # Adjacency List with Weights
         self.packages = packages
-        self.weights = weights
 
 
 def simple_instance():
     return Instance(
-        number_of_vehicles=3,
-        first=2,
-        last=3,
+        name="1",
+        number_of_vehicles=1,
+        depot=1,
         capacity=100,
         graph={
-            1: [1, 2],
-            2: [2, 3],
-            3: [1, 3],
+            1: {2: 1, 3: 50},
+            2: {1: 1, 3: 1},
+            3: {1: 100, 2: 1},
         },
         packages={
-            1: 20,
-            2: 81,
-            3: 20,
-        },
-        weights={
-            1: 1,
-            2: 100,
-            3: 1,
+            (1, 2): 20,
+            (2, 3): 20,
+            (1, 3): 20,
         },
     )
 
@@ -77,6 +70,7 @@ def get_base_grid_instance(rows, cols, vehicles):
     total_edges = (rows + 1) * cols + rows * (cols + 1)
     total_nodes = (rows + 1) * (cols + 1)
     return Instance(
+        name="2",
         number_of_vehicles=vehicles,
         first=1,
         last=total_nodes,
@@ -89,16 +83,12 @@ def get_base_grid_instance(rows, cols, vehicles):
             4: 20,
             8: 20,
             9: 20,
-            10: 20,
-            20: 20,
-            21: 20,
-            22: 20,
         },
         weights={i: 1 for i in range(1, total_edges + 1)},
     )
 
 
-def tanslate_from_tagliavini(path_to_src):
+def tanslate_from_tagliavini(instance_name, path_to_src):
     """
     translate instance from the format in Tagliavini's Msc Thesis
     to a format readable by this script
@@ -131,6 +121,7 @@ def tanslate_from_tagliavini(path_to_src):
     total_edges = (rows + 1) * cols + rows * (cols + 1)
     total_nodes = (rows + 1) * (cols + 1)
     return Instance(
+        name=instance_name,
         number_of_vehicles=2,
         first=1,
         last=total_nodes,
