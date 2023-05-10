@@ -1,7 +1,11 @@
+from collections import defaultdict
+import random
+
+random.seed(123456)
+
+
 class Instance:
-    def __init__(
-        self, name, number_of_vehicles, depot, capacity, graph, packages
-    ):
+    def __init__(self, name, number_of_vehicles, depot, capacity, graph, packages):
         self.name = name
         self.number_of_vehicles = number_of_vehicles
         self.depot = depot
@@ -17,14 +21,14 @@ def simple_instance():
         depot=1,
         capacity=100,
         graph={
-            1: {2: 1, 3: 50},
+            1: {2: 1, 4: 1},
             2: {1: 1, 3: 1},
-            3: {1: 100, 2: 1},
+            3: {2: 1, 4: 100},
+            4: {1: 50, 3: 100},
         },
         packages={
             (1, 2): 20,
-            (2, 3): 20,
-            (1, 3): 20,
+            (3, 4): 20,
         },
     )
 
@@ -43,48 +47,50 @@ def _get_node_id(x, y, rows, cols):
 
 
 def _get_grid(rows, cols):
-    graph = {}
-    for i in range(rows + 1):
-        for j in range(cols):
-            graph[_get_horizontal_edge_id(i, j, rows, cols)] = (
-                _get_node_id(i, j, rows, cols),
-                _get_node_id(i, j + 1, rows, cols),
-            )
+    graph = defaultdict(dict)
+    max_node = rows * cols
     for i in range(rows):
-        for j in range(cols + 1):
-            graph[_get_vertical_edge_id(i, j, rows, cols)] = (
-                _get_node_id(i, j, rows, cols),
-                _get_node_id(i + 1, j, rows, cols),
-            )
-
+        for j in range(cols):
+            current_node = i * cols + j + 1
+            if j % cols != cols - 1:
+                graph[current_node][current_node + 1] = 1
+            if j % cols != 0:
+                graph[current_node][current_node - 1] = 1
+            if i % rows != rows - 1:
+                graph[current_node][current_node + cols] = 1
+            if i % rows != 0:
+                graph[current_node][current_node - cols] = 1
     return graph
 
 
-def get_base_grid_instance(rows, cols, vehicles):
+def _get_random_customers(rows, cols, prob):
+    customers = {}
+    for i in range(rows):
+        for j in range(cols):
+            bernoulli = random.choices([0, 1], weights=[1 - prob, prob])[0]
+            current_node = i * cols + j + 1
+            if bernoulli == 1 and j % cols != cols - 1:
+                customers[(current_node, current_node + 1)] = 10
+    return customers
+
+
+def get_base_grid_instance(rows, cols, vehicles, customer_prob=0.1, capacity=0):
     """
     returns an instance of M x N Grid city
     M rows, N columns
-    M x N edges, (M+1) x (N+1) nodes
+    M x N nodes
     """
     graph = _get_grid(rows, cols)
-    total_edges = (rows + 1) * cols + rows * (cols + 1)
-    total_nodes = (rows + 1) * (cols + 1)
+    packages = _get_random_customers(rows, cols, customer_prob)
+    if not capacity:
+        capacity = len(packages) * 10
     return Instance(
         name="2",
         number_of_vehicles=vehicles,
-        first=1,
-        last=total_nodes,
-        capacity=140,
+        depot=1,
+        capacity=capacity,
         graph=graph,
-        packages={
-            1: 20,
-            2: 20,
-            3: 20,
-            4: 20,
-            8: 20,
-            9: 20,
-        },
-        weights={i: 1 for i in range(1, total_edges + 1)},
+        packages=packages,
     )
 
 

@@ -1,13 +1,11 @@
 import os
-from instances import (
-    Instance,
-    simple_instance,
-)
+from instances import Instance, simple_instance, get_base_grid_instance
 
 
 INSTANCES = [
-    simple_instance(),
-]
+    simple_instance(), 
+    get_base_grid_instance(10, 10, 1),
+    ]
 
 
 def dir_naming_convention(instance_name):
@@ -20,7 +18,6 @@ def generate_cases():
 
 
 def write_to_files(instance: Instance):
-
     output_dir = dir_naming_convention(instance.name)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -35,7 +32,7 @@ def write_to_files(instance: Instance):
             edge_start, edge_end = customer[0], customer[1]
             package_weight = instance.packages[customer]
             packages_file.write(
-                str(idx)
+                str(idx+1)
                 + " "
                 + str(edge_start)
                 + " "

@@ -84,13 +84,13 @@ subto r6:
 		forall <j> in Nodes with j != Depot and j != i:
         	forall <k> in Nodes with k != Depot and k != i and k != j:
 			    forall <v> in Vehicles:
-				    u[i, k] - u[j, k] + bigM * (x[i, j, v] + x[j, k, v]) <= bigM - 1;
+				    u[i, j, v] - u[j, k, v] + bigM * (x[i, j, v] + x[j, k, v]) <= bigM - 1;
 
 subto r7:
 	forall <i> in Nodes:
     	forall <j> in Nodes:
-		    forall <k> in Vehicles:
-			    1 <= u[i, j, k] <= bigM;
+		    forall <v> in Vehicles:
+			    1 <= u[i, j, v] <= bigM;
 
 # Non existent edges should not be added to the path
 # Redundant constraint
