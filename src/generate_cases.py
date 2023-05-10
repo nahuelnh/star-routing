@@ -4,7 +4,7 @@ from instances import Instance, simple_instance, get_base_grid_instance
 
 INSTANCES = [
     simple_instance(), 
-    get_base_grid_instance(10, 10, 1),
+    get_base_grid_instance(5, 5, 1),
     ]
 
 

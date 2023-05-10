@@ -1,4 +1,4 @@
-param dir := "resources/instance1/";
+param dir := "resources/instance2/";
 
 
 #===============================================================================
@@ -82,9 +82,9 @@ subto r5:
 subto r6:
 	forall <i> in Nodes with i != Depot:
 		forall <j> in Nodes with j != Depot and j != i:
-        	forall <k> in Nodes with k != Depot and k != i and k != j:
+        	forall <k> in Nodes with k != Depot and k != j:
 			    forall <v> in Vehicles:
-				    u[i, j, v] - u[j, k, v] + bigM * (x[i, j, v] + x[j, k, v]) <= bigM - 1;
+				    u[i, j, v] - u[j, k, v] + bigM * (x[i, j, v] + x[j, k, v]) <= 2 * bigM - 1;
 
 subto r7:
 	forall <i> in Nodes:
