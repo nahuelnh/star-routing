@@ -61,7 +61,7 @@ subto r2:
 	forall <customerId, edgeStart, edgeEnd> in Customers:
 		(sum <k> in Vehicles: y[customerId, k]) == 1;
 
-# Every node leaves the depot
+# Every vehicle leaves the depot
 subto r3:
 	forall <k> in Vehicles:
 		(sum <j> in Nodes with graph[Depot, j] != 0: x[Depot, j, k]) == 1;
