@@ -1,7 +1,7 @@
 from collections import defaultdict
 import random
 
-random.seed(123456)
+random.seed(159753)
 
 
 class Instance:
