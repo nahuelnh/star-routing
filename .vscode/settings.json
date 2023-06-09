@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "/opt/ibm/ILOG/CPLEX_Studio2211/cplex/lib/cplex.jar"
+    ]
+}
