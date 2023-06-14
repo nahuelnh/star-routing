@@ -1,6 +1,4 @@
 import java.io.IOException;
-import java.util.Arrays;
-
 import ilog.concert.*;
 import ilog.cplex.*;
 
@@ -38,7 +36,7 @@ public class StarRoutingModel {
 
     public static void main(String[] args) throws IOException {
         try {
-            Data inputData = new Data("instance1");
+            Data inputData = new Data("instance4");
             StarRoutingModel starRoutingModel = new StarRoutingModel(inputData);
             starRoutingModel.buildModel();
             starRoutingModel.run();
@@ -56,10 +54,6 @@ public class StarRoutingModel {
             int N = data.nodes;
             int K = data.vehicles;
             int S = data.customers.length;
-            // double[] x = cplex.getValues(var[0]);
-            // double[] dj = cplex.getReducedCosts(var[0]);
-            // double[] pi = cplex.getDuals(rng[0]);
-            // double[] slack = cplex.getSlacks(rng[0]);
 
             System.out.println("Solution status = " + cplex.getStatus());
             System.out.println("Solution value  = " + cplex.getObjValue());

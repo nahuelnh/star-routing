@@ -1,4 +1,3 @@
-vehicles 2
-first 1
-last 256
-capacity 480
+vehicles 10
+depot 1
+capacity 100

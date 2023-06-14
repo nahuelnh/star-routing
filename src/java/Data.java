@@ -49,7 +49,7 @@ public class Data {
         this.demand = new HashMap<Integer, Integer>();
         this.fillCustomersAndDemand(getFullPath(instance, packagesFilename));
         this.neighbors = new HashMap<Integer, Set<Integer>>();
-        this.fillCustomerNeighbors(getFullPath(instance, customersFilename));
+                 this.fillCustomerNeighbors(getFullPath(instance, customersFilename));
 
         System.out.println(demand);
         System.out.println(neighbors);

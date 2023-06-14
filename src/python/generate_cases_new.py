@@ -1,9 +1,18 @@
 import os
-from instances import Instance, simple_instance, get_base_grid_instance
+from instances import (
+    Instance,
+    simple_instance,
+    two_vehicle_instance,
+    larger_instance,
+    random_instance,
+)
 
 
 INSTANCES = [
     simple_instance(),
+    two_vehicle_instance(),
+    larger_instance(),
+    random_instance(40),
 ]
 
 
