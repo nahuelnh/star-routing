@@ -3,5 +3,7 @@
 /doc/*.aux
 /doc/*.fdb_latexmk
 /doc/*.log
-/docs/*gz
+/doc/*.fls
+/doc/*.gz
 /lib/
+/.vscode/
