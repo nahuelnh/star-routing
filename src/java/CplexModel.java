@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import ilog.concert.*;
 import ilog.cplex.*;
@@ -54,19 +56,14 @@ public class CplexModel {
             IloNumVar[][] var,
             IloRange[][] rng, Data data) throws IloException {
 
-        // IloCplex cplex = new IloCplex();
-
-        // IloNumVar[][] var = new IloNumVar[1][];
-        // IloRange[][] rng = new IloRange[1][];
-
         int N = data.nodes;
         int K = data.vehicles;
-        Set<Integer> S = data.customers;
+        int S = data.customers.length;
         int depot = data.depot;
         int Q = data.capacity;
 
         IloIntVar[][][] x = new IloIntVar[N][N][K];
-        IloIntVar[][] y = new IloIntVar[S.size()][K];
+        IloIntVar[][] y = new IloIntVar[S][K];
         IloIntVar[][] u = new IloIntVar[N][K];
 
         for (int i = 0; i < N; i++) {
@@ -77,7 +74,7 @@ public class CplexModel {
             }
         }
 
-        for (int s : S) {
+        for (int s = 0; s < S; s++) {
             for (int k = 0; k < K; k++) {
                 y[s][k] = model.boolVar();
             }
@@ -121,8 +118,8 @@ public class CplexModel {
             }
         }
         // Every customer is served by exactly one vehicle
-        IloConstraint[] servingConstraint = new IloConstraint[S.size()];
-        for (int s : S) {
+        IloConstraint[] servingConstraint = new IloConstraint[S];
+        for (int s = 0; s < S; s++) {
             IloLinearIntExpr numberOfVehiclesSevingS = model.linearIntExpr();
             for (int k = 0; k < K; k++) {
                 numberOfVehiclesSevingS.addTerm(y[s][k], 1);
@@ -140,12 +137,13 @@ public class CplexModel {
             depotConstraint[k] = model.addEq(outgoingEdgesFromDepot, 1);
         }
         // A vehicle can only serve visited customers
-        IloConstraint[][] visitConstraint = new IloConstraint[S.size()][K];
-        for (int s : S) {
+        IloConstraint[][] visitConstraint = new IloConstraint[S][K];
+        for (int s = 0; s < S; s++) {
+            int currentCustomer = data.customers[s];
             for (int k = 0; k < K; k++) {
                 IloLinearIntExpr timesInNeighborhood = model.linearIntExpr();
                 for (int i = 0; i < N; i++) {
-                    for (int neighbor : data.neighbors.get(S)) {
+                    for (int neighbor : data.neighbors.get(currentCustomer)) {
                         timesInNeighborhood.addTerm(x[i][neighbor][k], 1);
                     }
 
@@ -158,8 +156,8 @@ public class CplexModel {
         for (int k = 0; k < K; k++) {
             IloLinearIntExpr totalDemand = model.linearIntExpr();
 
-            for (int s : S) {
-                totalDemand.addTerm(y[s][k], data.demand.get(s));
+            for (int s = 0; s < S; s++) {
+                totalDemand.addTerm(y[s][k], data.demand.get(data.customers[s]));
             }
             capacityConstraint[k] = model.addLe(totalDemand, Q);
         }

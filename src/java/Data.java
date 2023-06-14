@@ -13,12 +13,12 @@ import java.util.stream.Collectors;
 public class Data {
 
     private static final String DELIMITER = " ";
-    private static final String DEFAULT_GRAPH_FILENAME = "graph.txt";
 
     private static final String DEFAULT_DIR = "src/resources/";
-    private static final String DEFAULT_CUSTOMERS_FILENAME = "graph.txt";
-    private static final String DEFAULT_PACKAGES_FILENAME = "graph.txt";
-    private static final String DEFAULT_PARAMS_FILENAME = "graph.txt";
+    private static final String DEFAULT_GRAPH_FILENAME = "graph.txt";
+    private static final String DEFAULT_CUSTOMERS_FILENAME = "customers.txt";
+    private static final String DEFAULT_PACKAGES_FILENAME = "packages.txt";
+    private static final String DEFAULT_PARAMS_FILENAME = "params.txt";
 
     private static final String CAPACITY_STRING = "capacity";
     private static final String DEPOT_STRING = "depot";
@@ -29,7 +29,7 @@ public class Data {
     public final int capacity;
     public final int depot;
     public final int[][] graphWeights;
-    public final Set<Integer> customers;
+    public final int[] customers;
     public final Map<Integer, Set<Integer>> neighbors;
     public final Map<Integer, Integer> demand;
 
@@ -44,13 +44,13 @@ public class Data {
                 .requireNonNull(getParameterValue(CAPACITY_STRING, getFullPath(instance, paramsFilename)));
         this.vehicles = Objects
                 .requireNonNull(getParameterValue(VEHICLES_STRING, getFullPath(instance, paramsFilename)));
-        this.depot = Objects.requireNonNull(getParameterValue(DEPOT_STRING, getFullPath(instance, paramsFilename)));
+        this.depot = Objects.requireNonNull(getParameterValue(DEPOT_STRING, getFullPath(instance, paramsFilename))) - 1;
 
         // TODO: eliminar set de customers y hacer que el id del customer sea el mismo
         // que del nodo
-        this.customers = new HashSet<>();
+        this.customers = new int[getNumberOfCustomers(getFullPath(instance, packagesFilename))];
         this.demand = new HashMap<Integer, Integer>();
-        this.fillDemand(getFullPath(instance, packagesFilename));
+        this.fillCustomersAndDemand(getFullPath(instance, packagesFilename));
         this.neighbors = new HashMap<Integer, Set<Integer>>();
         this.fillCustomerNeighbors(getFullPath(instance, customersFilename));
     }
@@ -91,7 +91,7 @@ public class Data {
             String[] values = line.split(DELIMITER);
             if (parameterName.equals(values[0])) {
                 br.close();
-                return Integer.valueOf(values[0]);
+                return Integer.valueOf(values[1]);
             }
         }
         br.close();
@@ -103,20 +103,39 @@ public class Data {
         String line;
         while ((line = br.readLine()) != null) {
             List<Integer> values = readIntegerLine(line, DELIMITER);
-            this.graphWeights[values.get(0)][values.get(1)] = values.get(2);
+            this.graphWeights[values.get(0) - 1][values.get(1) - 1] = values.get(2);
         }
         br.close();
     }
 
-    void fillDemand(String packagesFilename) throws IOException {
+    private int getNumberOfCustomers(String packagesFilename) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(packagesFilename));
         String line;
+        int maxCustomerIndex = 0;
         while ((line = br.readLine()) != null) {
             List<Integer> values = readIntegerLine(line, DELIMITER);
-            int customer = values.get(0);
+            int customer = values.get(0) ;
+            maxCustomerIndex = Math.max(maxCustomerIndex, customer);
+        }
+        br.close();
+        return maxCustomerIndex;
+    }
+
+    private void fillCustomersAndDemand(String packagesFilename) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(packagesFilename));
+        String line;
+        Set<Integer> customersAsSet = new HashSet<>();
+        while ((line = br.readLine()) != null) {
+            List<Integer> values = readIntegerLine(line, DELIMITER);
+            int customer = values.get(0) - 1;
             int demand = values.get(1);
             this.demand.put(customer, demand);
-            this.customers.add(customer);
+            customersAsSet.add(customer);
+        }
+        int index = 0;
+        for (int customer : customersAsSet) {
+            this.customers[index] = customer;
+            index++;
         }
         br.close();
     }
@@ -130,10 +149,11 @@ public class Data {
         String line;
         while ((line = br.readLine()) != null) {
             List<Integer> values = readIntegerLine(line, DELIMITER);
-            int customer = values.get(0);
-            int neighbor = values.get(1);
+            int customer = values.get(0) - 1;
+            int neighbor = values.get(1) - 1;
             if (!this.neighbors.containsKey(customer)) {
-                System.out.println("Non existing customer:" + customer);
+                br.close();
+                throw new AssertionError("Non existing customer:" + customer);
             }
             this.neighbors.get(customer).add(neighbor);
         }
