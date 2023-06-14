@@ -34,25 +34,27 @@ public class Data {
     public final Map<Integer, Integer> demand;
 
     public Data(String instance, String graphFilename, String customersFilename, String packagesFilename,
-            String paramsFilename)
-            throws IOException {
+            String paramsFilename) throws IOException {
+
         this.nodes = getNumberOfNodes(getFullPath(instance, graphFilename));
         this.graphWeights = new int[this.nodes][this.nodes];
         fillGraphWeights(getFullPath(instance, graphFilename));
-
-        this.capacity = Objects
-                .requireNonNull(getParameterValue(CAPACITY_STRING, getFullPath(instance, paramsFilename)));
-        this.vehicles = Objects
-                .requireNonNull(getParameterValue(VEHICLES_STRING, getFullPath(instance, paramsFilename)));
-        this.depot = Objects.requireNonNull(getParameterValue(DEPOT_STRING, getFullPath(instance, paramsFilename))) - 1;
-
-        // TODO: eliminar set de customers y hacer que el id del customer sea el mismo
-        // que del nodo
+        this.capacity = Objects.requireNonNull(
+                getParameterValue(CAPACITY_STRING, getFullPath(instance, paramsFilename)));
+        this.vehicles = Objects.requireNonNull(
+                getParameterValue(VEHICLES_STRING, getFullPath(instance, paramsFilename)));
+        this.depot = Objects.requireNonNull(
+                getParameterValue(DEPOT_STRING, getFullPath(instance, paramsFilename))) - 1;
         this.customers = new int[getNumberOfCustomers(getFullPath(instance, packagesFilename))];
         this.demand = new HashMap<Integer, Integer>();
         this.fillCustomersAndDemand(getFullPath(instance, packagesFilename));
         this.neighbors = new HashMap<Integer, Set<Integer>>();
         this.fillCustomerNeighbors(getFullPath(instance, customersFilename));
+
+        System.out.println(demand);
+        System.out.println(neighbors);
+        System.out.println(Arrays.toString(customers));
+        System.out.println(Arrays.deepToString(graphWeights));
     }
 
     public Data(String instance) throws IOException {
@@ -70,7 +72,7 @@ public class Data {
                 .collect(Collectors.toList());
     }
 
-    int getNumberOfNodes(String graphFilename) throws IOException {
+    private int getNumberOfNodes(String graphFilename) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(graphFilename));
         String line;
         int maxNodeIndexFound = 0;
@@ -83,7 +85,7 @@ public class Data {
         return maxNodeIndexFound;
     }
 
-    Integer getParameterValue(String parameterName, String paramsFilename)
+    private Integer getParameterValue(String parameterName, String paramsFilename)
             throws NumberFormatException, IOException {
         BufferedReader br = new BufferedReader(new FileReader(paramsFilename));
         String line;
@@ -98,7 +100,7 @@ public class Data {
         return null;
     }
 
-    void fillGraphWeights(String graphFilename) throws IOException {
+    private void fillGraphWeights(String graphFilename) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(graphFilename));
         String line;
         while ((line = br.readLine()) != null) {
@@ -110,37 +112,27 @@ public class Data {
 
     private int getNumberOfCustomers(String packagesFilename) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(packagesFilename));
-        String line;
-        int maxCustomerIndex = 0;
-        while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line, DELIMITER);
-            int customer = values.get(0) ;
-            maxCustomerIndex = Math.max(maxCustomerIndex, customer);
-        }
+        int lines = (int) br.lines().count();
         br.close();
-        return maxCustomerIndex;
+        return lines;
     }
 
     private void fillCustomersAndDemand(String packagesFilename) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(packagesFilename));
         String line;
-        Set<Integer> customersAsSet = new HashSet<>();
+        int index = 0;
         while ((line = br.readLine()) != null) {
             List<Integer> values = readIntegerLine(line, DELIMITER);
             int customer = values.get(0) - 1;
             int demand = values.get(1);
             this.demand.put(customer, demand);
-            customersAsSet.add(customer);
-        }
-        int index = 0;
-        for (int customer : customersAsSet) {
             this.customers[index] = customer;
             index++;
         }
         br.close();
     }
 
-    void fillCustomerNeighbors(String customersFilename) throws IOException {
+   private  void fillCustomerNeighbors(String customersFilename) throws IOException {
         for (int customer : this.customers) {
             this.neighbors.put(customer, new HashSet<Integer>());
             this.neighbors.get(customer).add(customer);

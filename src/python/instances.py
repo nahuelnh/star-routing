@@ -5,13 +5,16 @@ random.seed(159753)
 
 
 class Instance:
-    def __init__(self, name, number_of_vehicles, depot, capacity, graph, packages):
+    def __init__(
+        self, name, number_of_vehicles, depot, capacity, graph, packages, neighbors
+    ):
         self.name = name
         self.number_of_vehicles = number_of_vehicles
         self.depot = depot
         self.capacity = capacity
         self.graph = graph  # Adjacency List with Weights
         self.packages = packages
+        self.neighbors = neighbors  # Non trivial neighbors
 
 
 def simple_instance():
@@ -27,9 +30,10 @@ def simple_instance():
             4: {1: 50, 3: 100},
         },
         packages={
-            (1, 2): 20,
-            (3, 4): 20,
+            2: 20,
+            3: 20,
         },
+        neighbors={},
     )
 
 
@@ -48,7 +52,6 @@ def _get_node_id(x, y, rows, cols):
 
 def _get_grid(rows, cols):
     graph = defaultdict(dict)
-    max_node = rows * cols
     for i in range(rows):
         for j in range(cols):
             current_node = i * cols + j + 1

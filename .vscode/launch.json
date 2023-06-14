@@ -12,9 +12,9 @@
         },
         {
             "type": "java",
-            "name": "CplexModel",
+            "name": "StarRoutingModel",
             "request": "launch",
-            "mainClass": "CplexModel",
+            "mainClass": "StarRoutingModel",
             "projectName": "star-routing_6ef9400c",
             "vmArgs": "-Djava.library.path=/opt/ibm/ILOG/CPLEX_Studio2211/cplex/bin/x86-64_linux/"
         }
