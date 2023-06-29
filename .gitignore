@@ -7,3 +7,6 @@
 /doc/*.gz
 /lib/
 /.vscode/
+/out/*
+/.idea/
+*.iml
