@@ -1,4 +1,5 @@
 import os
+
 from instances import (
     Instance,
     simple_instance,
@@ -6,7 +7,6 @@ from instances import (
     larger_instance,
     random_instance,
 )
-
 
 INSTANCES = [
     simple_instance(),
@@ -17,7 +17,7 @@ INSTANCES = [
 
 
 def dir_naming_convention(instance_name):
-    return "src/resources/instance{}/".format(instance_name)
+    return "../resources/instance{}/".format(instance_name)
 
 
 def generate_cases():
@@ -52,7 +52,7 @@ def write_to_files(instance: Instance):
                 weight_or_zero = (
                     instance.graph[start_node][end_node]
                     if start_node in instance.graph
-                    and end_node in instance.graph[start_node]
+                       and end_node in instance.graph[start_node]
                     else 10000
                 )
                 graph_file.write(

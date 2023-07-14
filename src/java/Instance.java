@@ -1,16 +1,10 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class Data {
+public class Instance {
 
     private static final String DELIMITER = " ";
 
@@ -24,20 +18,22 @@ public class Data {
     private static final String DEPOT_STRING = "depot";
     private static final String VEHICLES_STRING = "vehicles";
 
-    public final int nodes;
-    public final int vehicles;
-    public final int capacity;
-    public final int depot;
-    public final int[][] graphWeights;
-    public final int[] customers;
-    public final Map<Integer, Set<Integer>> neighbors;
-    public final Map<Integer, Integer> demand;
+    private final int nodes;
+    private final int vehicles;
+    private final int capacity;
+    private final int depot;
+    private final List<List<Integer>> graphWeights;
+    private final List<Integer> customers;
+    private final Map<Integer, Set<Integer>> neighbors;
+    private final Map<Integer, Integer> demand;
 
-    public Data(String instance, String graphFilename, String customersFilename, String packagesFilename,
-            String paramsFilename) throws IOException {
-
+    public Instance(String instance, String graphFilename, String customersFilename, String packagesFilename,
+                    String paramsFilename) throws IOException {
         this.nodes = getNumberOfNodes(getFullPath(instance, graphFilename));
-        this.graphWeights = new int[this.nodes][this.nodes];
+        this.graphWeights = new ArrayList<>(this.nodes);
+        for (int i = 0; i < this.nodes; i++) {
+            this.graphWeights.add(new ArrayList<>(Collections.nCopies(this.nodes, 0)));
+        }
         fillGraphWeights(getFullPath(instance, graphFilename));
         this.capacity = Objects.requireNonNull(
                 getParameterValue(CAPACITY_STRING, getFullPath(instance, paramsFilename)));
@@ -45,19 +41,20 @@ public class Data {
                 getParameterValue(VEHICLES_STRING, getFullPath(instance, paramsFilename)));
         this.depot = Objects.requireNonNull(
                 getParameterValue(DEPOT_STRING, getFullPath(instance, paramsFilename))) - 1;
-        this.customers = new int[getNumberOfCustomers(getFullPath(instance, packagesFilename))];
-        this.demand = new HashMap<Integer, Integer>();
+        int numberOfCustomers = getNumberOfCustomers(getFullPath(instance, packagesFilename));
+        this.customers = new ArrayList<>(Collections.nCopies(numberOfCustomers, 0));
+        this.demand = new HashMap<>();
         this.fillCustomersAndDemand(getFullPath(instance, packagesFilename));
-        this.neighbors = new HashMap<Integer, Set<Integer>>();
-                 this.fillCustomerNeighbors(getFullPath(instance, customersFilename));
+        this.neighbors = new HashMap<>();
+        this.fillCustomerNeighbors(getFullPath(instance, customersFilename));
 
-        System.out.println(demand);
-        System.out.println(neighbors);
-        System.out.println(Arrays.toString(customers));
-        System.out.println(Arrays.deepToString(graphWeights));
+        System.out.println(this.demand);
+        System.out.println(this.neighbors);
+        System.out.println(this.customers);
+        System.out.println(this.graphWeights);
     }
 
-    public Data(String instance) throws IOException {
+    public Instance(String instance) throws IOException {
         this(instance, DEFAULT_GRAPH_FILENAME, DEFAULT_CUSTOMERS_FILENAME,
                 DEFAULT_PACKAGES_FILENAME, DEFAULT_PARAMS_FILENAME);
     }
@@ -66,8 +63,8 @@ public class Data {
         return DEFAULT_DIR + instance + "/" + filename;
     }
 
-    private List<Integer> readIntegerLine(String line, String delimiter) {
-        return Arrays.stream(line.split(delimiter))
+    private List<Integer> readIntegerLine(String line) {
+        return Arrays.stream(line.split(DELIMITER))
                 .map(Integer::valueOf)
                 .collect(Collectors.toList());
     }
@@ -77,7 +74,7 @@ public class Data {
         String line;
         int maxNodeIndexFound = 0;
         while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line, DELIMITER);
+            List<Integer> values = readIntegerLine(line);
             maxNodeIndexFound = Math.max(maxNodeIndexFound,
                     Math.max(values.get(0), values.get(1)));
         }
@@ -104,8 +101,8 @@ public class Data {
         BufferedReader br = new BufferedReader(new FileReader(graphFilename));
         String line;
         while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line, DELIMITER);
-            this.graphWeights[values.get(0) - 1][values.get(1) - 1] = values.get(2);
+            List<Integer> values = readIntegerLine(line);
+            this.graphWeights.get(values.get(0) - 1).set(values.get(1) - 1, values.get(2));
         }
         br.close();
     }
@@ -122,17 +119,17 @@ public class Data {
         String line;
         int index = 0;
         while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line, DELIMITER);
+            List<Integer> values = readIntegerLine(line);
             int customer = values.get(0) - 1;
             int demand = values.get(1);
             this.demand.put(customer, demand);
-            this.customers[index] = customer;
+            this.customers.set(index, customer);
             index++;
         }
         br.close();
     }
 
-   private  void fillCustomerNeighbors(String customersFilename) throws IOException {
+    private void fillCustomerNeighbors(String customersFilename) throws IOException {
         for (int customer : this.customers) {
             this.neighbors.put(customer, new HashSet<Integer>());
             this.neighbors.get(customer).add(customer);
@@ -140,7 +137,7 @@ public class Data {
         BufferedReader br = new BufferedReader(new FileReader(customersFilename));
         String line;
         while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line, DELIMITER);
+            List<Integer> values = readIntegerLine(line);
             int customer = values.get(0) - 1;
             int neighbor = values.get(1) - 1;
             if (!this.neighbors.containsKey(customer)) {
@@ -152,4 +149,35 @@ public class Data {
         br.close();
     }
 
+    public int getNodes() {
+        return nodes;
+    }
+
+    public int getVehicles() {
+        return vehicles;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public int getDepot() {
+        return depot;
+    }
+
+    public List<List<Integer>> getGraphWeights() {
+        return graphWeights;
+    }
+
+    public List<Integer> getCustomers() {
+        return customers;
+    }
+
+    public Map<Integer, Set<Integer>> getNeighbors() {
+        return neighbors;
+    }
+
+    public Integer getDemand(int customer) {
+        return demand.get(customer);
+    }
 }

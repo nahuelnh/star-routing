@@ -3,10 +3,10 @@ import java.util.List;
 
 public class PricingProblem {
 
-    Data data;
+    Instance instance;
 
-    PricingProblem(Data data){
-        this.data=data;
+    PricingProblem(Instance instance){
+        this.instance = instance;
     }
 
     List<Route> solve(){

@@ -1,12 +1,12 @@
-from collections import defaultdict
 import random
+from collections import defaultdict
 
 random.seed(159753)
 
 
 class Instance:
     def __init__(
-        self, name, number_of_vehicles, depot, capacity, graph, packages, neighbors
+            self, name, number_of_vehicles, depot, capacity, graph, packages, neighbors
     ):
         self.name = name
         self.number_of_vehicles = number_of_vehicles
@@ -94,7 +94,7 @@ def random_instance(N):
         depot=1,
         capacity=100,
         graph=graph,
-        packages={i: 20 for i in range(1, N)},
+        packages={i: 20 for i in range(1, N + 1)},
         neighbors={2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, N - 1: N},
     )
 

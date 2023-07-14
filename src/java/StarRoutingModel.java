@@ -4,7 +4,7 @@ import ilog.cplex.*;
 
 public class StarRoutingModel {
 
-    private final Data data;
+    private final Instance instance;
     private final IloCplex cplex;
     private final IloIntVar[][][] x;
     private final IloIntVar[][] y;
@@ -16,12 +16,12 @@ public class StarRoutingModel {
     private final IloConstraint[] capacityConstraint;
     private final IloConstraint[][][] mtzConstraints;
 
-    public StarRoutingModel(Data data) throws IloException {
-        int N = data.nodes;
-        int K = data.vehicles;
-        int S = data.customers.length;
+    public StarRoutingModel(Instance instance) throws IloException {
+        int N = instance.getNodes();
+        int K = instance.getVehicles();
+        int S = instance.getCustomers().size();
 
-        this.data = data;
+        this.instance = instance;
         this.x = new IloIntVar[N][N][K];
         this.y = new IloIntVar[S][K];
         this.u = new IloIntVar[N][K];
@@ -36,8 +36,8 @@ public class StarRoutingModel {
 
     public static void main(String[] args) throws IOException {
         try {
-            Data inputData = new Data("instance4");
-            StarRoutingModel starRoutingModel = new StarRoutingModel(inputData);
+            Instance inputInstance = new Instance("instance4");
+            StarRoutingModel starRoutingModel = new StarRoutingModel(inputInstance);
             starRoutingModel.buildModel();
             starRoutingModel.run();
         } catch (IloException e) {
@@ -51,9 +51,9 @@ public class StarRoutingModel {
 
         // solve the model and display the solution if one was found
         if (cplex.solve()) {
-            int N = data.nodes;
-            int K = data.vehicles;
-            int S = data.customers.length;
+            int N = instance.getNodes();
+            int K = instance.getVehicles();
+            int S = instance.getCustomers().size();
 
             System.out.println("Solution status = " + cplex.getStatus());
             System.out.println("Solution value  = " + cplex.getObjValue());
@@ -77,7 +77,7 @@ public class StarRoutingModel {
             }
             for (int i = 0; i < N; i++) {
                 for (int k = 0; k < K; k++) {
-                    if (i != data.depot && cplex.getValue(u[i][k]) > 0) {
+                    if (i != instance.getDepot() && cplex.getValue(u[i][k]) > 0) {
                         System.out.println("u " + i + " " + k + " = " + cplex.getValue(u[i][k]));
                     }
                 }
@@ -88,11 +88,11 @@ public class StarRoutingModel {
 
     private void buildModel() throws IloException {
 
-        int N = data.nodes;
-        int K = data.vehicles;
-        int S = data.customers.length;
-        int depot = data.depot;
-        int Q = data.capacity;
+        int N = instance.getNodes();
+        int K = instance.getVehicles();
+        int S = instance.getCustomers().size();
+        int depot = instance.getDepot();
+        int Q = instance.getCapacity();
 
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
@@ -120,7 +120,7 @@ public class StarRoutingModel {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
-                    objective.addTerm(x[i][j][k], data.graphWeights[i][j]);
+                    objective.addTerm(x[i][j][k], instance.getGraphWeights().get(i).get(j));
                 }
             }
         }
@@ -163,11 +163,11 @@ public class StarRoutingModel {
         }
         // A vehicle can only serve visited customers
         for (int s = 0; s < S; s++) {
-            int currentCustomer = data.customers[s];
+            int currentCustomer = instance.getCustomers().get(s);
             for (int k = 0; k < K; k++) {
                 IloLinearIntExpr timesInNeighborhood = cplex.linearIntExpr();
                 for (int i = 0; i < N; i++) {
-                    for (int neighbor : data.neighbors.get(currentCustomer)) {
+                    for (int neighbor : instance.getNeighbors().get(currentCustomer)) {
                         timesInNeighborhood.addTerm(x[i][neighbor][k], 1);
                     }
 
@@ -179,7 +179,7 @@ public class StarRoutingModel {
         for (int k = 0; k < K; k++) {
             IloLinearIntExpr totalDemand = cplex.linearIntExpr();
             for (int s = 0; s < S; s++) {
-                totalDemand.addTerm(y[s][k], data.demand.get(data.customers[s]));
+                totalDemand.addTerm(y[s][k], instance.getDemand(instance.getCustomers().get(s)));
             }
             capacityConstraint[k] = cplex.addLe(totalDemand, Q);
         }
