@@ -30,13 +30,13 @@ class ColumnGeneration {
         while (!nuevos.isEmpty()) {
             clusters.addAll(nuevos);
             MasterProblem master = new MasterProblem(instance, clusters);
-            master.solve();
-            PricingProblem pricing = new PricingProblem(instance);
+            MasterProblem.Solution solution = master.solveRelaxation();
+            PricingProblem pricing = new PricingProblem(instance, solution);
             nuevos = pricing.solve();
         }
         MasterProblem master = new MasterProblem(instance, clusters);
-        master.solveInteger();
-        return new Solution(master.getSolution());
+        MasterProblem.Solution solution = master.solveInteger();
+        return new Solution(new ArrayList<>());
     }
 
 }

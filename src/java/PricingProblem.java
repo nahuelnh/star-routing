@@ -3,13 +3,15 @@ import java.util.List;
 
 public class PricingProblem {
 
-    Instance instance;
+    private final Instance instance;
+    private final MasterProblem.Solution solution;
 
-    PricingProblem(Instance instance){
+    PricingProblem(Instance instance, MasterProblem.Solution solution) {
         this.instance = instance;
+        this.solution = solution;
     }
 
-    List<Route> solve(){
+    List<Route> solve() {
         return new ArrayList<>();
     }
 

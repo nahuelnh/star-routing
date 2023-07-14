@@ -165,8 +165,8 @@ public class Instance {
         return depot;
     }
 
-    public List<List<Integer>> getGraphWeights() {
-        return graphWeights;
+    public Integer getGraphWeights(int i, int j) {
+        return graphWeights.get(i).get(j);
     }
 
     public List<Integer> getCustomers() {

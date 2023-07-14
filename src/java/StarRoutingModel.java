@@ -1,6 +1,7 @@
-import java.io.IOException;
 import ilog.concert.*;
-import ilog.cplex.*;
+import ilog.cplex.IloCplex;
+
+import java.io.IOException;
 
 public class StarRoutingModel {
 
@@ -120,7 +121,7 @@ public class StarRoutingModel {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
-                    objective.addTerm(x[i][j][k], instance.getGraphWeights().get(i).get(j));
+                    objective.addTerm(x[i][j][k], instance.getGraphWeights(i, j));
                 }
             }
         }
