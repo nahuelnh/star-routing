@@ -168,7 +168,7 @@ public class StarRoutingModel {
             for (int k = 0; k < K; k++) {
                 IloLinearIntExpr timesInNeighborhood = cplex.linearIntExpr();
                 for (int i = 0; i < N; i++) {
-                    for (int neighbor : instance.getNeighbors().get(currentCustomer)) {
+                    for (int neighbor : instance.getNeighbors(currentCustomer)) {
                         timesInNeighborhood.addTerm(x[i][neighbor][k], 1);
                     }
 

@@ -1,43 +1,41 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FeasibleSolutionHeuristic {
 
     private final Instance instance;
 
-    FeasibleSolutionHeuristic(Instance instance) {
+    public FeasibleSolutionHeuristic(Instance instance) {
         this.instance = instance;
     }
 
 
-    List<Route> run() {
+    public List<Route> run() {
         List<Route> ret = new ArrayList<>();
-        List<Integer> nodes = new ArrayList<>();
-        Map<Integer, Set<Integer>> customersServed = new HashMap<>();
-        List<Integer> weights = new ArrayList<>();
 
+        Route currentRoute = Route.emptyRoute();
         int cumulativeDemand = 0;
-        nodes.add(0);
-        customersServed.put(0, new HashSet<>());
-        customersServed.get(0).add(0);
-        int lastNode = 0;
+        int lastNode = instance.getDepot();
 
-        for (int currentNode = 1; currentNode < instance.getNodes(); currentNode++) {
+        for (int currentNode : instance.getCustomers()) {
             cumulativeDemand += instance.getDemand(currentNode);
             if (cumulativeDemand > instance.getCapacity()) {
-                weights.add(instance.getGraphWeights(lastNode, instance.getDepot()));
-                ret.add(new Route(nodes, customersServed, weights));
-                nodes = new ArrayList<>();
-                customersServed = new HashMap<>();
-                weights = new ArrayList<>();
+                currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getGraphWeights(lastNode, instance.getDepot()));
+                ret.add(currentRoute);
+                currentRoute = Route.emptyRoute();
                 cumulativeDemand = 0;
+                lastNode = instance.getDepot();
             }
-            nodes.add(currentNode);
-            customersServed.put(currentNode, new HashSet<>());
-            customersServed.get(currentNode).add(currentNode);
-            weights.add(instance.getGraphWeights(lastNode, currentNode));
+            Set<Integer> customersServed = Stream.of(currentNode).collect(Collectors.toSet());
+            currentRoute.addNode(currentNode, customersServed, instance.getGraphWeights(lastNode, currentNode));
             lastNode = currentNode;
         }
+        currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getGraphWeights(lastNode, instance.getDepot()));
+        ret.add(currentRoute);
         return ret;
     }
-
 }

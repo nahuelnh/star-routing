@@ -27,7 +27,7 @@ public class MasterProblem {
         IloLinearNumExpr lhs = cplex.linearNumExpr();
         for (int route = 0; route < routes.size(); route++) {
             for (int node = 0; node < instance.getNodes(); node++) {
-                int a_isr = routes.get(route).inRoute(node, customer) ? 1 : 0;
+                int a_isr = routes.get(route).isServedAtNode(node, instance.getCustomer(customer)) ? 1 : 0;
                 lhs.addTerm(theta[route], a_isr);
             }
         }
@@ -37,7 +37,7 @@ public class MasterProblem {
     private void buildModel(boolean integral) throws IloException {
         cplex = new IloCplex();
         int N = routes.size();
-        int S = instance.getCustomers().size();
+        int S = instance.getNumberOfCustomers();
 
         // Variable declaration
         theta = new IloNumVar[N];

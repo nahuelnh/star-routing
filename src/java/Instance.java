@@ -6,11 +6,10 @@ import java.util.stream.Collectors;
 
 public class Instance {
 
-    private static final String DELIMITER = " ";
 
     private static final String DEFAULT_DIR = "src/resources/";
     private static final String DEFAULT_GRAPH_FILENAME = "graph.txt";
-    private static final String DEFAULT_CUSTOMERS_FILENAME = "customers.txt";
+    private static final String DEFAULT_NEIGHBORS_FILENAME = "customers.txt";
     private static final String DEFAULT_PACKAGES_FILENAME = "packages.txt";
     private static final String DEFAULT_PARAMS_FILENAME = "params.txt";
 
@@ -27,126 +26,161 @@ public class Instance {
     private final Map<Integer, Set<Integer>> neighbors;
     private final Map<Integer, Integer> demand;
 
-    public Instance(String instance, String graphFilename, String customersFilename, String packagesFilename,
-                    String paramsFilename) throws IOException {
+    public Instance(String instance, String graphFilename, String neighborsFilename, String packagesFilename,
+                    String paramsFilename) {
         this.nodes = getNumberOfNodes(getFullPath(instance, graphFilename));
-        this.graphWeights = new ArrayList<>(this.nodes);
-        for (int i = 0; i < this.nodes; i++) {
-            this.graphWeights.add(new ArrayList<>(Collections.nCopies(this.nodes, 0)));
-        }
-        fillGraphWeights(getFullPath(instance, graphFilename));
-        this.capacity = Objects.requireNonNull(
-                getParameterValue(CAPACITY_STRING, getFullPath(instance, paramsFilename)));
-        this.vehicles = Objects.requireNonNull(
-                getParameterValue(VEHICLES_STRING, getFullPath(instance, paramsFilename)));
-        this.depot = Objects.requireNonNull(
-                getParameterValue(DEPOT_STRING, getFullPath(instance, paramsFilename))) - 1;
-        int numberOfCustomers = getNumberOfCustomers(getFullPath(instance, packagesFilename));
-        this.customers = new ArrayList<>(Collections.nCopies(numberOfCustomers, 0));
-        this.demand = new HashMap<>();
-        this.fillCustomersAndDemand(getFullPath(instance, packagesFilename));
-        this.neighbors = new HashMap<>();
-        this.fillCustomerNeighbors(getFullPath(instance, customersFilename));
+        this.graphWeights = createWeightsMatrix(this.nodes, getFullPath(instance, graphFilename));
 
-        System.out.println(this.demand);
-        System.out.println(this.neighbors);
-        System.out.println(this.customers);
-        System.out.println(this.graphWeights);
+        this.capacity = getParameterValue(CAPACITY_STRING, getFullPath(instance, paramsFilename));
+        this.vehicles = getParameterValue(VEHICLES_STRING, getFullPath(instance, paramsFilename));
+        this.depot = getParameterValue(DEPOT_STRING, getFullPath(instance, paramsFilename)) - 1;
+
+        this.customers = createCustomerList(getFullPath(instance, packagesFilename));
+        this.demand = createDemandMap(getFullPath(instance, packagesFilename));
+        this.neighbors = createNeighborsMap(getFullPath(instance, neighborsFilename), this.customers);
+
+        checkRep();
+
+        System.out.println("Demand: " + this.demand);
+        System.out.println("Neighbors: " + this.neighbors);
+        System.out.println("Customer Set: " + this.customers);
+        System.out.println("Weights: " + this.graphWeights);
     }
 
     public Instance(String instance) throws IOException {
-        this(instance, DEFAULT_GRAPH_FILENAME, DEFAULT_CUSTOMERS_FILENAME,
+        this(instance, DEFAULT_GRAPH_FILENAME, DEFAULT_NEIGHBORS_FILENAME,
                 DEFAULT_PACKAGES_FILENAME, DEFAULT_PARAMS_FILENAME);
     }
 
-    private String getFullPath(String instance, String filename) {
-        return DEFAULT_DIR + instance + "/" + filename;
+    private static List<List<Integer>> createWeightsMatrix(int size, String graphFilename) {
+        List<List<Integer>> matrix = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            matrix.add(new ArrayList<>(Collections.nCopies(size, Integer.MAX_VALUE)));
+        }
+        try (BufferedReader br = new BufferedReader(new FileReader(graphFilename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                List<Integer> values = readIntegerLine(line);
+                int i = values.get(0) - 1;
+                int j = values.get(1) - 1;
+                int weight = values.get(2);
+                if (i != j) {
+                    matrix.get(i).set(j, weight);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return matrix;
     }
 
-    private List<Integer> readIntegerLine(String line) {
+    private static List<Integer> readIntegerLine(String line) {
         return Arrays.stream(line.split(DELIMITER))
                 .map(Integer::valueOf)
                 .collect(Collectors.toList());
     }
 
-    private int getNumberOfNodes(String graphFilename) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(graphFilename));
-        String line;
+    private static Map<Integer, Integer> createDemandMap(String packagesFilename) {
+        Map<Integer, Integer> customerToDemand = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(packagesFilename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                List<Integer> values = readIntegerLine(line);
+                int customer = values.get(0) - 1;
+                int demand = values.get(1);
+                customerToDemand.put(customer, demand);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return customerToDemand;
+    }
+
+    private static List<Integer> createCustomerList(String packagesFilename) {
+        List<Integer> customers = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(packagesFilename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                List<Integer> values = readIntegerLine(line);
+                int customer = values.get(0) - 1;
+                customers.add(customer);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return customers.stream().distinct().toList();
+    }
+
+    private static String getFullPath(String instance, String filename) {
+        return DEFAULT_DIR + instance + "/" + filename;
+    }
+
+    private static Integer getParameterValue(String parameterName, String filename) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(DELIMITER);
+                if (parameterName.equals(values[0])) {
+                    return Integer.valueOf(values[1]);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        throw new AssertionError("Parameter not found: " + parameterName + " in: " + filename);
+    }
+
+    private static Map<Integer, Set<Integer>> createNeighborsMap(String customersFilename, List<Integer> customers) {
+        Map<Integer, Set<Integer>> neighbors = new HashMap<>();
+        for (int customer : customers) {
+            neighbors.put(customer, new HashSet<>());
+            neighbors.get(customer).add(customer);
+        }
+        try (BufferedReader br = new BufferedReader(new FileReader(customersFilename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                List<Integer> values = readIntegerLine(line);
+                int customer = values.get(0) - 1;
+                int neighbor = values.get(1) - 1;
+                if (!neighbors.containsKey(customer)) {
+                    System.out.printf("Trying to add non existing customer: %d %n", customer);
+                } else {
+                    neighbors.get(customer).add(neighbor);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return neighbors;
+    }
+
+    private static int getNumberOfNodes(String graphFilename) {
         int maxNodeIndexFound = 0;
-        while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line);
-            maxNodeIndexFound = Math.max(maxNodeIndexFound,
-                    Math.max(values.get(0), values.get(1)));
-        }
-        br.close();
-        return maxNodeIndexFound;
-    }
-
-    private Integer getParameterValue(String parameterName, String paramsFilename)
-            throws NumberFormatException, IOException {
-        BufferedReader br = new BufferedReader(new FileReader(paramsFilename));
-        String line;
-        while ((line = br.readLine()) != null) {
-            String[] values = line.split(DELIMITER);
-            if (parameterName.equals(values[0])) {
-                br.close();
-                return Integer.valueOf(values[1]);
+        try (BufferedReader br = new BufferedReader(new FileReader(graphFilename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                List<Integer> values = readIntegerLine(line);
+                maxNodeIndexFound = Math.max(maxNodeIndexFound, values.get(0) - 1);
+                maxNodeIndexFound = Math.max(maxNodeIndexFound, values.get(1) - 1);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        br.close();
-        return null;
+        return maxNodeIndexFound + 1;
     }
 
-    private void fillGraphWeights(String graphFilename) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(graphFilename));
-        String line;
-        while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line);
-            this.graphWeights.get(values.get(0) - 1).set(values.get(1) - 1, values.get(2));
+    private void checkRep() {
+        assert customers.size() == demand.size();
+        assert customers.size() == neighbors.size();
+        assert customers.size() < nodes;
+        for (int customer : customers) {
+            assert demand.containsKey(customer);
+            assert neighbors.containsKey(customer);
+            assert customer != depot;
+            assert 0 <= customer;
+            assert customer < nodes;
         }
-        br.close();
-    }
-
-    private int getNumberOfCustomers(String packagesFilename) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(packagesFilename));
-        int lines = (int) br.lines().count();
-        br.close();
-        return lines;
-    }
-
-    private void fillCustomersAndDemand(String packagesFilename) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(packagesFilename));
-        String line;
-        int index = 0;
-        while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line);
-            int customer = values.get(0) - 1;
-            int demand = values.get(1);
-            this.demand.put(customer, demand);
-            this.customers.set(index, customer);
-            index++;
-        }
-        br.close();
-    }
-
-    private void fillCustomerNeighbors(String customersFilename) throws IOException {
-        for (int customer : this.customers) {
-            this.neighbors.put(customer, new HashSet<Integer>());
-            this.neighbors.get(customer).add(customer);
-        }
-        BufferedReader br = new BufferedReader(new FileReader(customersFilename));
-        String line;
-        while ((line = br.readLine()) != null) {
-            List<Integer> values = readIntegerLine(line);
-            int customer = values.get(0) - 1;
-            int neighbor = values.get(1) - 1;
-            if (!this.neighbors.containsKey(customer)) {
-                br.close();
-                throw new AssertionError("Non existing customer:" + customer);
-            }
-            this.neighbors.get(customer).add(neighbor);
-        }
-        br.close();
+        assert graphWeights.size() == nodes;
     }
 
     public int getNodes() {
@@ -173,8 +207,16 @@ public class Instance {
         return customers;
     }
 
-    public Map<Integer, Set<Integer>> getNeighbors() {
-        return neighbors;
+    public int getNumberOfCustomers() {
+        return customers.size();
+    }
+
+    public int getCustomer(int index) {
+        return customers.get(index);
+    }
+
+    public Set<Integer> getNeighbors(int node) {
+        return neighbors.get(node);
     }
 
     public Integer getDemand(int customer) {
