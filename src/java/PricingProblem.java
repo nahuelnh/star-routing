@@ -146,7 +146,7 @@ public class PricingProblem {
         IloLinearNumExpr secondTerm = cplex.linearNumExpr();
         for (int i = 0; i < N; i++) {
             for (int s = 0; s < S; s++) {
-                secondTerm.addTerm(x[i][s], rmpSolution.getVisitorDualValues().get(s));
+                secondTerm.addTerm(x[i][s], rmpSolution.getVisitorDualValue(s));
             }
         }
         IloNumExpr objective = cplex.sum(firstTerm, secondTerm);
@@ -154,28 +154,6 @@ public class PricingProblem {
         cplex.addMinimize(objective);
     }
 
-    private ElementaryPath getRoutesFromSolution() throws IloException {
-        int N = instance.getNumberOfNodes();
-        int S = instance.getNumberOfCustomers();
-
-        ElementaryPath elementaryPath = ElementaryPath.emptyPath();
-        int lastNode = instance.getDepot();
-        for (int i = 0; i < N; i++) {
-            Set<Integer> customersVisited = new HashSet<>();
-            for (int s = 0; s < S; s++) {// TODO revisar como hacer igualdad == 1
-                if (cplex.getValue(x[i][s]) > 0.5) {
-                    customersVisited.add(s);
-                }
-            }
-            if (!customersVisited.isEmpty()) {
-                elementaryPath.addNode(i, customersVisited, instance.getEdgeWeight(lastNode, i));
-                lastNode = i;
-            }
-        }
-        elementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
-
-        return elementaryPath;
-    }
 
     Solution solve(MasterProblem.Solution rmpSolution) {
         try {

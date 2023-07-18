@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 class ColumnGeneration {
@@ -26,8 +27,13 @@ class ColumnGeneration {
         while (!nuevos.isEmpty()) {
             rmp.addPaths(nuevos);
             MasterProblem.Solution rmpSolution = rmp.solveRelaxation();
-            PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
-            nuevos = pricingSolution.getNegativeReducedCostPaths();
+            if (rmpSolution.isFeasible()) {
+                PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
+                nuevos = pricingSolution.getNegativeReducedCostPaths();
+            } else {
+                System.out.println("Infeasible!!!!");
+                return new Solution(new ArrayList<>());
+            }
         }
         MasterProblem.IntegerSolution solution = rmp.solveInteger();
         return new Solution(solution.getUsedPaths());
