@@ -22,7 +22,7 @@ public class PricingProblem {
 
 
     private void createVariables() throws IloException {
-        int N = instance.getNodes();
+        int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
         x = new IloIntVar[N][S];
@@ -51,7 +51,7 @@ public class PricingProblem {
     }
 
     private void createConstraints() throws IloException {
-        int N = instance.getNodes();
+        int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
 
@@ -128,13 +128,13 @@ public class PricingProblem {
     }
 
     private void createObjective() throws IloException {
-        int N = instance.getNodes();
+        int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
         IloLinearIntExpr firstTerm = cplex.linearIntExpr();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                firstTerm.addTerm(u[i][j], instance.getGraphWeights(i, j));
+                firstTerm.addTerm(u[i][j], instance.getWeight(i, j));
             }
         }
         IloLinearNumExpr secondTerm = cplex.linearNumExpr();
@@ -149,7 +149,7 @@ public class PricingProblem {
     }
 
     private Route getRoutesFromSolution() throws IloException {
-        int N = instance.getNodes();
+        int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
         Route route = Route.emptyRoute();
@@ -162,11 +162,11 @@ public class PricingProblem {
                 }
             }
             if (!customersVisited.isEmpty()) {
-                route.addNode(i, customersVisited, instance.getGraphWeights(lastNode, i));
+                route.addNode(i, customersVisited, instance.getWeight(lastNode, i));
                 lastNode = i;
             }
         }
-        route.addNode(instance.getDepot(), new HashSet<>(), instance.getGraphWeights(lastNode, instance.getDepot()));
+        route.addNode(instance.getDepot(), new HashSet<>(), instance.getWeight(lastNode, instance.getDepot()));
 
         return route;
     }

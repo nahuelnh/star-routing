@@ -24,17 +24,17 @@ public class FeasibleSolutionHeuristic {
         for (int currentNode : instance.getCustomers()) {
             cumulativeDemand += instance.getDemand(currentNode);
             if (cumulativeDemand > instance.getCapacity()) {
-                currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getGraphWeights(lastNode, instance.getDepot()));
+                currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getWeight(lastNode, instance.getDepot()));
                 ret.add(currentRoute);
                 currentRoute = Route.emptyRoute();
                 cumulativeDemand = 0;
                 lastNode = instance.getDepot();
             }
             Set<Integer> customersServed = Stream.of(currentNode).collect(Collectors.toSet());
-            currentRoute.addNode(currentNode, customersServed, instance.getGraphWeights(lastNode, currentNode));
+            currentRoute.addNode(currentNode, customersServed, instance.getWeight(lastNode, currentNode));
             lastNode = currentNode;
         }
-        currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getGraphWeights(lastNode, instance.getDepot()));
+        currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getWeight(lastNode, instance.getDepot()));
         ret.add(currentRoute);
         return ret;
     }

@@ -26,7 +26,7 @@ public class MasterProblem {
     private void addConstraintRow(int customer) throws IloException {
         IloLinearNumExpr lhs = cplex.linearNumExpr();
         for (int route = 0; route < routes.size(); route++) {
-            for (int node = 0; node < instance.getNodes(); node++) {
+            for (int node = 0; node < instance.getNumberOfNodes(); node++) {
                 int a_isr = routes.get(route).isServedAtNode(node, instance.getCustomer(customer)) ? 1 : 0;
                 lhs.addTerm(theta[route], a_isr);
             }
@@ -57,7 +57,7 @@ public class MasterProblem {
         for (int i = 0; i < N; i++) {
             lhs.addTerm(theta[i], 1);
         }
-        numberOfVehiclesConstraint = cplex.addEq(lhs, instance.getVehicles());
+        numberOfVehiclesConstraint = cplex.addEq(lhs, instance.getNumberOfVehicles());
 
         // Add objective function
         IloLinearNumExpr objective = cplex.linearNumExpr();

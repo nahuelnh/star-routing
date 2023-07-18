@@ -18,8 +18,8 @@ public class StarRoutingModel {
     private final IloConstraint[][][] mtzConstraints;
 
     public StarRoutingModel(Instance instance) throws IloException {
-        int N = instance.getNodes();
-        int K = instance.getVehicles();
+        int N = instance.getNumberOfNodes();
+        int K = instance.getNumberOfVehicles();
         int S = instance.getCustomers().size();
 
         this.instance = instance;
@@ -52,8 +52,8 @@ public class StarRoutingModel {
 
         // solve the model and display the solution if one was found
         if (cplex.solve()) {
-            int N = instance.getNodes();
-            int K = instance.getVehicles();
+            int N = instance.getNumberOfNodes();
+            int K = instance.getNumberOfVehicles();
             int S = instance.getCustomers().size();
 
             System.out.println("Solution status = " + cplex.getStatus());
@@ -89,8 +89,8 @@ public class StarRoutingModel {
 
     private void buildModel() throws IloException {
 
-        int N = instance.getNodes();
-        int K = instance.getVehicles();
+        int N = instance.getNumberOfNodes();
+        int K = instance.getNumberOfVehicles();
         int S = instance.getCustomers().size();
         int depot = instance.getDepot();
         int Q = instance.getCapacity();
@@ -121,7 +121,7 @@ public class StarRoutingModel {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
-                    objective.addTerm(x[i][j][k], instance.getGraphWeights(i, j));
+                    objective.addTerm(x[i][j][k], instance.getWeight(i, j));
                 }
             }
         }

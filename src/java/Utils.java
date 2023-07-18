@@ -7,7 +7,6 @@ import java.util.stream.Stream;
 
 public class Utils {
 
-
     private static final String DELIMITER = " ";
 
     public static <T> Set<T> singletonSet(T elem) {
@@ -19,10 +18,10 @@ public class Utils {
     }
 
     private static List<Integer> readIntegerLine(String line) {
-        return Arrays.stream(line.split(" ")).map(Integer::valueOf).collect(Collectors.toList());
+        return Arrays.stream(line.split(" ")).map(Integer::valueOf).toList();
     }
 
-    public List<List<Integer>> parseIntegerMatrix(String filename) {
+    public static List<List<Integer>> parseIntegerMatrix(String filename) {
         List<List<Integer>> matrix = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
@@ -36,7 +35,7 @@ public class Utils {
         return matrix;
     }
 
-    public Map<String, Integer> parseStringToIntMap(String filename) {
+    public static Map<String, Integer> parseStringToIntMap(String filename) {
         Map<String, Integer> ret = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
