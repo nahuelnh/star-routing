@@ -2,8 +2,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class FeasibleSolutionHeuristic {
 
@@ -14,28 +12,27 @@ public class FeasibleSolutionHeuristic {
     }
 
 
-    public List<Route> run() {
-        List<Route> ret = new ArrayList<>();
+    public List<ElementaryPath> run() {
+        List<ElementaryPath> ret = new ArrayList<>();
 
-        Route currentRoute = Route.emptyRoute();
+        ElementaryPath currentElementaryPath = ElementaryPath.emptyPath();
         int cumulativeDemand = 0;
         int lastNode = instance.getDepot();
 
         for (int currentNode : instance.getCustomers()) {
             cumulativeDemand += instance.getDemand(currentNode);
             if (cumulativeDemand > instance.getCapacity()) {
-                currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getWeight(lastNode, instance.getDepot()));
-                ret.add(currentRoute);
-                currentRoute = Route.emptyRoute();
+                currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+                ret.add(currentElementaryPath);
+                currentElementaryPath = ElementaryPath.emptyPath();
                 cumulativeDemand = 0;
                 lastNode = instance.getDepot();
             }
-            Set<Integer> customersServed = Stream.of(currentNode).collect(Collectors.toSet());
-            currentRoute.addNode(currentNode, customersServed, instance.getWeight(lastNode, currentNode));
+            currentElementaryPath.addNode(currentNode, Set.of(currentNode), instance.getEdgeWeight(lastNode, currentNode));
             lastNode = currentNode;
         }
-        currentRoute.addNode(instance.getDepot(), new HashSet<>(), instance.getWeight(lastNode, instance.getDepot()));
-        ret.add(currentRoute);
+        currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+        ret.add(currentElementaryPath);
         return ret;
     }
 }

@@ -1,12 +1,18 @@
 import java.util.List;
 
 public class Solution {
-    private final List<Route> routes;
-    Solution(List<Route> routes){
-        this.routes = routes;
+    private final List<ElementaryPath> elementaryPaths;
+
+    Solution(List<ElementaryPath> elementaryPaths) {
+        this.elementaryPaths = elementaryPaths;
     }
 
-    public List<Route> getRoutes() {
-        return routes;
+    public List<ElementaryPath> getRoutes() {
+        return elementaryPaths;
+    }
+
+    @Override
+    public String toString() {
+        return "Solution{" + "elementaryPaths=" + elementaryPaths + '}';
     }
 }

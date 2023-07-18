@@ -1,21 +1,16 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Utils {
 
     private static final String DELIMITER = " ";
 
-    public static <T> Set<T> singletonSet(T elem) {
-        return Stream.of(elem).collect(Collectors.toSet());
-    }
-
-    public static <T> List<T> singletonList(T elem) {
-        return Stream.of(elem).toList();
-    }
 
     private static List<Integer> readIntegerLine(String line) {
         return Arrays.stream(line.split(" ")).map(Integer::valueOf).toList();

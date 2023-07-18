@@ -1,48 +1,36 @@
-import ilog.concert.IloException;
-
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 class ColumnGeneration {
 
     private final Instance instance;
+    private final MasterProblem rmp;
+    private final PricingProblem pricing;
+    private final FeasibleSolutionHeuristic heuristic;
 
-    public ColumnGeneration(Instance instance) {
+    public ColumnGeneration(Instance instance, MasterProblem rmp, PricingProblem pricingProblem, FeasibleSolutionHeuristic heuristic) {
         this.instance = instance;
+        this.rmp = rmp;
+        this.pricing = pricingProblem;
+        this.heuristic = heuristic;
     }
 
-    public static void main(String[] args) throws IOException {
-        try {
-            Instance inputInstance = new Instance("instance1");
-            ColumnGeneration columnGeneration = new ColumnGeneration(inputInstance);
-            columnGeneration.solve();
-        } catch (IloException e) {
-            System.err.println("Concert exception '" + e + "' caught");
-        }
+    public static void main(String[] args) {
+        Instance inputInstance = new Instance("instance1");
+        ColumnGeneration columnGeneration = new ColumnGeneration(inputInstance, new MasterProblem(inputInstance), new PricingProblem(inputInstance), new FeasibleSolutionHeuristic(inputInstance));
+        Solution solution = columnGeneration.solve();
+        System.out.println(solution);
     }
 
-    public Solution solve() throws IloException {
-        ArrayList<Route> routes = new ArrayList<>();
-        List<Route> nuevos = new ArrayList<>();
-        FeasibleSolutionHeuristic initialConfiguration = new FeasibleSolutionHeuristic(instance);
-        nuevos.addAll(initialConfiguration.run());
+    public Solution solve() {
+        List<ElementaryPath> nuevos = heuristic.run();
         while (!nuevos.isEmpty()) {
-            routes.addAll(nuevos);
-            MasterProblem master = new MasterProblem(instance, routes);
-            MasterProblem.Solution solution = master.solveRelaxation();
-
-            PricingProblem pricing = new PricingProblem(instance, solution);
-            nuevos = new ArrayList<>();
-            Route newRoute = pricing.solve();
-            if (newRoute == null) {
-                break;
-            }
-            nuevos.add(newRoute);
+            rmp.addPaths(nuevos);
+            MasterProblem.Solution rmpSolution = rmp.solveRelaxation();
+            PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
+            nuevos = pricingSolution.getNegativeReducedCostPaths();
         }
-        MasterProblem master = new MasterProblem(instance, routes);
-        MasterProblem.Solution solution = master.solveInteger();
-        return new Solution(new ArrayList<>());
+        MasterProblem.IntegerSolution solution = rmp.solveInteger();
+        return new Solution(solution.getUsedPaths());
     }
 
 }

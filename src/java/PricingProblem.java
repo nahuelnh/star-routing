@@ -1,13 +1,18 @@
-import ilog.concert.*;
+import ilog.concert.IloException;
+import ilog.concert.IloIntExpr;
+import ilog.concert.IloIntVar;
+import ilog.concert.IloLinearIntExpr;
+import ilog.concert.IloLinearNumExpr;
+import ilog.concert.IloNumExpr;
 import ilog.cplex.IloCplex;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class PricingProblem {
 
     private final Instance instance;
-    private final MasterProblem.Solution solution;
     private IloCplex cplex;
     private IloIntVar[][] x;
     private IloIntVar[] z;
@@ -15,9 +20,8 @@ public class PricingProblem {
     private IloIntVar[] v;
 
 
-    PricingProblem(Instance instance, MasterProblem.Solution solution) {
+    PricingProblem(Instance instance) {
         this.instance = instance;
-        this.solution = solution;
     }
 
 
@@ -127,32 +131,32 @@ public class PricingProblem {
         }
     }
 
-    private void createObjective() throws IloException {
+    private void createObjective(MasterProblem.Solution rmpSolution) throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
         IloLinearIntExpr firstTerm = cplex.linearIntExpr();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                firstTerm.addTerm(u[i][j], instance.getWeight(i, j));
+                firstTerm.addTerm(u[i][j], instance.getEdgeWeight(i, j));
             }
         }
         IloLinearNumExpr secondTerm = cplex.linearNumExpr();
         for (int i = 0; i < N; i++) {
             for (int s = 0; s < S; s++) {
-                secondTerm.addTerm(x[i][s], solution.getVisitorDualValues().get(s));
+                secondTerm.addTerm(x[i][s], rmpSolution.getVisitorDualValues().get(s));
             }
         }
         IloNumExpr objective = cplex.sum(firstTerm, secondTerm);
-        objective = cplex.sum(objective, -solution.getNumberOfVehiclesDualValue());
+        objective = cplex.sum(objective, -rmpSolution.getNumberOfVehiclesDualValue());
         cplex.addMinimize(objective);
     }
 
-    private Route getRoutesFromSolution() throws IloException {
+    private ElementaryPath getRoutesFromSolution() throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
-        Route route = Route.emptyRoute();
+        ElementaryPath elementaryPath = ElementaryPath.emptyPath();
         int lastNode = instance.getDepot();
         for (int i = 0; i < N; i++) {
             Set<Integer> customersVisited = new HashSet<>();
@@ -162,27 +166,72 @@ public class PricingProblem {
                 }
             }
             if (!customersVisited.isEmpty()) {
-                route.addNode(i, customersVisited, instance.getWeight(lastNode, i));
+                elementaryPath.addNode(i, customersVisited, instance.getEdgeWeight(lastNode, i));
                 lastNode = i;
             }
         }
-        route.addNode(instance.getDepot(), new HashSet<>(), instance.getWeight(lastNode, instance.getDepot()));
+        elementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
 
-        return route;
+        return elementaryPath;
     }
 
-    Route solve() throws IloException {
-        cplex = new IloCplex();
-        createVariables();
-        createConstraints();
-        createObjective();
-        cplex.solve();
-        // TODO evitar usar nulls
-        Route ret = null;
-        if (IloCplex.Status.Optimal.equals(cplex.getStatus()) && cplex.getObjValue() < 0) {
-            ret = getRoutesFromSolution();
+    Solution solve(MasterProblem.Solution rmpSolution) {
+        try {
+            cplex = new IloCplex();
+            createVariables();
+            createConstraints();
+            createObjective(rmpSolution);
+            cplex.solve();
+            Solution solution = new Solution();
+            cplex.end();
+            return solution;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
         }
-        cplex.end();
-        return ret;
+    }
+
+    public class Solution {
+        private final IloCplex.Status status;
+        private final double objectiveValue;
+        private final List<ElementaryPath> negativeReducedCostPaths;
+
+        Solution() throws IloException {
+            this(cplex.getStatus(), cplex.getObjValue());
+        }
+
+        Solution(IloCplex.Status status, double objectiveValue) throws IloException {
+            this.status = status;
+            this.objectiveValue = objectiveValue;
+            this.negativeReducedCostPaths = getRoutesFromSolution();
+        }
+
+
+        private List<ElementaryPath> getRoutesFromSolution() throws IloException {
+            if (!IloCplex.Status.Optimal.equals(status) || objectiveValue > 0) {
+                return List.of();
+            }
+            int N = instance.getNumberOfNodes();
+            int S = instance.getNumberOfCustomers();
+            ElementaryPath elementaryPath = ElementaryPath.emptyPath();
+            int lastNode = instance.getDepot();
+            for (int i = 0; i < N; i++) {
+                Set<Integer> customersVisited = new HashSet<>();
+                for (int s = 0; s < S; s++) {// TODO revisar como hacer igualdad == 1
+                    if (cplex.getValue(x[i][s]) > 0.5) {
+                        customersVisited.add(s);
+                    }
+                }
+                if (!customersVisited.isEmpty()) {
+                    elementaryPath.addNode(i, customersVisited, instance.getEdgeWeight(lastNode, i));
+                    lastNode = i;
+                }
+            }
+            elementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+            return List.of(elementaryPath);
+        }
+
+        public List<ElementaryPath> getNegativeReducedCostPaths() {
+            return negativeReducedCostPaths;
+        }
     }
 }

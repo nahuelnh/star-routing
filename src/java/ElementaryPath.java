@@ -1,19 +1,19 @@
 import java.util.*;
 
-public class Route {
+public class ElementaryPath {
 
     private final List<Integer> nodes;
     private final Map<Integer, Set<Integer>> customersServed;
     private final List<Integer> weights;
 
-    public Route(List<Integer> nodes, Map<Integer, Set<Integer>> customersServed, List<Integer> weights) {
+    public ElementaryPath(List<Integer> nodes, Map<Integer, Set<Integer>> customersServed, List<Integer> weights) {
         this.nodes = nodes;
         this.customersServed = customersServed;
         this.weights = weights;
     }
 
-    public static Route emptyRoute() {
-        return new Route(new ArrayList<>(), new HashMap<>(), new ArrayList<>());
+    public static ElementaryPath emptyPath() {
+        return new ElementaryPath(new ArrayList<>(), new HashMap<>(), new ArrayList<>());
     }
 
     public void addNode(int node, Set<Integer> customersVisited, int weight) {

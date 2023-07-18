@@ -151,7 +151,7 @@ public class Instance {
         return depot;
     }
 
-    public Integer getWeight(int i, int j) {
+    public Integer getEdgeWeight(int i, int j) {
         return graphWeights.get(i).get(j);
     }
 

@@ -121,7 +121,7 @@ public class StarRoutingModel {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
-                    objective.addTerm(x[i][j][k], instance.getWeight(i, j));
+                    objective.addTerm(x[i][j][k], instance.getEdgeWeight(i, j));
                 }
             }
         }

@@ -4,6 +4,7 @@ import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,91 +12,104 @@ import java.util.stream.Collectors;
 public class MasterProblem {
 
     private final Instance instance;
-    private final List<Route> routes;
+    List<ElementaryPath> paths;
     private IloCplex cplex;
     private IloNumVar[] theta;
     private IloRange[] visitorConstraints;
     private IloRange numberOfVehiclesConstraint;
 
-    public MasterProblem(Instance instance, List<Route> routes) throws IloException {
+    public MasterProblem(Instance instance) {
         this.instance = instance;
-        this.routes = routes;
+        this.paths = new ArrayList<>();
     }
 
-
-    private void addConstraintRow(int customer) throws IloException {
-        IloLinearNumExpr lhs = cplex.linearNumExpr();
-        for (int route = 0; route < routes.size(); route++) {
-            for (int node = 0; node < instance.getNumberOfNodes(); node++) {
-                int a_isr = routes.get(route).isServedAtNode(node, instance.getCustomer(customer)) ? 1 : 0;
-                lhs.addTerm(theta[route], a_isr);
-            }
-        }
-        visitorConstraints[customer] = cplex.addEq(lhs, 1);
+    public void addPaths(List<ElementaryPath> newPaths) {
+        paths.addAll(newPaths);
     }
 
-    private void buildModel(boolean integral) throws IloException {
-        cplex = new IloCplex();
-        int N = routes.size();
-        int S = instance.getNumberOfCustomers();
-
-        // Variable declaration
-        theta = new IloNumVar[N];
-        for (int i = 0; i < N; i++) {
+    private void createVariables(boolean integral) throws IloException {
+        theta = new IloNumVar[paths.size()];
+        for (int i = 0; i < paths.size(); i++) {
             theta[i] = integral ? cplex.boolVar("theta_" + i) : cplex.numVar(0, 1, "theta_" + i);
         }
+    }
 
-        // Add visitor constraints
-        // Every customer is visited and served exactly once
-        visitorConstraints = new IloRange[S];
-        for (int customer = 0; customer < S; customer++) {
-            addConstraintRow(customer);
+    private void createCustomerServedConstraints() throws IloException {
+        visitorConstraints = new IloRange[instance.getNumberOfCustomers()];
+        for (int customer = 0; customer < instance.getNumberOfCustomers(); customer++) {
+            IloLinearNumExpr lhs = cplex.linearNumExpr();
+            for (int route = 0; route < paths.size(); route++) {
+                for (int node = 0; node < instance.getNumberOfNodes(); node++) {
+                    int a_isr = paths.get(route).isServedAtNode(node, instance.getCustomer(customer)) ? 1 : 0;
+                    lhs.addTerm(theta[route], a_isr);
+                }
+            }
+            visitorConstraints[customer] = cplex.addEq(lhs, 1);
         }
+    }
 
-        // Add constraint on number of vehicles used
+    private void createNumberOfVehiclesConstraint() throws IloException {
         IloLinearNumExpr lhs = cplex.linearNumExpr();
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < paths.size(); i++) {
             lhs.addTerm(theta[i], 1);
         }
         numberOfVehiclesConstraint = cplex.addEq(lhs, instance.getNumberOfVehicles());
+    }
 
-        // Add objective function
+
+    private void createObjective() throws IloException {
         IloLinearNumExpr objective = cplex.linearNumExpr();
-        for (int i = 0; i < N; i++) {
-            objective.addTerm(theta[i], routes.get(i).getCost());
+        for (int i = 0; i < paths.size(); i++) {
+            objective.addTerm(theta[i], paths.get(i).getCost());
         }
         cplex.addMinimize(objective);
     }
 
-    private Solution solve(boolean integral) throws IloException {
-        buildModel(integral);
-        cplex.solve();
-        Solution solution = new Solution(cplex.getStatus(),
-                cplex.getValues(theta),
-                cplex.getDuals(visitorConstraints),
-                cplex.getDual(numberOfVehiclesConstraint),
-                cplex.getObjValue()
-        );
-        cplex.end();
-        return solution;
+    private void buildModel(boolean integral) throws IloException {
+        cplex = new IloCplex();
+        createVariables(integral);
+        createCustomerServedConstraints();
+        createNumberOfVehiclesConstraint();
+        createObjective();
     }
 
-    public Solution solveRelaxation() throws IloException {
-        return solve(false);
+
+    public Solution solveRelaxation() {
+        try {
+            buildModel(false);
+            cplex.solve();
+            Solution solution = new Solution();
+            cplex.end();
+            return solution;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Solution solveInteger() throws IloException {
-        return solve(true);
+    public IntegerSolution solveInteger() {
+        try {
+            buildModel(true);
+            cplex.solve();
+            IntegerSolution solution = new IntegerSolution();
+            cplex.end();
+            return solution;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static class Solution {
+    public class Solution {
         private final IloCplex.Status status;
         private final List<Double> primalValues;
         private final List<Double> visitorDualValues;
         private final double numberOfVehiclesDualValue;
         private final double objectiveValue;
 
-        public Solution(IloCplex.Status status, double[] primalValues, double[] visitorDualValues, double numberOfVehiclesDualValue, double objectiveValue) {
+        private Solution() throws IloException {
+            this(cplex.getStatus(), cplex.getValues(theta), cplex.getDuals(visitorConstraints), cplex.getDual(numberOfVehiclesConstraint), cplex.getObjValue());
+        }
+
+        private Solution(IloCplex.Status status, double[] primalValues, double[] visitorDualValues, double numberOfVehiclesDualValue, double objectiveValue) {
             this.status = status;
             this.primalValues = Arrays.stream(primalValues).boxed().collect(Collectors.toList());
             this.visitorDualValues = Arrays.stream(visitorDualValues).boxed().collect(Collectors.toList());
@@ -124,5 +138,25 @@ public class MasterProblem {
         }
     }
 
+    public class IntegerSolution {
+        private final IloCplex.Status status;
+        private final List<Double> primalValues;
+        private final double objectiveValue;
 
+        private IntegerSolution() throws IloException {
+            this(cplex.getStatus(), cplex.getValues(theta), cplex.getObjValue());
+        }
+
+        private IntegerSolution(IloCplex.Status status, double[] primalValues, double objectiveValue) {
+            this.status = status;
+            this.primalValues = Arrays.stream(primalValues).boxed().collect(Collectors.toList());
+            this.objectiveValue = objectiveValue;
+        }
+
+        public List<ElementaryPath> getUsedPaths() {
+            // TODO complete
+            return new ArrayList<>();
+        }
+
+    }
 }
