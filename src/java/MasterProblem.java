@@ -154,9 +154,13 @@ public class MasterProblem {
         }
 
         public List<ElementaryPath> getUsedPaths() {
-            // TODO complete
-            return new ArrayList<>();
+            List<ElementaryPath> ret = new ArrayList<>();
+            for (int i = 0; i < paths.size(); i++) {
+                if (Math.round(primalValues.get(i)) == 1){
+                    ret.add(paths.get(i));
+                }
+            }
+            return ret;
         }
-
     }
 }

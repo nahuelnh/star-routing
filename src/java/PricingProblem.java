@@ -6,12 +6,14 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
 import ilog.cplex.IloCplex;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class PricingProblem {
 
+    private static final double EPSILON = 1e6;
     private final Instance instance;
     private IloCplex cplex;
     private IloIntVar[][] x;
@@ -205,29 +207,35 @@ public class PricingProblem {
             this.negativeReducedCostPaths = getRoutesFromSolution();
         }
 
+        private boolean hasNegativeReducedCostPaths() {
+            return (IloCplex.Status.Optimal.equals(status) || IloCplex.Status.Feasible.equals(status)) && objectiveValue < EPSILON;
+        }
 
         private List<ElementaryPath> getRoutesFromSolution() throws IloException {
-            if (!IloCplex.Status.Optimal.equals(status) || objectiveValue > 0) {
-                return List.of();
+            List<ElementaryPath> ret = new ArrayList<>();
+            if (!hasNegativeReducedCostPaths()) {
+                return ret;
             }
-            int N = instance.getNumberOfNodes();
-            int S = instance.getNumberOfCustomers();
-            ElementaryPath elementaryPath = ElementaryPath.emptyPath();
-            int lastNode = instance.getDepot();
-            for (int i = 0; i < N; i++) {
-                Set<Integer> customersVisited = new HashSet<>();
-                for (int s = 0; s < S; s++) {// TODO revisar como hacer igualdad == 1
-                    if (cplex.getValue(x[i][s]) > 0.5) {
-                        customersVisited.add(s);
+            for (int solIdx = 0; solIdx < cplex.getSolnPoolNsolns(); solIdx++) {
+                if (cplex.getObjValue(solIdx) < -EPSILON) {
+                    ElementaryPath elementaryPath = ElementaryPath.emptyPath();
+                    int lastNode = instance.getDepot();
+                    for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+                        Set<Integer> customersVisited = new HashSet<>();
+                        for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
+                            if (Math.round(cplex.getValue(x[i][s], solIdx)) == 1) {
+                                customersVisited.add(s);
+                            }
+                        }
+                        if (!customersVisited.isEmpty()) {
+                            elementaryPath.addNode(i, customersVisited, instance.getEdgeWeight(lastNode, i));
+                            lastNode = i;
+                        }
                     }
-                }
-                if (!customersVisited.isEmpty()) {
-                    elementaryPath.addNode(i, customersVisited, instance.getEdgeWeight(lastNode, i));
-                    lastNode = i;
+                    elementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
                 }
             }
-            elementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
-            return List.of(elementaryPath);
+            return ret;
         }
 
         public List<ElementaryPath> getNegativeReducedCostPaths() {
