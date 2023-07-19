@@ -11,7 +11,6 @@ public class FeasibleSolutionHeuristic {
         this.instance = instance;
     }
 
-
     public List<ElementaryPath> run() {
         List<ElementaryPath> ret = new ArrayList<>();
 
@@ -22,17 +21,32 @@ public class FeasibleSolutionHeuristic {
         for (int currentNode : instance.getCustomers()) {
             cumulativeDemand += instance.getDemand(currentNode);
             if (cumulativeDemand > instance.getCapacity()) {
-                currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+                currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(),
+                        instance.getEdgeWeight(lastNode, instance.getDepot()));
                 ret.add(currentElementaryPath);
                 currentElementaryPath = ElementaryPath.emptyPath();
                 cumulativeDemand = 0;
                 lastNode = instance.getDepot();
             }
-            currentElementaryPath.addNode(currentNode, Set.of(currentNode), instance.getEdgeWeight(lastNode, currentNode));
+            currentElementaryPath.addNode(currentNode, Set.of(currentNode),
+                    instance.getEdgeWeight(lastNode, currentNode));
             lastNode = currentNode;
         }
-        currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+        currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(),
+                instance.getEdgeWeight(lastNode, instance.getDepot()));
         ret.add(currentElementaryPath);
+
+
+        // TODO revisar!!!
+//        while (ret.size() < instance.getNumberOfVehicles()) {
+//            ElementaryPath path = ElementaryPath.emptyPath();
+//            int firstCustomer = instance.getCustomer(0);
+//            path.addNode(firstCustomer, new HashSet<>(), instance.getEdgeWeight(instance.getDepot(), firstCustomer));
+//            path.addNode(instance.getDepot(), new HashSet<>(),
+//                    instance.getEdgeWeight(firstCustomer, instance.getDepot()));
+//            ret.add(path);
+//        }
+
         return ret;
     }
 }

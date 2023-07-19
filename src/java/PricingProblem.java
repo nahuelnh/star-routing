@@ -32,25 +32,25 @@ public class PricingProblem {
         x = new IloIntVar[N][S];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < S; j++) {
-                x[i][j] = cplex.boolVar();
+                x[i][j] = cplex.boolVar("x_" + i + "_" + j);
             }
         }
 
         z = new IloIntVar[N];
         for (int i = 0; i < N; i++) {
-            z[i] = cplex.boolVar();
+            z[i] = cplex.boolVar("z_" + i);
         }
 
         u = new IloIntVar[N][N];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                u[i][j] = cplex.boolVar();
+                u[i][j] = cplex.boolVar("u_" + i + "_" + j);
             }
         }
 
         v = new IloIntVar[N];
         for (int i = 0; i < N; i++) {
-            v[i] = cplex.intVar(1, N - 1);
+            v[i] = cplex.intVar(1, N - 1, "v_" + i);
         }
     }
 
@@ -60,12 +60,9 @@ public class PricingProblem {
 
         // First constraint
         for (int i = 0; i < N; i++) {
-            IloLinearIntExpr lhs = cplex.linearIntExpr();
-            for (int s = 0; s < S; s++) {
-                lhs.addTerm(x[i][s], 1);
-            }
+            IloIntExpr lhs = Utils.getIntArraySum(cplex, x[i]);
             IloIntExpr rhs = cplex.prod(z[i], S);
-            cplex.addLe(lhs, rhs);
+            cplex.addLe(lhs, rhs, "z_consistent_" + i);
         }
 
         // Second constraint
@@ -74,11 +71,11 @@ public class PricingProblem {
             for (int i = 0; i < N; i++) {
                 lhs.addTerm(x[i][s], 1);
             }
-            cplex.addLe(lhs, 1);
+            cplex.addLe(lhs, 1, "serving_" + s);
         }
 
         // Third Constraint
-        cplex.addEq(z[instance.getDepot()], 1);
+        cplex.addEq(z[instance.getDepot()], 1, "depot");
 
         // Fourth Constraint
         for (int s = 0; s < S; s++) {
@@ -88,7 +85,7 @@ public class PricingProblem {
                     lhs.addTerm(x[i][s], 1);
                 }
             }
-            cplex.addEq(lhs, 0);
+            cplex.addEq(lhs, 0, "neighbor_" + s);
         }
 
         // Fifth constraint
@@ -98,12 +95,12 @@ public class PricingProblem {
                 lhs.addTerm(x[i][s], instance.getDemand(instance.getCustomer(s)));
             }
         }
-        cplex.addLe(lhs, instance.getCapacity());
+        cplex.addLe(lhs, instance.getCapacity(), "capacity");
 
         //Seventh constraint
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                cplex.addLe(cplex.sum(u[i][j], 1), cplex.sum(z[i], z[j]));
+                cplex.addLe(cplex.sum(u[i][j], 1), cplex.sum(z[i], z[j]), "u_consistent_" + i + "_" + j);
             }
         }
 
@@ -115,8 +112,8 @@ public class PricingProblem {
                 sum1.addTerm(u[i][j], 1);
                 sum2.addTerm(u[j][i], 1);
             }
-            cplex.addEq(z[i], sum1);
-            cplex.addEq(z[i], sum2);
+            cplex.addEq(z[i], sum1, "inflow_" + i);
+            cplex.addEq(z[i], sum2, "outflow_" + i);
         }
 
         // MTZ constraints
@@ -124,13 +121,13 @@ public class PricingProblem {
             for (int j = 0; j < N; j++) {
                 if (i != instance.getDepot() && j != instance.getDepot() && j != i) {
                     IloIntExpr mtz = cplex.sum(v[i], cplex.negative(v[j]), cplex.prod(u[i][j], N - 1));
-                    cplex.addLe(mtz, N - 2);
+                    cplex.addLe(mtz, N - 2, "mtz_" + i + "_" + j);
                 }
             }
         }
     }
 
-    private void createObjective(MasterProblem.Solution rmpSolution) throws IloException {
+    private void createObjective(RestrictedMasterProblem.Solution rmpSolution) throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
@@ -151,7 +148,7 @@ public class PricingProblem {
         cplex.addMinimize(objective);
     }
 
-    Solution solve(MasterProblem.Solution rmpSolution) {
+    Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
         try {
             cplex = new IloCplex();
             cplex.setOut(null);

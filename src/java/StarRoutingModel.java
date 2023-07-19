@@ -42,6 +42,7 @@ public class StarRoutingModel {
         buildModel();
         // solve the model and display the solution if one was found
         if (cplex.solve()) {
+            cplex.writeSolution("src/resources/star_routing_model.sol");
             System.out.println("Solution status = " + cplex.getStatus());
             System.out.println("Solution value  = " + cplex.getObjValue());
             System.out.println(new Solution(getPathsFromSolution()));
@@ -57,21 +58,21 @@ public class StarRoutingModel {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
-                    x[i][j][k] = cplex.boolVar();
+                    x[i][j][k] = cplex.boolVar("x_" + i + "_" + j + "_" + k);
                 }
             }
         }
         y = new IloIntVar[S][K];
         for (int s = 0; s < S; s++) {
             for (int k = 0; k < K; k++) {
-                y[s][k] = cplex.boolVar();
+                y[s][k] = cplex.boolVar("y_" + s + "_" + k);
             }
 
         }
         u = new IloIntVar[N][K];
         for (int i = 0; i < N; i++) {
             for (int k = 0; k < K; k++) {
-                u[i][k] = cplex.intVar(1, N - 1);
+                u[i][k] = cplex.intVar(1, N - 1, "u_" + i + "_" + k);
             }
         }
     }
@@ -89,7 +90,7 @@ public class StarRoutingModel {
                     inFlow.addTerm(x[i][j][k], 1);
                     outFlow.addTerm(x[j][i][k], 1);
                 }
-                flowConstraint[i][k] = cplex.addEq(inFlow, outFlow);
+                flowConstraint[i][k] = cplex.addEq(inFlow, outFlow, "flow_" + i + "_" + k);
             }
         }
     }
@@ -104,7 +105,7 @@ public class StarRoutingModel {
             for (int k = 0; k < K; k++) {
                 numberOfVehiclesServingS.addTerm(y[s][k], 1);
             }
-            servingConstraint[s] = cplex.addEq(numberOfVehiclesServingS, 1);
+            servingConstraint[s] = cplex.addEq(numberOfVehiclesServingS, 1, "serving_" + s);
         }
     }
 
@@ -118,7 +119,11 @@ public class StarRoutingModel {
             for (int j = 0; j < N; j++) {
                 outgoingEdgesFromDepot.addTerm(x[instance.getDepot()][j][k], 1);
             }
-            depotConstraint[k] = cplex.addEq(outgoingEdgesFromDepot, 1);
+            if (instance.unusedVehiclesAllowed()) {
+                depotConstraint[k] = cplex.addLe(outgoingEdgesFromDepot, 1, "depot_" + k);
+            } else {
+                depotConstraint[k] = cplex.addEq(outgoingEdgesFromDepot, 1, "depot_" + k);
+            }
         }
     }
 
@@ -132,7 +137,7 @@ public class StarRoutingModel {
             for (int s = 0; s < S; s++) {
                 totalDemand.addTerm(y[s][k], instance.getDemand(instance.getCustomers().get(s)));
             }
-            capacityConstraint[k] = cplex.addLe(totalDemand, instance.getCapacity());
+            capacityConstraint[k] = cplex.addLe(totalDemand, instance.getCapacity(), "capacity_" + k);
         }
     }
 
@@ -146,7 +151,7 @@ public class StarRoutingModel {
                 for (int k = 0; k < K; k++) {
                     if (i != instance.getDepot() && j != instance.getDepot() && j != i) {
                         IloIntExpr mtz = cplex.sum(u[i][k], cplex.negative(u[j][k]), cplex.prod(x[i][j][k], N - 1));
-                        mtzConstraints[i][j][k] = cplex.addLe(mtz, N - 2);
+                        mtzConstraints[i][j][k] = cplex.addLe(mtz, N - 2, "mtz_" + i + "_" + j + "_" + k);
                     }
                 }
             }
@@ -170,7 +175,7 @@ public class StarRoutingModel {
                     }
 
                 }
-                visitConstraint[s][k] = cplex.addLe(y[s][k], timesInNeighborhood);
+                visitConstraint[s][k] = cplex.addLe(y[s][k], timesInNeighborhood, "visit_" + s + "_" + k);
             }
         }
     }
@@ -191,6 +196,8 @@ public class StarRoutingModel {
 
     private void buildModel() throws IloException {
         cplex = new IloCplex();
+        cplex.setParam(IloCplex.Param.Output.WriteLevel, IloCplex.WriteLevel.NonzeroVars);
+        cplex.setOut(null);
         createVariables();
         createFlowConstraints();
         createServingConstraints();
@@ -225,21 +232,39 @@ public class StarRoutingModel {
         return customersServed;
     }
 
+    private boolean isVehicleUsed(int k) throws IloException {
+        //        for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
+        //            if (Math.round(cplex.getValue(y[s][k])) == 1) {
+        //                return true;
+        //            }
+        //        }
+        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+            for (int j = 0; j < instance.getNumberOfNodes(); j++) {
+                if (Math.round(cplex.getValue(x[i][j][k])) == 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private List<ElementaryPath> getPathsFromSolution() throws IloException {
         List<ElementaryPath> ret = new ArrayList<>();
         for (int k = 0; k < instance.getNumberOfVehicles(); k++) {
-            ElementaryPath path = ElementaryPath.emptyPath();
-            Set<Integer> alreadyVisited = new HashSet<>();
-            int lastNode = instance.getDepot();
-            int currentNode = getNextNodeInPath(lastNode, k);
-            while (currentNode != instance.getDepot()) {
-                path.addNode(currentNode, getCustomersServed(currentNode, k, alreadyVisited),
-                        instance.getEdgeWeight(lastNode, currentNode));
-                lastNode = currentNode;
-                currentNode = getNextNodeInPath(currentNode, k);
+            if (isVehicleUsed(k)) {
+                ElementaryPath path = ElementaryPath.emptyPath();
+                Set<Integer> alreadyVisited = new HashSet<>();
+                int lastNode = instance.getDepot();
+                int currentNode = getNextNodeInPath(lastNode, k);
+                while (currentNode != instance.getDepot()) {
+                    path.addNode(currentNode, getCustomersServed(currentNode, k, alreadyVisited),
+                            instance.getEdgeWeight(lastNode, currentNode));
+                    lastNode = currentNode;
+                    currentNode = getNextNodeInPath(currentNode, k);
+                }
+                path.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, currentNode));
+                ret.add(path);
             }
-            path.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, currentNode));
-            ret.add(path);
         }
         return ret;
     }

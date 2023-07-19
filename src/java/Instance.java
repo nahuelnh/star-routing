@@ -24,9 +24,12 @@ public class Instance {
     private final List<Integer> customers;
     private final Map<Integer, Set<Integer>> neighbors;
     private final Map<Integer, Integer> demand;
+    private boolean allowUnusedVehicles;
 
     public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename,
                     String paramsFilename) {
+        this.allowUnusedVehicles = false;
+
         List<List<Integer>> adjacencyMatrix = Utils.parseIntegerMatrix(getFullPath(instanceName, graphFilename));
         this.numberOfNodes = getNumberOfNodes(adjacencyMatrix);
         this.graphWeights = createWeightsMatrix(adjacencyMatrix, numberOfNodes);
@@ -123,6 +126,10 @@ public class Instance {
         return neighbors;
     }
 
+    public void allowUnusedVehicles() {
+        allowUnusedVehicles = true;
+    }
+
     private void checkRep() {
         assert customers.size() == demand.size();
         assert customers.size() == neighbors.size();
@@ -175,5 +182,9 @@ public class Instance {
 
     public Integer getDemand(int customer) {
         return demand.get(customer);
+    }
+
+    public boolean unusedVehiclesAllowed() {
+        return allowUnusedVehicles;
     }
 }

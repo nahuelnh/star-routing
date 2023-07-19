@@ -1,5 +1,6 @@
 import ilog.concert.IloException;
 import ilog.concert.IloLinearNumExpr;
+import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
@@ -7,7 +8,7 @@ import ilog.cplex.IloCplex;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MasterProblem {
+public class RestrictedMasterProblem {
 
     private final Instance instance;
     private final List<ElementaryPath> paths;
@@ -16,7 +17,7 @@ public class MasterProblem {
     private IloRange[] customerServedConstraints;
     private IloRange numberOfVehiclesConstraint;
 
-    public MasterProblem(Instance instance) {
+    public RestrictedMasterProblem(Instance instance) {
         this.instance = instance;
         this.paths = new ArrayList<>();
     }
@@ -37,21 +38,24 @@ public class MasterProblem {
         for (int customer = 0; customer < instance.getNumberOfCustomers(); customer++) {
             IloLinearNumExpr lhs = cplex.linearNumExpr();
             for (int route = 0; route < paths.size(); route++) {
+                int numberOfNodesServingCustomer = 0;
                 for (int node = 0; node < instance.getNumberOfNodes(); node++) {
-                    int a_isr = paths.get(route).isServedAtNode(node, instance.getCustomer(customer)) ? 1 : 0;
-                    lhs.addTerm(theta[route], a_isr);
+                    boolean isServedAtNode = paths.get(route).isServedAtNode(node, instance.getCustomer(customer));
+                    numberOfNodesServingCustomer += isServedAtNode ? 1 : 0;
                 }
+                lhs.addTerm(theta[route], numberOfNodesServingCustomer);
             }
-            customerServedConstraints[customer] = cplex.addEq(lhs, 1);
+            customerServedConstraints[customer] = cplex.addEq(lhs, 1, "customer_served_" + customer);
         }
     }
 
     private void createNumberOfVehiclesConstraint() throws IloException {
-        IloLinearNumExpr lhs = cplex.linearNumExpr();
-        for (int i = 0; i < paths.size(); i++) {
-            lhs.addTerm(theta[i], 1);
+        IloNumExpr lhs = Utils.getNumArraySum(cplex, theta);
+        if (instance.unusedVehiclesAllowed()) {
+            numberOfVehiclesConstraint = cplex.addLe(lhs, instance.getNumberOfVehicles(), "number_vehicles");
+        } else {
+            numberOfVehiclesConstraint = cplex.addEq(lhs, instance.getNumberOfVehicles(), "number_vehicles");
         }
-        numberOfVehiclesConstraint = cplex.addLe(lhs, instance.getNumberOfVehicles());
     }
 
     private void createObjective() throws IloException {
@@ -70,7 +74,6 @@ public class MasterProblem {
         createNumberOfVehiclesConstraint();
         createObjective();
     }
-
 
     public Solution solveRelaxation() {
         try {
@@ -101,7 +104,6 @@ public class MasterProblem {
         private final double[] visitorDualValues;
         private final double numberOfVehiclesDualValue;
 
-
         private Solution() throws IloException {
             this.status = cplex.getStatus();
             if (isFeasible()) {
@@ -117,11 +119,9 @@ public class MasterProblem {
             return IloCplex.Status.Optimal.equals(this.status) || IloCplex.Status.Feasible.equals(this.status);
         }
 
-
         public double getNumberOfVehiclesDualValue() {
             return numberOfVehiclesDualValue;
         }
-
 
         public double getVisitorDualValue(int constraintIndex) {
             return visitorDualValues[constraintIndex];
@@ -132,7 +132,6 @@ public class MasterProblem {
 
         private final IloCplex.Status status;
         private final double[] primalValues;
-
 
         private IntegerSolution() throws IloException {
             this.status = cplex.getStatus();

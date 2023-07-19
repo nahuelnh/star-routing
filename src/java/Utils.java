@@ -1,3 +1,10 @@
+import ilog.concert.IloException;
+import ilog.concert.IloIntExpr;
+import ilog.concert.IloIntVar;
+import ilog.concert.IloNumExpr;
+import ilog.concert.IloNumVar;
+import ilog.cplex.IloCplex;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -43,5 +50,21 @@ public class Utils {
             throw new RuntimeException(e);
         }
         return ret;
+    }
+
+    public static IloIntExpr getIntArraySum(IloCplex cplex, IloIntVar[] intVarArray) throws IloException {
+        IloIntExpr sum = cplex.linearIntExpr();
+        for (IloIntVar i : intVarArray) {
+            sum = cplex.sum(sum, i);
+        }
+        return sum;
+    }
+
+    public static IloNumExpr getNumArraySum(IloCplex cplex, IloNumVar[] numVarArray) throws IloException {
+        IloNumExpr sum = cplex.linearNumExpr();
+        for (IloNumVar i : numVarArray) {
+            sum = cplex.sum(sum, i);
+        }
+        return sum;
     }
 }
