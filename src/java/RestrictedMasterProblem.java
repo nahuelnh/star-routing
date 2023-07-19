@@ -6,6 +6,7 @@ import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class RestrictedMasterProblem {
@@ -106,13 +107,11 @@ public class RestrictedMasterProblem {
 
         private Solution() throws IloException {
             this.status = cplex.getStatus();
-            if (isFeasible()) {
-                this.visitorDualValues = cplex.getDuals(customerServedConstraints);
-                this.numberOfVehiclesDualValue = cplex.getDual(numberOfVehiclesConstraint);
-            } else {
-                this.visitorDualValues = null;
-                this.numberOfVehiclesDualValue = 0;
+            if (!isFeasible()) {
+                throw new IllegalStateException("Restricted Master Problem is not feasible");
             }
+            this.visitorDualValues = cplex.getDuals(customerServedConstraints);
+            this.numberOfVehiclesDualValue = cplex.getDual(numberOfVehiclesConstraint);
         }
 
         public boolean isFeasible() {

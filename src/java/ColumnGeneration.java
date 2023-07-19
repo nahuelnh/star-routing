@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.List;
 
 class ColumnGeneration {
@@ -8,7 +7,8 @@ class ColumnGeneration {
     private final PricingProblem pricing;
     private final FeasibleSolutionHeuristic heuristic;
 
-    public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem, FeasibleSolutionHeuristic heuristic) {
+    public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
+                            FeasibleSolutionHeuristic heuristic) {
         this.instance = instance;
         this.rmp = rmp;
         this.pricing = pricingProblem;
@@ -16,24 +16,21 @@ class ColumnGeneration {
     }
 
     public static void main(String[] args) {
-        Instance inputInstance = new Instance("instance5");
-        ColumnGeneration columnGeneration = new ColumnGeneration(inputInstance, new RestrictedMasterProblem(inputInstance), new PricingProblem(inputInstance), new FeasibleSolutionHeuristic(inputInstance));
+        Instance inputInstance = new Instance("instance5", true);
+        ColumnGeneration columnGeneration =
+                new ColumnGeneration(inputInstance, new RestrictedMasterProblem(inputInstance),
+                        new PricingProblem(inputInstance), new FeasibleSolutionHeuristic(inputInstance));
         Solution solution = columnGeneration.solve();
         System.out.println(solution);
     }
 
     public Solution solve() {
-        List<ElementaryPath> nuevos = heuristic.run();
-        while (!nuevos.isEmpty()) {
-            rmp.addPaths(nuevos);
+        List<ElementaryPath> newPaths = heuristic.run();
+        while (!newPaths.isEmpty()) {
+            rmp.addPaths(newPaths);
             RestrictedMasterProblem.Solution rmpSolution = rmp.solveRelaxation();
-            if (rmpSolution.isFeasible()) {
-                PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
-                nuevos = pricingSolution.getNegativeReducedCostPaths();
-            } else {
-                System.out.println("Infeasible!!!!");
-                return new Solution(new ArrayList<>());
-            }
+            PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
+            newPaths = pricingSolution.getNegativeReducedCostPaths();
         }
         RestrictedMasterProblem.IntegerSolution solution = rmp.solveInteger();
         return new Solution(solution.getUsedPaths());

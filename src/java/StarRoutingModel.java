@@ -30,7 +30,7 @@ public class StarRoutingModel {
 
     public static void main(String[] args) {
         try {
-            Instance inputInstance = new Instance("instance5");
+            Instance inputInstance = new Instance("instance5", true);
             StarRoutingModel starRoutingModel = new StarRoutingModel(inputInstance);
             starRoutingModel.solve();
         } catch (IloException e) {
@@ -97,14 +97,10 @@ public class StarRoutingModel {
 
     private void createServingConstraints() throws IloException {
         // Every customer is served by exactly one vehicle
-        int K = instance.getNumberOfVehicles();
         int S = instance.getNumberOfCustomers();
         servingConstraint = new IloConstraint[S];
         for (int s = 0; s < S; s++) {
-            IloLinearIntExpr numberOfVehiclesServingS = cplex.linearIntExpr();
-            for (int k = 0; k < K; k++) {
-                numberOfVehiclesServingS.addTerm(y[s][k], 1);
-            }
+            IloIntExpr numberOfVehiclesServingS = Utils.getIntArraySum(cplex, y[s]);
             servingConstraint[s] = cplex.addEq(numberOfVehiclesServingS, 1, "serving_" + s);
         }
     }
@@ -173,7 +169,6 @@ public class StarRoutingModel {
                     for (int neighbor : instance.getNeighbors(currentCustomer)) {
                         timesInNeighborhood.addTerm(x[i][neighbor][k], 1);
                     }
-
                 }
                 visitConstraint[s][k] = cplex.addLe(y[s][k], timesInNeighborhood, "visit_" + s + "_" + k);
             }
@@ -233,11 +228,6 @@ public class StarRoutingModel {
     }
 
     private boolean isVehicleUsed(int k) throws IloException {
-        //        for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
-        //            if (Math.round(cplex.getValue(y[s][k])) == 1) {
-        //                return true;
-        //            }
-        //        }
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
             for (int j = 0; j < instance.getNumberOfNodes(); j++) {
                 if (Math.round(cplex.getValue(x[i][j][k])) == 1) {

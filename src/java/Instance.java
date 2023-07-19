@@ -24,11 +24,11 @@ public class Instance {
     private final List<Integer> customers;
     private final Map<Integer, Set<Integer>> neighbors;
     private final Map<Integer, Integer> demand;
-    private boolean allowUnusedVehicles;
+    private final boolean allowUnusedVehicles;
 
     public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename,
-                    String paramsFilename) {
-        this.allowUnusedVehicles = false;
+                    String paramsFilename, boolean allowUnusedVehicles) {
+        this.allowUnusedVehicles = allowUnusedVehicles;
 
         List<List<Integer>> adjacencyMatrix = Utils.parseIntegerMatrix(getFullPath(instanceName, graphFilename));
         this.numberOfNodes = getNumberOfNodes(adjacencyMatrix);
@@ -47,7 +47,6 @@ public class Instance {
         this.neighbors = createNeighborsMap(neighbors, this.customers);
 
         checkRep();
-
         //        System.out.println("Demand: " + this.demand);
         //        System.out.println("Neighbors: " + this.neighbors);
         //        System.out.println("Customer Set: " + this.customers);
@@ -56,7 +55,12 @@ public class Instance {
 
     public Instance(String instanceName) {
         this(instanceName, DEFAULT_GRAPH_FILENAME, DEFAULT_NEIGHBORS_FILENAME, DEFAULT_PACKAGES_FILENAME,
-                DEFAULT_PARAMS_FILENAME);
+                DEFAULT_PARAMS_FILENAME, false);
+    }
+
+    public Instance(String instanceName, boolean allowUnusedVehicles) {
+        this(instanceName, DEFAULT_GRAPH_FILENAME, DEFAULT_NEIGHBORS_FILENAME, DEFAULT_PACKAGES_FILENAME,
+                DEFAULT_PARAMS_FILENAME, allowUnusedVehicles);
     }
 
     private static String getFullPath(String instance, String filename) {
@@ -124,10 +128,6 @@ public class Instance {
             }
         }
         return neighbors;
-    }
-
-    public void allowUnusedVehicles() {
-        allowUnusedVehicles = true;
     }
 
     private void checkRep() {

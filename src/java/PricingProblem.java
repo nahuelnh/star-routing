@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class PricingProblem {
 
-    private static final double EPSILON = 1e6;
+    private static final double EPSILON = 1e-6;
     private final Instance instance;
     private IloCplex cplex;
     private IloIntVar[][] x;
@@ -29,9 +29,9 @@ public class PricingProblem {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
-        x = new IloIntVar[N][S];
+        x = new IloIntVar[N][S + 1];
         for (int i = 0; i < N; i++) {
-            for (int j = 0; j < S; j++) {
+            for (int j = 0; j < S + 1; j++) {
                 x[i][j] = cplex.boolVar("x_" + i + "_" + j);
             }
         }
@@ -57,11 +57,13 @@ public class PricingProblem {
     private void createConstraints() throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
+        int SExtended = instance.getNumberOfCustomers() + 1;
+        int s0 = instance.getNumberOfCustomers();
 
         // First constraint
         for (int i = 0; i < N; i++) {
             IloIntExpr lhs = Utils.getIntArraySum(cplex, x[i]);
-            IloIntExpr rhs = cplex.prod(z[i], S);
+            IloIntExpr rhs = cplex.prod(z[i], SExtended);
             cplex.addLe(lhs, rhs, "z_consistent_" + i);
         }
 
@@ -97,7 +99,14 @@ public class PricingProblem {
         }
         cplex.addLe(lhs, instance.getCapacity(), "capacity");
 
-        //Seventh constraint
+        // Sixth Constraint
+        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+            IloIntExpr numberOfCustomersServed = Utils.getIntArraySum(cplex, x[i]);
+            IloIntExpr rhs = cplex.sum(SExtended, cplex.prod(-SExtended, x[i][s0]));
+            cplex.addLe(numberOfCustomersServed, rhs, "non_existing_customer_" + i);
+        }
+
+        // Seventh constraint
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 cplex.addLe(cplex.sum(u[i][j], 1), cplex.sum(z[i], z[j]), "u_consistent_" + i + "_" + j);
@@ -143,8 +152,8 @@ public class PricingProblem {
                 secondTerm.addTerm(x[i][s], rmpSolution.getVisitorDualValue(s));
             }
         }
-        IloNumExpr objective = cplex.sum(firstTerm, secondTerm);
-        objective = cplex.sum(objective, -rmpSolution.getNumberOfVehiclesDualValue());
+        IloNumExpr objective = cplex.diff(firstTerm, secondTerm);
+        objective = cplex.diff(objective, rmpSolution.getNumberOfVehiclesDualValue());
         cplex.addMinimize(objective);
     }
 
@@ -181,7 +190,28 @@ public class PricingProblem {
 
         private boolean hasNegativeReducedCostPaths() {
             return (IloCplex.Status.Optimal.equals(status) || IloCplex.Status.Feasible.equals(status)) &&
-                    objectiveValue < EPSILON;
+                    objectiveValue < -EPSILON;
+        }
+
+        private ElementaryPath getPathFromFeasibleSolution(int solutionIndex) throws IloException {
+            int s0 = instance.getNumberOfCustomers();
+            ElementaryPath elementaryPath = ElementaryPath.emptyPath();
+            int lastNode = instance.getDepot();
+            for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+                Set<Integer> customersVisited = new HashSet<>();
+                for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
+                    if (Math.round(cplex.getValue(x[i][s], solutionIndex)) == 1) {
+                        customersVisited.add(s);
+                    }
+                }
+                if (!customersVisited.isEmpty() || Math.round(cplex.getValue(x[i][s0], solutionIndex)) == 1) {
+                    elementaryPath.addNode(i, customersVisited, instance.getEdgeWeight(lastNode, i));
+                    lastNode = i;
+                }
+            }
+            elementaryPath.addNode(instance.getDepot(), new HashSet<>(),
+                    instance.getEdgeWeight(lastNode, instance.getDepot()));
+            return elementaryPath;
         }
 
         private List<ElementaryPath> getRoutesFromSolution() throws IloException {
@@ -189,25 +219,9 @@ public class PricingProblem {
             if (!hasNegativeReducedCostPaths()) {
                 return ret;
             }
-            for (int solIdx = 0; solIdx < cplex.getSolnPoolNsolns(); solIdx++) {
-                if (cplex.getObjValue(solIdx) < -EPSILON) {
-                    ElementaryPath elementaryPath = ElementaryPath.emptyPath();
-                    int lastNode = instance.getDepot();
-                    for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-                        Set<Integer> customersVisited = new HashSet<>();
-                        for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
-                            if (Math.round(cplex.getValue(x[i][s], solIdx)) == 1) {
-                                customersVisited.add(s);
-                            }
-                        }
-                        if (!customersVisited.isEmpty()) {
-                            elementaryPath.addNode(i, customersVisited, instance.getEdgeWeight(lastNode, i));
-                            lastNode = i;
-                        }
-                    }
-                    elementaryPath.addNode(instance.getDepot(), new HashSet<>(),
-                            instance.getEdgeWeight(lastNode, instance.getDepot()));
-                    ret.add(elementaryPath);
+            for (int solutionIndex = 0; solutionIndex < cplex.getSolnPoolNsolns(); solutionIndex++) {
+                if (cplex.getObjValue(solutionIndex) < -EPSILON) {
+                    ret.add(getPathFromFeasibleSolution(solutionIndex));
                 }
             }
             return ret;
