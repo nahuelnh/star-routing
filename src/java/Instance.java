@@ -167,8 +167,8 @@ public class Instance {
         return customers.get(index);
     }
 
-    public Set<Integer> getNeighbors(int node) {
-        return neighbors.get(node);
+    public Set<Integer> getNeighbors(int customer) {
+        return neighbors.get(customer);
     }
 
     public Integer getDemand(int customer) {

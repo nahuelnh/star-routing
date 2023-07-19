@@ -54,7 +54,6 @@ public class MasterProblem {
         numberOfVehiclesConstraint = cplex.addLe(lhs, instance.getNumberOfVehicles());
     }
 
-
     private void createObjective() throws IloException {
         IloLinearNumExpr objective = cplex.linearNumExpr();
         for (int i = 0; i < paths.size(); i++) {

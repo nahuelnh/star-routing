@@ -16,7 +16,7 @@ class ColumnGeneration {
     }
 
     public static void main(String[] args) {
-        Instance inputInstance = new Instance("instance2");
+        Instance inputInstance = new Instance("instance3");
         ColumnGeneration columnGeneration = new ColumnGeneration(inputInstance, new MasterProblem(inputInstance), new PricingProblem(inputInstance), new FeasibleSolutionHeuristic(inputInstance));
         Solution solution = columnGeneration.solve();
         System.out.println(solution);
