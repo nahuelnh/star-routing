@@ -1,0 +1,3 @@
+vehicles 6
+depot 1
+capacity 100

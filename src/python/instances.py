@@ -3,7 +3,6 @@ from collections import defaultdict
 
 random.seed(159753)
 
-
 class Instance:
     def __init__(
             self, name, number_of_vehicles, depot, capacity, graph, packages, neighbors
@@ -70,8 +69,8 @@ def larger_instance():
             3: {1: 1, 4: 100, 6: 1},
             4: {1: 50, 3: 100},
             5: {8: 1, 3: 1, 2: 1, 4: 1, 1: 1},
-            6: {7: 1, 1: 1, 4: 200, 1: 200, 3: 200},
-            7: {6: 1, 1: 100, 4: 250, 1: 250, 3: 250},
+            6: {7: 1, 4: 200, 1: 200, 3: 200},
+            7: {6: 1, 1: 100, 4: 250, 3: 250},
             8: {1: 50, 3: 100, 2: 500, 4: 500, 5: 500, 6: 500},
         },
         packages={
@@ -83,19 +82,19 @@ def larger_instance():
     )
 
 
-def random_instance(N):
+def random_instance(N, name):
     graph = defaultdict(dict)
     for i in range(N):
         for j in range(N):
             graph[i + 1][j + 1] = random.randint(1, 100)
     return Instance(
-        name="4",
+        name=name,
         number_of_vehicles=int(N / 5) + 2,
         depot=1,
         capacity=100,
         graph=graph,
-        packages={i: 20 for i in range(1, N + 1)},
-        neighbors={2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, N - 1: N},
+        packages={i: 20 for i in range(2, N + 1)},
+        neighbors={3: 2, 4: 2, 5: 2, 6: 2, 7: 2, N - 1: N},
     )
 
 

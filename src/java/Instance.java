@@ -25,10 +25,11 @@ public class Instance {
     private final Map<Integer, Set<Integer>> neighbors;
     private final Map<Integer, Integer> demand;
 
-    public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename, String paramsFilename) {
+    public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename,
+                    String paramsFilename) {
         List<List<Integer>> adjacencyMatrix = Utils.parseIntegerMatrix(getFullPath(instanceName, graphFilename));
         this.numberOfNodes = getNumberOfNodes(adjacencyMatrix);
-        this.graphWeights = createWeightsMatrix(adjacencyMatrix);
+        this.graphWeights = createWeightsMatrix(adjacencyMatrix, numberOfNodes);
 
         Map<String, Integer> parameterValues = Utils.parseStringToIntMap(getFullPath(instanceName, paramsFilename));
         this.capacity = parameterValues.get(CAPACITY_STRING);
@@ -44,14 +45,15 @@ public class Instance {
 
         checkRep();
 
-        System.out.println("Demand: " + this.demand);
-        System.out.println("Neighbors: " + this.neighbors);
-        System.out.println("Customer Set: " + this.customers);
-        System.out.println("Weights: " + this.graphWeights);
+        //        System.out.println("Demand: " + this.demand);
+        //        System.out.println("Neighbors: " + this.neighbors);
+        //        System.out.println("Customer Set: " + this.customers);
+        //        System.out.println("Weights: " + this.graphWeights);
     }
 
     public Instance(String instanceName) {
-        this(instanceName, DEFAULT_GRAPH_FILENAME, DEFAULT_NEIGHBORS_FILENAME, DEFAULT_PACKAGES_FILENAME, DEFAULT_PARAMS_FILENAME);
+        this(instanceName, DEFAULT_GRAPH_FILENAME, DEFAULT_NEIGHBORS_FILENAME, DEFAULT_PACKAGES_FILENAME,
+                DEFAULT_PARAMS_FILENAME);
     }
 
     private static String getFullPath(String instance, String filename) {
@@ -67,8 +69,7 @@ public class Instance {
         return maxNodeIndexFound + 1;
     }
 
-    private static List<List<Integer>> createWeightsMatrix(List<List<Integer>> adjacencyMatrix) {
-        int size = adjacencyMatrix.size();
+    private static List<List<Integer>> createWeightsMatrix(List<List<Integer>> adjacencyMatrix, int size) {
         List<List<Integer>> weightsMatrix = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             weightsMatrix.add(new ArrayList<>(Collections.nCopies(size, Integer.MAX_VALUE)));
@@ -103,7 +104,8 @@ public class Instance {
         return customers.stream().distinct().sorted().toList();
     }
 
-    private static Map<Integer, Set<Integer>> createNeighborsMap(List<List<Integer>> customersAndDemand, List<Integer> customers) {
+    private static Map<Integer, Set<Integer>> createNeighborsMap(List<List<Integer>> customersAndDemand,
+                                                                 List<Integer> customers) {
         Map<Integer, Set<Integer>> neighbors = new HashMap<>();
         for (int customer : customers) {
             neighbors.put(customer, new HashSet<>());

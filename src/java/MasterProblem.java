@@ -10,7 +10,7 @@ import java.util.List;
 public class MasterProblem {
 
     private final Instance instance;
-    List<ElementaryPath> paths;
+    private final List<ElementaryPath> paths;
     private IloCplex cplex;
     private IloNumVar[] theta;
     private IloRange[] customerServedConstraints;
@@ -64,6 +64,7 @@ public class MasterProblem {
 
     private void buildModel(boolean integral) throws IloException {
         cplex = new IloCplex();
+        cplex.setOut(null);
         createVariables(integral);
         createCustomerServedConstraints();
         createNumberOfVehiclesConstraint();

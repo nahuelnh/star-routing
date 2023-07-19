@@ -21,11 +21,9 @@ public class PricingProblem {
     private IloIntVar[][] u;
     private IloIntVar[] v;
 
-
     PricingProblem(Instance instance) {
         this.instance = instance;
     }
-
 
     private void createVariables() throws IloException {
         int N = instance.getNumberOfNodes();
@@ -59,7 +57,6 @@ public class PricingProblem {
     private void createConstraints() throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
-
 
         // First constraint
         for (int i = 0; i < N; i++) {
@@ -154,10 +151,10 @@ public class PricingProblem {
         cplex.addMinimize(objective);
     }
 
-
     Solution solve(MasterProblem.Solution rmpSolution) {
         try {
             cplex = new IloCplex();
+            cplex.setOut(null);
             createVariables();
             createConstraints();
             createObjective(rmpSolution);
@@ -186,7 +183,8 @@ public class PricingProblem {
         }
 
         private boolean hasNegativeReducedCostPaths() {
-            return (IloCplex.Status.Optimal.equals(status) || IloCplex.Status.Feasible.equals(status)) && objectiveValue < EPSILON;
+            return (IloCplex.Status.Optimal.equals(status) || IloCplex.Status.Feasible.equals(status)) &&
+                    objectiveValue < EPSILON;
         }
 
         private List<ElementaryPath> getRoutesFromSolution() throws IloException {
@@ -210,7 +208,9 @@ public class PricingProblem {
                             lastNode = i;
                         }
                     }
-                    elementaryPath.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+                    elementaryPath.addNode(instance.getDepot(), new HashSet<>(),
+                            instance.getEdgeWeight(lastNode, instance.getDepot()));
+                    ret.add(elementaryPath);
                 }
             }
             return ret;

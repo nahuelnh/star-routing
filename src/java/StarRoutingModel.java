@@ -30,7 +30,7 @@ public class StarRoutingModel {
 
     public static void main(String[] args) {
         try {
-            Instance inputInstance = new Instance("instance3");
+            Instance inputInstance = new Instance("instance5");
             StarRoutingModel starRoutingModel = new StarRoutingModel(inputInstance);
             starRoutingModel.solve();
         } catch (IloException e) {

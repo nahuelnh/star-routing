@@ -12,7 +12,8 @@ INSTANCES = [
     simple_instance(),
     two_vehicle_instance(),
     larger_instance(),
-    random_instance(40),
+    random_instance(40, "4"),
+    random_instance(20, "5")
 ]
 
 

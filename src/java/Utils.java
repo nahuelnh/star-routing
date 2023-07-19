@@ -11,7 +11,6 @@ public class Utils {
 
     private static final String DELIMITER = " ";
 
-
     private static List<Integer> readIntegerLine(String line) {
         return Arrays.stream(line.split(" ")).map(Integer::valueOf).toList();
     }
