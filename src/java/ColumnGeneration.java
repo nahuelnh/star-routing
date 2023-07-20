@@ -16,10 +16,10 @@ class ColumnGeneration {
     }
 
     public static void main(String[] args) {
-        Instance inputInstance = new Instance("instance5", true);
+        Instance instance = new Instance("instance_rptd_path", true);
         ColumnGeneration columnGeneration =
-                new ColumnGeneration(inputInstance, new RestrictedMasterProblem(inputInstance),
-                        new PricingProblem(inputInstance), new FeasibleSolutionHeuristic(inputInstance));
+                new ColumnGeneration(instance, new RestrictedMasterProblem(instance),
+                        new PricingProblem(instance), new FeasibleSolutionHeuristic(instance));
         Solution solution = columnGeneration.solve();
         System.out.println(solution);
     }

@@ -30,24 +30,21 @@ public class StarRoutingModel {
 
     public static void main(String[] args) {
         try {
-            Instance inputInstance = new Instance("instance5", true);
-            StarRoutingModel starRoutingModel = new StarRoutingModel(inputInstance);
+            Instance instance = new Instance("instance_rptd_path", true);
+            StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
             starRoutingModel.solve();
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");
         }
     }
 
-    private void solve() throws IloException {
+    public Solution solve() throws IloException {
         buildModel();
-        // solve the model and display the solution if one was found
-        if (cplex.solve()) {
-            cplex.writeSolution("src/resources/star_routing_model.sol");
-            System.out.println("Solution status = " + cplex.getStatus());
-            System.out.println("Solution value  = " + cplex.getObjValue());
-            System.out.println(new Solution(getPathsFromSolution()));
-        }
+        cplex.solve();
+        cplex.writeSolution("src/resources/star_routing_model.sol");
+        Solution solution = new Solution(getPathsFromSolution());
         cplex.end();
+        return solution;
     }
 
     private void createVariables() throws IloException {

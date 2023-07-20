@@ -10,7 +10,7 @@ public class Instance {
 
     private static final String DEFAULT_DIR = "src/resources/";
     private static final String DEFAULT_GRAPH_FILENAME = "graph.txt";
-    private static final String DEFAULT_NEIGHBORS_FILENAME = "customers.txt";
+    private static final String DEFAULT_NEIGHBORS_FILENAME = "neighbors.txt";
     private static final String DEFAULT_PACKAGES_FILENAME = "packages.txt";
     private static final String DEFAULT_PARAMS_FILENAME = "params.txt";
     private static final String CAPACITY_STRING = "capacity";
@@ -85,7 +85,7 @@ public class Instance {
             int i = line.get(0) - 1;
             int j = line.get(1) - 1;
             int weight = line.get(2);
-            if (i != j) {
+            if (i != j && weight != -1) {
                 weightsMatrix.get(i).set(j, weight);
             }
         }

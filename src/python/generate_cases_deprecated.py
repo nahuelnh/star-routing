@@ -1,24 +1,15 @@
 import os
+from instances import Instance, simple_instance, get_base_grid_instance
 
-from instances import (
-    Instance,
-    simple_instance,
-    two_vehicle_instance,
-    larger_instance,
-    random_instance,
-)
 
 INSTANCES = [
-    simple_instance(),
-    two_vehicle_instance(),
-    larger_instance(),
-    random_instance(40, "4"),
-    random_instance(20, "5")
-]
+    simple_instance(), 
+    get_base_grid_instance(6, 6, 1),
+    ]
 
 
 def dir_naming_convention(instance_name):
-    return "../resources/instance{}/".format(instance_name)
+    return "src/resources/instance{}/".format(instance_name)
 
 
 def generate_cases():
@@ -37,14 +28,19 @@ def write_to_files(instance: Instance):
         params_file.write("capacity " + str(instance.capacity) + "\n")
 
     with open(output_dir + "packages.txt", "w") as packages_file:
-        for customer in instance.packages:
+        for idx, customer in enumerate(instance.packages):
+            edge_start, edge_end = customer[0], customer[1]
             package_weight = instance.packages[customer]
-            packages_file.write(str(customer) + " " + str(package_weight) + "\n")
-
-    with open(output_dir + "customers.txt", "w") as customers_file:
-        for customer in instance.neighbors:
-            neighbor = instance.neighbors[customer]
-            customers_file.write(str(customer) + " " + str(neighbor) + "\n")
+            packages_file.write(
+                str(idx+1)
+                + " "
+                + str(edge_start)
+                + " "
+                + str(edge_end)
+                + " "
+                + str(package_weight)
+                + "\n"
+            )
 
     with open(output_dir + "graph.txt", "w") as graph_file:
         number_of_vertices = max(v for v in instance.graph.keys())
@@ -53,8 +49,8 @@ def write_to_files(instance: Instance):
                 weight_or_zero = (
                     instance.graph[start_node][end_node]
                     if start_node in instance.graph
-                       and end_node in instance.graph[start_node]
-                    else 10000
+                    and end_node in instance.graph[start_node]
+                    else 0
                 )
                 graph_file.write(
                     str(start_node)

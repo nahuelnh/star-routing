@@ -1,7 +1,8 @@
+import collections
 import random
-from collections import defaultdict
 
 random.seed(159753)
+
 
 class Instance:
     def __init__(
@@ -11,14 +12,14 @@ class Instance:
         self.number_of_vehicles = number_of_vehicles
         self.depot = depot
         self.capacity = capacity
-        self.graph = graph  # Adjacency List with Weights
+        self.graph = graph  # Adjacency Matrix of weights
         self.packages = packages
-        self.neighbors = neighbors  # Non trivial neighbors
+        self.neighbors = neighbors  # Non-trivial neighbors. Map customer -> neighborhood
 
 
 def simple_instance():
     return Instance(
-        name="1",
+        name="simple",
         number_of_vehicles=1,
         depot=1,
         capacity=100,
@@ -37,9 +38,9 @@ def simple_instance():
 
 
 def two_vehicle_instance():
-    # Optimal solution achived using only one car
+    # Optimal solution achieved using only one car
     return Instance(
-        name="2",
+        name="2v1",
         number_of_vehicles=2,
         depot=1,
         capacity=100,
@@ -53,13 +54,55 @@ def two_vehicle_instance():
             2: 20,
             3: 20,
         },
-        neighbors={2: 3},
+        neighbors={2: {3}},
+    )
+
+
+def other_two_vehicle_instance():
+    # Optimal solution achieved using both cars
+    return Instance(
+        name="2v2",
+        number_of_vehicles=2,
+        depot=1,
+        capacity=20,
+        graph={
+            1: {2: 1, 3: 1},
+            2: {1: 1, 3: 1},
+            3: {1: 1, 4: 2},
+            4: {1: 50, 3: 2},
+        },
+        packages={
+            2: 20,
+            3: 20,
+        },
+        neighbors={2: {3}},
+    )
+
+
+def all_vehicles_do_the_same_instance():
+    # Optimal solution achieved using both cars doing the same route
+    return Instance(
+        name="rptd_path",
+        number_of_vehicles=2,
+        depot=1,
+        capacity=30,
+        graph={
+            1: {2: 1, 3: 100, 4: 50},
+            2: {1: 1, 3: 100, 4: 100},
+            3: {1: 100, 2: 100, 4: 50},
+            4: {1: 100, 2: 100, 3: 100},
+        },
+        packages={
+            3: 20,
+            4: 20,
+        },
+        neighbors={3: {2}, 4: {2}},
     )
 
 
 def larger_instance():
     return Instance(
-        name="3",
+        name="large",
         number_of_vehicles=3,
         depot=1,
         capacity=100,
@@ -78,23 +121,47 @@ def larger_instance():
             3: 20,
             7: 90,
         },
-        neighbors={2: 3, 7: 6},
+        neighbors={2: {3}, 7: {6}},
     )
 
 
-def random_instance(N, name):
-    graph = defaultdict(dict)
-    for i in range(N):
-        for j in range(N):
-            graph[i + 1][j + 1] = random.randint(1, 100)
+def random_instance(size):
+    graph = collections.defaultdict(dict)
+    neighbors = collections.defaultdict(set)
+    for i in range(size):
+        for j in range(size):
+            random_int = random.randint(1, 100)
+            graph[i + 1][j + 1] = random_int
+            if random_int < 5 and i >= 1:
+                neighbors[i + 1].add(j + 1)
     return Instance(
-        name=name,
-        number_of_vehicles=int(N / 5) + 2,
+        name="random_" + str(size),
+        number_of_vehicles=int(size / 5) + 2,
         depot=1,
         capacity=100,
         graph=graph,
-        packages={i: 20 for i in range(2, N + 1)},
-        neighbors={3: 2, 4: 2, 5: 2, 6: 2, 7: 2, N - 1: N},
+        packages={i: 20 for i in range(2, size + 1)},
+        neighbors=neighbors
+    )
+
+
+def random_instance_many_neighbors(size):
+    graph = collections.defaultdict(dict)
+    neighbors = collections.defaultdict(set)
+    for i in range(size):
+        for j in range(size):
+            random_int = random.randint(1, 100)
+            graph[i + 1][j + 1] = random_int
+            if _get_bernoulli_random_value(0.5) and i >= 1:
+                neighbors[i + 1].add(j + 1)
+    return Instance(
+        name="neighbors_" + str(size),
+        number_of_vehicles=int(size / 5) + 2,
+        depot=1,
+        capacity=100,
+        graph=graph,
+        packages={i: 20 for i in range(2, size + 1)},
+        neighbors=neighbors
     )
 
 
@@ -111,8 +178,8 @@ def _get_node_id(x, y, rows, cols):
     return x * (cols + 1) + y + 1
 
 
-def _get_grid(rows, cols):
-    graph = defaultdict(dict)
+def _get_grid_graph(rows, cols):
+    graph = collections.defaultdict(dict)
     for i in range(rows):
         for j in range(cols):
             current_node = i * cols + j + 1
@@ -127,14 +194,18 @@ def _get_grid(rows, cols):
     return graph
 
 
-def _get_random_customers(rows, cols, prob):
+def _get_bernoulli_random_value(prob):
+    return random.choices([0, 1], weights=[1 - prob, prob])[0]
+
+
+def _get_random_grid_customers(rows, cols, prob):
     customers = {}
     for i in range(rows):
         for j in range(cols):
-            bernoulli = random.choices([0, 1], weights=[1 - prob, prob])[0]
+            bernoulli = _get_bernoulli_random_value(prob)
             current_node = i * cols + j + 1
             if bernoulli == 1 and j % cols != cols - 1:
-                customers[(current_node, current_node + 1)] = 10
+                customers[current_node] = 10
     return customers
 
 
@@ -144,59 +215,16 @@ def get_base_grid_instance(rows, cols, vehicles, customer_prob=0.1, capacity=0):
     M rows, N columns
     M x N nodes
     """
-    graph = _get_grid(rows, cols)
-    packages = _get_random_customers(rows, cols, customer_prob)
+    graph = _get_grid_graph(rows, cols)
+    packages = _get_random_grid_customers(rows, cols, customer_prob)
     if not capacity:
         capacity = len(packages) * 10
     return Instance(
-        name="2",
+        name="_grid_" + str(rows) + "_" + str(cols),
         number_of_vehicles=vehicles,
         depot=1,
         capacity=capacity,
         graph=graph,
         packages=packages,
-    )
-
-
-def tanslate_from_tagliavini(instance_name, path_to_src):
-    """
-    translate instance from the format in Tagliavini's Msc Thesis
-    to a format readable by this script
-    """
-
-    packages = {}
-    with open(path_to_src, "r") as source_file:
-        rows, cols, _ = source_file.readline().split(" ")
-        rows = int(rows)
-        cols = int(cols)
-        for line in source_file:
-            x1, y1, x2, y2 = line.split(" ")
-            x1 = int(x1)
-            x2 = int(x2)
-            y1 = int(y1)
-            y2 = int(y2)
-            edge = 0
-            if x1 < x2 and y1 == y2:
-                edge = _get_horizontal_edge_id(x1, y1, rows, cols)
-            if x2 < x1 and y1 == y2:
-                edge = _get_horizontal_edge_id(x2, y2, rows, cols)
-            if y1 < y2 and x1 == x2:
-                edge = _get_vertical_edge_id(x1, y1, rows, cols)
-            if y2 < y1 and x1 == x2:
-                edge = _get_vertical_edge_id(x2, y2, rows, cols)
-            if edge:
-                packages[edge] = 1
-
-    graph = _get_grid(rows, cols)
-    total_edges = (rows + 1) * cols + rows * (cols + 1)
-    total_nodes = (rows + 1) * (cols + 1)
-    return Instance(
-        name=instance_name,
-        number_of_vehicles=2,
-        first=1,
-        last=total_nodes,
-        capacity=total_edges,
-        graph=graph,
-        packages=packages,
-        weights={i: 1 for i in range(1, total_edges + 1)},
+        neighbors={}
     )
