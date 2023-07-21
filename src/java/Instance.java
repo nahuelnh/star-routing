@@ -47,10 +47,6 @@ public class Instance {
         this.neighbors = createNeighborsMap(neighbors, this.customers);
 
         checkRep();
-        //        System.out.println("Demand: " + this.demand);
-        //        System.out.println("Neighbors: " + this.neighbors);
-        //        System.out.println("Customer Set: " + this.customers);
-        //        System.out.println("Weights: " + this.graphWeights);
     }
 
     public Instance(String instanceName) {

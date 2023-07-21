@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 public class SecondPricingProblem implements PricingProblem {
     private static final double EPSILON = 1e-6;
@@ -19,8 +18,6 @@ public class SecondPricingProblem implements PricingProblem {
     private IloIntVar[][] x;
     private IloIntVar[] y;
     private IloIntVar[] u;
-
-    private IloIntExpr[] visitConstraint;
 
     public SecondPricingProblem(Instance instance) {
         this.instance = instance;
@@ -44,7 +41,7 @@ public class SecondPricingProblem implements PricingProblem {
 
         u = new IloIntVar[N];
         for (int i = 0; i < N; i++) {
-            u[i] = cplex.boolVar("u_" + i);
+            u[i] = cplex.intVar(0, N - 1, "u_" + i);
         }
     }
 
@@ -69,7 +66,6 @@ public class SecondPricingProblem implements PricingProblem {
 
     private void createVisitConstraints() throws IloException {
         // A vehicle can only serve visited customers
-        visitConstraint = new IloIntExpr[instance.getNumberOfCustomers()];
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             int currentCustomer = instance.getCustomer(s);
             IloIntExpr rhs = cplex.linearIntExpr();
@@ -78,7 +74,6 @@ public class SecondPricingProblem implements PricingProblem {
                     rhs = cplex.sum(rhs, x[i][neighbor]);
                 }
             }
-            visitConstraint[s] = rhs;
             cplex.addLe(y[s], rhs, "visit_" + s);
         }
     }
@@ -149,31 +144,31 @@ public class SecondPricingProblem implements PricingProblem {
             cplex.solve();
             PricingProblem.Solution solution = new PricingProblem.Solution(cplex, getRoutesFromSolution());
 
-//            for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-//                for (int j = 0; j < instance.getNumberOfNodes(); j++) {
-//                    if (Math.round(cplex.getValue(x[i][j])) == 1) {
-//                        System.out.println(x[i][j]);
-//                    }
-//                }
-//            }
-//
-//            System.out.println("Obj: " + cplex.getObjValue());
-//            int reducedCost = getPathFromFeasibleSolution(0).getCost();
-//            for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
-//                if (Math.round(cplex.getValue(y[s])) == 1) {
-//                    System.out.println(visitConstraint[s]);
-//                    System.out.println(y[s] + " " + instance.getCustomer(s) + " " +
-//                            instance.getNeighbors(instance.getCustomer(s)));
-//                }
-//                reducedCost -= rmpSolution.getVisitorDualValue(s) * Math.round(cplex.getValue(y[s]));
-//            }
-//            reducedCost -= rmpSolution.getNumberOfVehiclesDualValue();
-//            System.out.println("RC: " + reducedCost);
-//            System.out.println("Cost: " + getPathFromFeasibleSolution(0).getCost() + " dual: " +
-//                    rmpSolution.getNumberOfVehiclesDualValue() + " duals: " +
-//                    IntStream.range(0, instance.getNumberOfCustomers()).mapToObj(rmpSolution::getVisitorDualValue)
-//                            .toList());
-//            System.out.println();
+            //            for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+            //                for (int j = 0; j < instance.getNumberOfNodes(); j++) {
+            //                    if (Math.round(cplex.getValue(x[i][j])) == 1) {
+            //                        System.out.println(x[i][j]);
+            //                    }
+            //                }
+            //            }
+            //
+            //            System.out.println("Obj: " + cplex.getObjValue());
+            //            int reducedCost = getPathFromFeasibleSolution(0).getCost();
+            //            for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
+            //                if (Math.round(cplex.getValue(y[s])) == 1) {
+            //                    System.out.println(visitConstraint[s]);
+            //                    System.out.println(y[s] + " " + instance.getCustomer(s) + " " +
+            //                            instance.getNeighbors(instance.getCustomer(s)));
+            //                }
+            //                reducedCost -= rmpSolution.getVisitorDualValue(s) * Math.round(cplex.getValue(y[s]));
+            //            }
+            //            reducedCost -= rmpSolution.getNumberOfVehiclesDualValue();
+            //            System.out.println("RC: " + reducedCost);
+            //            System.out.println("Cost: " + getPathFromFeasibleSolution(0).getCost() + " dual: " +
+            //                    rmpSolution.getNumberOfVehiclesDualValue() + " duals: " +
+            //                    IntStream.range(0, instance.getNumberOfCustomers()).mapToObj(rmpSolution::getVisitorDualValue)
+            //                            .toList());
+            //            System.out.println();
 
             cplex.end();
             return solution;

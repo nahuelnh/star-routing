@@ -179,8 +179,7 @@ public class FirstPricingProblem implements PricingProblem {
     }
 
     private boolean isFeasible() throws IloException {
-        return IloCplex.Status.Optimal.equals(cplex.getStatus()) ||
-                IloCplex.Status.Feasible.equals(cplex.getStatus());
+        return IloCplex.Status.Optimal.equals(cplex.getStatus()) || IloCplex.Status.Feasible.equals(cplex.getStatus());
     }
 
     private int getNextNodeInPath(int from, int solutionIndex) throws IloException {

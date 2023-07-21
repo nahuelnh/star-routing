@@ -7,10 +7,10 @@ public class Main {
         runInstance("instance_2v2");
         runInstance("instance_large");
         runInstance("instance_simple");
-        runInstance("instance_neighbors_20");
-        runInstance("instance_neighbors_40");
-        runInstance("instance_random_20");
-        runInstance("instance_random_40");
+        runInstance("instance_neighbors_10");
+        runInstance("instance_neighbors_12");
+        runInstance("instance_random_10");
+        runInstance("instance_random_12");
 
     }
 

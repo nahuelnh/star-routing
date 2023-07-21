@@ -103,7 +103,7 @@ public class RestrictedMasterProblem {
         private final double[] visitorDualValues;
         private final double numberOfVehiclesDualValue;
 
-        private Solution(IloCplex cplex, IloRange[] customerServedConstraints, IloRange numberOfVehiclesConstraint)
+        public Solution(IloCplex cplex, IloRange[] customerServedConstraints, IloRange numberOfVehiclesConstraint)
                 throws IloException {
             this.status = cplex.getStatus();
             if (!isFeasible()) {

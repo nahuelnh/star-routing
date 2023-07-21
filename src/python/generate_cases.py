@@ -17,10 +17,10 @@ INSTANCES = [
     other_two_vehicle_instance(),
     all_vehicles_do_the_same_instance(),
     larger_instance(),
-    random_instance(40),
-    random_instance(20),
-    random_instance_many_neighbors(20),
-    random_instance_many_neighbors(40),
+    random_instance(10),
+    random_instance(12),
+    random_instance_many_neighbors(10),
+    random_instance_many_neighbors(12),
 ]
 
 
