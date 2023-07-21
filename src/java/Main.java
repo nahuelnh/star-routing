@@ -7,6 +7,10 @@ public class Main {
         runInstance("instance_2v2");
         runInstance("instance_large");
         runInstance("instance_simple");
+        runInstance("instance_neighbors_20");
+        runInstance("instance_neighbors_40");
+        runInstance("instance_random_20");
+        runInstance("instance_random_40");
 
     }
 
@@ -16,9 +20,8 @@ public class Main {
             Instance instance = new Instance(instanceName, true);
             StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
             System.out.println(starRoutingModel.solve());
-            ColumnGeneration columnGeneration =
-                    new ColumnGeneration(instance, new RestrictedMasterProblem(instance), new PricingProblem(instance),
-                            new FeasibleSolutionHeuristic(instance));
+            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new RestrictedMasterProblem(instance),
+                    new SecondPricingProblem(instance), new FeasibleSolutionHeuristic(instance));
             System.out.println(columnGeneration.solve());
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");

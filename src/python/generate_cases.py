@@ -60,12 +60,12 @@ def _write_graph_file(instance: Instance, output_dir: str):
         number_of_vertices = max(v for v in instance.graph.keys())
         for start_node in range(1, number_of_vertices + 1):
             for end_node in range(1, number_of_vertices + 1):
-                weight_or_negative = (
+                weight_or_large_n = (
                     instance.graph[start_node][end_node]
                     if start_node in instance.graph and end_node in instance.graph[start_node]
-                    else -1
+                    else 10000
                 )
-                graph_file.write(str(start_node) + " " + str(end_node) + " " + str(weight_or_negative) + "\n")
+                graph_file.write(str(start_node) + " " + str(end_node) + " " + str(weight_or_large_n) + "\n")
 
 
 def write_to_files(instance: Instance):

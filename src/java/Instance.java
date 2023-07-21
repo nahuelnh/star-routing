@@ -85,7 +85,7 @@ public class Instance {
             int i = line.get(0) - 1;
             int j = line.get(1) - 1;
             int weight = line.get(2);
-            if (i != j && weight != -1) {
+            if (i != j) {
                 weightsMatrix.get(i).set(j, weight);
             }
         }
@@ -186,5 +186,12 @@ public class Instance {
 
     public boolean unusedVehiclesAllowed() {
         return allowUnusedVehicles;
+    }
+
+    @Override
+    public String toString() {
+        return "Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
+                ", capacity=" + capacity + ", depot=" + depot + ", customers=" + customers + ", neighbors=" +
+                neighbors + ", demand=" + demand + ", allowUnusedVehicles=" + allowUnusedVehicles + '}';
     }
 }

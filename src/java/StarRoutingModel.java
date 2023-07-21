@@ -149,7 +149,6 @@ public class StarRoutingModel {
                 }
             }
         }
-
     }
 
     private void createVisitConstraints() throws IloException {

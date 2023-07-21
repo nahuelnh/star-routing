@@ -6,7 +6,6 @@ import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class RestrictedMasterProblem {
@@ -36,17 +35,15 @@ public class RestrictedMasterProblem {
 
     private void createCustomerServedConstraints() throws IloException {
         customerServedConstraints = new IloRange[instance.getNumberOfCustomers()];
-        for (int customer = 0; customer < instance.getNumberOfCustomers(); customer++) {
-            IloLinearNumExpr lhs = cplex.linearNumExpr();
+        for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
+            IloNumExpr lhs = cplex.linearNumExpr();
+            int customer = instance.getCustomer(s);
             for (int route = 0; route < paths.size(); route++) {
-                int numberOfNodesServingCustomer = 0;
-                for (int node = 0; node < instance.getNumberOfNodes(); node++) {
-                    boolean isServedAtNode = paths.get(route).isServedAtNode(node, instance.getCustomer(customer));
-                    numberOfNodesServingCustomer += isServedAtNode ? 1 : 0;
+                if (paths.get(route).isCustomerServed(customer)) {
+                    lhs = cplex.sum(lhs, theta[route]);
                 }
-                lhs.addTerm(theta[route], numberOfNodesServingCustomer);
             }
-            customerServedConstraints[customer] = cplex.addEq(lhs, 1, "customer_served_" + customer);
+            customerServedConstraints[s] = cplex.addEq(lhs, 1, "customer_served_" + s);
         }
     }
 
@@ -64,7 +61,7 @@ public class RestrictedMasterProblem {
         for (int i = 0; i < paths.size(); i++) {
             objective.addTerm(theta[i], paths.get(i).getCost());
         }
-        cplex.addMinimize(objective);
+        cplex.addMinimize(objective, "cost");
     }
 
     private void buildModel(boolean integral) throws IloException {
@@ -80,7 +77,7 @@ public class RestrictedMasterProblem {
         try {
             buildModel(false);
             cplex.solve();
-            Solution solution = new Solution();
+            Solution solution = new Solution(cplex, customerServedConstraints, numberOfVehiclesConstraint);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -92,7 +89,7 @@ public class RestrictedMasterProblem {
         try {
             buildModel(true);
             cplex.solve();
-            IntegerSolution solution = new IntegerSolution();
+            IntegerSolution solution = new IntegerSolution(cplex, theta, paths);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -100,22 +97,25 @@ public class RestrictedMasterProblem {
         }
     }
 
-    public class Solution {
+    public static class Solution {
         private final IloCplex.Status status;
+        private final double objectiveValue;
         private final double[] visitorDualValues;
         private final double numberOfVehiclesDualValue;
 
-        private Solution() throws IloException {
+        private Solution(IloCplex cplex, IloRange[] customerServedConstraints, IloRange numberOfVehiclesConstraint)
+                throws IloException {
             this.status = cplex.getStatus();
             if (!isFeasible()) {
                 throw new IllegalStateException("Restricted Master Problem is not feasible");
             }
+            this.objectiveValue = cplex.getObjValue();
             this.visitorDualValues = cplex.getDuals(customerServedConstraints);
             this.numberOfVehiclesDualValue = cplex.getDual(numberOfVehiclesConstraint);
         }
 
         public boolean isFeasible() {
-            return IloCplex.Status.Optimal.equals(this.status) || IloCplex.Status.Feasible.equals(this.status);
+            return IloCplex.Status.Optimal.equals(status) || IloCplex.Status.Feasible.equals(status);
         }
 
         public double getNumberOfVehiclesDualValue() {
@@ -125,16 +125,24 @@ public class RestrictedMasterProblem {
         public double getVisitorDualValue(int constraintIndex) {
             return visitorDualValues[constraintIndex];
         }
+
+        public double getObjectiveValue() {
+            return objectiveValue;
+        }
     }
 
-    public class IntegerSolution {
+    public static class IntegerSolution {
 
         private final IloCplex.Status status;
+        private final double objectiveValue;
         private final double[] primalValues;
+        private final List<ElementaryPath> paths;
 
-        private IntegerSolution() throws IloException {
+        private IntegerSolution(IloCplex cplex, IloNumVar[] theta, List<ElementaryPath> paths) throws IloException {
             this.status = cplex.getStatus();
+            this.objectiveValue = cplex.getObjValue();
             this.primalValues = isFeasible() ? cplex.getValues(theta) : null;
+            this.paths = paths;
         }
 
         public boolean isFeasible() {
@@ -152,6 +160,10 @@ public class RestrictedMasterProblem {
                 }
             }
             return ret;
+        }
+
+        public double getObjectiveValue() {
+            return objectiveValue;
         }
     }
 }
