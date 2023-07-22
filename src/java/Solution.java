@@ -14,8 +14,11 @@ public class Solution {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Solution{" + "cost=").append(cost).append(", numberOfVehicles=").append(numberOfVehicles)
-                .append(", paths=[\n");
+        builder.append("Solution{cost=").append(cost).append(", numberOfVehicles=").append(numberOfVehicles)
+                .append(", paths=[");
+        if (!paths.isEmpty()) {
+            builder.append('\n');
+        }
         for (ElementaryPath path : paths) {
             builder.append("\t");
             builder.append(path);

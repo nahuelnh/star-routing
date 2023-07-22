@@ -20,7 +20,7 @@ public class Main {
             Instance instance = new Instance(instanceName, true);
             StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
             System.out.println(starRoutingModel.solve());
-            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new RestrictedMasterProblem(instance),
+            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new MTZRestrictedMasterProblem(instance),
                     new SecondPricingProblem(instance), new FeasibleSolutionHeuristic(instance));
             System.out.println(columnGeneration.solve());
         } catch (IloException e) {

@@ -11,49 +11,56 @@ public class FeasibleSolutionHeuristic {
         this.instance = instance;
     }
 
-    private void addRedundantRoutes(List<ElementaryPath> ret) {
+    private ElementaryPath createOneRedundantPath() {
         int minCost = Integer.MAX_VALUE;
-        int bestNode = 1;
-        for (int i = 1; i < instance.getNumberOfNodes(); i++) {
-            int cost = instance.getEdgeWeight(instance.getDepot(), i) + instance.getEdgeWeight(i, instance.getDepot());
-            if (cost < minCost) {
-                minCost = cost;
-                bestNode = i;
+        int bestNode = instance.getDepot() + 1;
+        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+            if (i != instance.getDepot()) {
+                int roundTripCost =
+                        instance.getEdgeWeight(instance.getDepot(), i) + instance.getEdgeWeight(i, instance.getDepot());
+                if (roundTripCost < minCost) {
+                    minCost = roundTripCost;
+                    bestNode = i;
+                }
             }
         }
-        while (ret.size() < instance.getNumberOfVehicles()) {
-            ElementaryPath path = ElementaryPath.emptyPath();
-            path.addNode(bestNode, new HashSet<>(), instance.getEdgeWeight(instance.getDepot(), bestNode));
-            path.addNode(instance.getDepot(), new HashSet<>(), instance.getEdgeWeight(bestNode, instance.getDepot()));
-            ret.add(path);
-        }
+        ElementaryPath path = new ElementaryPath();
+        path.addNode(bestNode, instance.getEdgeWeight(instance.getDepot(), bestNode));
+        path.addNode(instance.getDepot(), instance.getEdgeWeight(bestNode, instance.getDepot()));
+        return path;
     }
 
     public List<ElementaryPath> run() {
+        int depot = instance.getDepot();
         List<ElementaryPath> ret = new ArrayList<>();
-        ElementaryPath currentElementaryPath = ElementaryPath.emptyPath();
+
+        ElementaryPath currentPath = new ElementaryPath();
         int cumulativeDemand = 0;
-        int lastNode = instance.getDepot();
+        int lastNode = depot;
+        Set<Integer> visitedCustomers = new HashSet<>();
         for (int currentNode : instance.getCustomers()) {
             cumulativeDemand += instance.getDemand(currentNode);
             if (cumulativeDemand > instance.getCapacity()) {
-                currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(),
-                        instance.getEdgeWeight(lastNode, instance.getDepot()));
-                ret.add(currentElementaryPath);
-                currentElementaryPath = ElementaryPath.emptyPath();
+                currentPath.addNode(depot, instance.getEdgeWeight(lastNode, depot));
+                ret.add(currentPath);
+                currentPath = new ElementaryPath();
                 cumulativeDemand = 0;
-                lastNode = instance.getDepot();
+                lastNode = depot;
+                visitedCustomers.clear();
             }
-            currentElementaryPath.addNode(currentNode, Set.of(currentNode),
-                    instance.getEdgeWeight(lastNode, currentNode));
+            visitedCustomers.add(currentNode);
+            currentPath.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
+            currentPath.addCustomers(visitedCustomers);
             lastNode = currentNode;
         }
-        currentElementaryPath.addNode(instance.getDepot(), new HashSet<>(),
-                instance.getEdgeWeight(lastNode, instance.getDepot()));
-        ret.add(currentElementaryPath);
+        currentPath.addNode(depot, instance.getEdgeWeight(lastNode, depot));
+        ret.add(currentPath);
         if (!instance.unusedVehiclesAllowed()) {
             // ret should have length equal to the number of vehicles
-            addRedundantRoutes(ret);
+            ElementaryPath redundantPath = createOneRedundantPath();
+            while (ret.size() < instance.getNumberOfVehicles()) {
+                ret.add(redundantPath);
+            }
         }
         return ret;
     }

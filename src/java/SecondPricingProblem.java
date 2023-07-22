@@ -48,19 +48,15 @@ public class SecondPricingProblem implements PricingProblem {
     private void createFlowConstraints() throws IloException {
         // Vehicle leaves the node that it enters
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-            IloLinearIntExpr inFlow = cplex.linearIntExpr();
-            IloLinearIntExpr outFlow = cplex.linearIntExpr();
-            for (int j = 0; j < instance.getNumberOfNodes(); j++) {
-                inFlow.addTerm(x[i][j], 1);
-                outFlow.addTerm(x[j][i], 1);
-            }
+            IloIntExpr inFlow = Utils.getRowSum(cplex, x, i);
+            IloIntExpr outFlow = Utils.getColumnSum(cplex, x, i);
             cplex.addEq(inFlow, outFlow, "flow_" + i);
         }
     }
 
     private void createDepotConstraints() throws IloException {
         // Every vehicle leaves the depot
-        IloIntExpr outgoingEdgesFromDepot = Utils.getIntArraySum(cplex, x[instance.getDepot()]);
+        IloIntExpr outgoingEdgesFromDepot = Utils.getRowSum(cplex, x, instance.getDepot());
         cplex.addEq(outgoingEdgesFromDepot, 1, "depot");
     }
 
@@ -125,16 +121,16 @@ public class SecondPricingProblem implements PricingProblem {
         }
         IloLinearNumExpr secondTerm = cplex.linearNumExpr();
         for (int s = 0; s < S; s++) {
-            secondTerm.addTerm(y[s], rmpSolution.getVisitorDualValue(s));
+            secondTerm.addTerm(y[s], rmpSolution.getCustomerDual(s));
         }
 
         IloNumExpr objective = cplex.sum(firstTerm, cplex.negative(secondTerm));
-        objective = cplex.sum(objective, -rmpSolution.getNumberOfVehiclesDualValue());
+        objective = cplex.sum(objective, -rmpSolution.getVehiclesDual());
         cplex.addMinimize(objective);
     }
 
     @Override
-    public PricingProblem.Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
+    public Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
         try {
             cplex = new IloCplex();
             cplex.setOut(null);
@@ -142,34 +138,7 @@ public class SecondPricingProblem implements PricingProblem {
             createConstraints();
             createObjective(rmpSolution);
             cplex.solve();
-            PricingProblem.Solution solution = new PricingProblem.Solution(cplex, getRoutesFromSolution());
-
-            //            for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-            //                for (int j = 0; j < instance.getNumberOfNodes(); j++) {
-            //                    if (Math.round(cplex.getValue(x[i][j])) == 1) {
-            //                        System.out.println(x[i][j]);
-            //                    }
-            //                }
-            //            }
-            //
-            //            System.out.println("Obj: " + cplex.getObjValue());
-            //            int reducedCost = getPathFromFeasibleSolution(0).getCost();
-            //            for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
-            //                if (Math.round(cplex.getValue(y[s])) == 1) {
-            //                    System.out.println(visitConstraint[s]);
-            //                    System.out.println(y[s] + " " + instance.getCustomer(s) + " " +
-            //                            instance.getNeighbors(instance.getCustomer(s)));
-            //                }
-            //                reducedCost -= rmpSolution.getVisitorDualValue(s) * Math.round(cplex.getValue(y[s]));
-            //            }
-            //            reducedCost -= rmpSolution.getNumberOfVehiclesDualValue();
-            //            System.out.println("RC: " + reducedCost);
-            //            System.out.println("Cost: " + getPathFromFeasibleSolution(0).getCost() + " dual: " +
-            //                    rmpSolution.getNumberOfVehiclesDualValue() + " duals: " +
-            //                    IntStream.range(0, instance.getNumberOfCustomers()).mapToObj(rmpSolution::getVisitorDualValue)
-            //                            .toList());
-            //            System.out.println();
-
+            Solution solution = new Solution(cplex, this);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -177,57 +146,48 @@ public class SecondPricingProblem implements PricingProblem {
         }
     }
 
-    private boolean isFeasible() throws IloException {
-        return IloCplex.Status.Optimal.equals(cplex.getStatus()) || IloCplex.Status.Feasible.equals(cplex.getStatus());
-    }
-
     private int getNextNodeInPath(int from, int solutionIndex) throws IloException {
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-            if (Math.round(cplex.getValue(x[from][i], solutionIndex)) == 1) {
+            if (Utils.getBoolValue(cplex, x[from][i], solutionIndex)) {
                 return i;
             }
         }
         throw new AssertionError(String.format("Path starting in %d has no end", from));
     }
 
-    private Set<Integer> getCustomersServed(int currentNode, int solutionIndex, Set<Integer> alreadyVisited)
-            throws IloException {
-        Set<Integer> customersServed = new HashSet<>();
+    private Set<Integer> getVisitedCustomers(int solutionIndex) throws IloException {
+        Set<Integer> visitedCustomers = new HashSet<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
-            int customer = instance.getCustomer(s);
-            if (!alreadyVisited.contains(customer) && instance.getNeighbors(customer).contains(currentNode) &&
-                    Math.round(cplex.getValue(y[s], solutionIndex)) == 1) {
-                customersServed.add(customer);
-                alreadyVisited.add(customer);
+            if (Utils.getBoolValue(cplex, y[s], solutionIndex)) {
+                visitedCustomers.add(instance.getCustomer(s));
             }
         }
-        return customersServed;
+        return visitedCustomers;
     }
 
-    private ElementaryPath getPathFromFeasibleSolution(int solutionIndex) throws IloException {
-        ElementaryPath path = ElementaryPath.emptyPath();
-        Set<Integer> alreadyVisited = new HashSet<>();
+    private ElementaryPath getPathFromFeasibleSolutionInPool(int solutionIndex) throws IloException {
+        ElementaryPath path = new ElementaryPath();
         int lastNode = instance.getDepot();
         int currentNode = getNextNodeInPath(lastNode, solutionIndex);
         while (currentNode != instance.getDepot()) {
-            path.addNode(currentNode, getCustomersServed(currentNode, solutionIndex, alreadyVisited),
-                    instance.getEdgeWeight(lastNode, currentNode));
+            path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
             lastNode = currentNode;
             currentNode = getNextNodeInPath(currentNode, solutionIndex);
         }
-        path.addNode(currentNode, getCustomersServed(currentNode, solutionIndex, alreadyVisited),
-                instance.getEdgeWeight(lastNode, currentNode));
+        path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
+        path.addCustomers(getVisitedCustomers(solutionIndex));
         return path;
     }
 
-    private List<ElementaryPath> getRoutesFromSolution() throws IloException {
+    @Override
+    public List<ElementaryPath> computePathsFromSolution() throws IloException {
         List<ElementaryPath> ret = new ArrayList<>();
-        if (!isFeasible()) {
+        if (!Utils.isSolutionFeasible(cplex)) {
             return ret;
         }
         for (int solutionIndex = 0; solutionIndex < cplex.getSolnPoolNsolns(); solutionIndex++) {
             if (cplex.getObjValue(solutionIndex) < -EPSILON) {
-                ret.add(getPathFromFeasibleSolution(solutionIndex));
+                ret.add(getPathFromFeasibleSolutionInPool(solutionIndex));
             }
         }
         return ret;

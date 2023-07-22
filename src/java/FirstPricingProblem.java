@@ -61,7 +61,7 @@ public class FirstPricingProblem implements PricingProblem {
 
         // First constraint
         for (int i = 0; i < N; i++) {
-            IloIntExpr lhs = Utils.getIntArraySum(cplex, x[i]);
+            IloIntExpr lhs = Utils.getArraySum(cplex, x[i]);
             IloIntExpr rhs = cplex.prod(z[i], SExtended);
             cplex.addLe(lhs, rhs, "z_consistent_" + i);
         }
@@ -100,7 +100,7 @@ public class FirstPricingProblem implements PricingProblem {
 
         // Sixth Constraint
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-            IloIntExpr numberOfCustomersServed = Utils.getIntArraySum(cplex, x[i]);
+            IloIntExpr numberOfCustomersServed = Utils.getArraySum(cplex, x[i]);
             IloIntExpr rhs = cplex.sum(SExtended, cplex.prod(-SExtended, x[i][s0]));
             cplex.addLe(numberOfCustomersServed, rhs, "non_existing_customer_" + i);
         }
@@ -153,16 +153,16 @@ public class FirstPricingProblem implements PricingProblem {
         IloLinearNumExpr secondTerm = cplex.linearNumExpr();
         for (int i = 0; i < N; i++) {
             for (int s = 0; s < S; s++) {
-                secondTerm.addTerm(x[i][s], rmpSolution.getVisitorDualValue(s));
+                secondTerm.addTerm(x[i][s], rmpSolution.getCustomerDual(s));
             }
         }
         IloNumExpr objective = cplex.sum(firstTerm, cplex.negative(secondTerm));
-        objective = cplex.sum(objective, -rmpSolution.getNumberOfVehiclesDualValue());
+        objective = cplex.sum(objective, -rmpSolution.getVehiclesDual());
         cplex.addMinimize(objective);
     }
 
     @Override
-    public PricingProblem.Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
+    public Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
         try {
             cplex = new IloCplex();
             cplex.setOut(null);
@@ -170,7 +170,7 @@ public class FirstPricingProblem implements PricingProblem {
             createConstraints();
             createObjective(rmpSolution);
             cplex.solve();
-            PricingProblem.Solution solution = new PricingProblem.Solution(cplex, getRoutesFromSolution());
+            Solution solution = new Solution(cplex, this);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -178,42 +178,10 @@ public class FirstPricingProblem implements PricingProblem {
         }
     }
 
-    private boolean isFeasible() throws IloException {
-        return IloCplex.Status.Optimal.equals(cplex.getStatus()) || IloCplex.Status.Feasible.equals(cplex.getStatus());
-    }
-
-    private int getNextNodeInPath(int from, int solutionIndex) throws IloException {
-        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-            if (Math.round(cplex.getValue(u[from][i], solutionIndex)) == 1) {
-                return i;
-            }
-        }
-        throw new AssertionError(String.format("Path starting in %d has no end", from));
-    }
-
-    private ElementaryPath getPathFromFeasibleSolution(int solutionIndex) throws IloException {
-        ElementaryPath elementaryPath = ElementaryPath.emptyPath();
-        int lastNode = instance.getDepot();
-        int currentNode = getNextNodeInPath(lastNode, solutionIndex);
-        while (currentNode != instance.getDepot()) {
-            Set<Integer> customersVisited = new HashSet<>();
-            for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
-                if (Math.round(cplex.getValue(x[currentNode][s], solutionIndex)) == 1) {
-                    customersVisited.add(instance.getCustomer(s));
-                }
-            }
-            elementaryPath.addNode(currentNode, customersVisited, instance.getEdgeWeight(lastNode, currentNode));
-            lastNode = currentNode;
-            currentNode = getNextNodeInPath(currentNode, solutionIndex);
-        }
-        elementaryPath.addNode(instance.getDepot(), new HashSet<>(),
-                instance.getEdgeWeight(lastNode, instance.getDepot()));
-        return elementaryPath;
-    }
-
-    private List<ElementaryPath> getRoutesFromSolution() throws IloException {
+    @Override
+    public List<ElementaryPath> computePathsFromSolution() throws IloException {
         List<ElementaryPath> ret = new ArrayList<>();
-        if (!isFeasible()) {
+        if (!Utils.isSolutionFeasible(cplex)) {
             return ret;
         }
         for (int solutionIndex = 0; solutionIndex < cplex.getSolnPoolNsolns(); solutionIndex++) {
@@ -222,6 +190,35 @@ public class FirstPricingProblem implements PricingProblem {
             }
         }
         return ret;
+    }
+
+    private int getNextNodeInPath(int from, int solutionIndex) throws IloException {
+        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+            if (Utils.getBoolValue(cplex, u[from][i], solutionIndex)) {
+                return i;
+            }
+        }
+        throw new AssertionError(String.format("Path starting in %d has no end", from));
+    }
+
+    private ElementaryPath getPathFromFeasibleSolution(int solutionIndex) throws IloException {
+        ElementaryPath elementaryPath = new ElementaryPath();
+        int lastNode = instance.getDepot();
+        int currentNode = getNextNodeInPath(lastNode, solutionIndex);
+        while (currentNode != instance.getDepot()) {
+            Set<Integer> customersVisited = new HashSet<>();
+            for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
+                if (Utils.getBoolValue(cplex, x[currentNode][s], solutionIndex)) {
+                    customersVisited.add(instance.getCustomer(s));
+                }
+            }
+            elementaryPath.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
+            elementaryPath.addCustomers(customersVisited);
+            lastNode = currentNode;
+            currentNode = getNextNodeInPath(currentNode, solutionIndex);
+        }
+        elementaryPath.addNode(instance.getDepot(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+        return elementaryPath;
     }
 
 }

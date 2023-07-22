@@ -52,7 +52,7 @@ public class Utils {
         return ret;
     }
 
-    public static IloIntExpr getIntArraySum(IloCplex cplex, IloIntVar[] intVarArray) throws IloException {
+    public static IloIntExpr getArraySum(IloCplex cplex, IloIntVar[] intVarArray) throws IloException {
         IloIntExpr sum = cplex.linearIntExpr();
         for (IloIntVar i : intVarArray) {
             sum = cplex.sum(sum, i);
@@ -60,11 +60,69 @@ public class Utils {
         return sum;
     }
 
-    public static IloNumExpr getNumArraySum(IloCplex cplex, IloNumVar[] numVarArray) throws IloException {
+    public static IloNumExpr getArraySum(IloCplex cplex, IloNumVar[] numVarArray) throws IloException {
         IloNumExpr sum = cplex.linearNumExpr();
         for (IloNumVar i : numVarArray) {
             sum = cplex.sum(sum, i);
         }
         return sum;
+    }
+
+    public static IloNumExpr getRowSum(IloCplex cplex, IloNumVar[][] numVarMatrix, int row) throws IloException {
+        IloNumExpr sum = cplex.linearNumExpr();
+        for (IloNumVar i : numVarMatrix[row]) {
+            sum = cplex.sum(sum, i);
+        }
+        return sum;
+    }
+
+    public static IloIntExpr getRowSum(IloCplex cplex, IloIntVar[][] numVarMatrix, int row) throws IloException {
+        IloIntExpr sum = cplex.linearIntExpr();
+        for (IloIntVar i : numVarMatrix[row]) {
+            sum = cplex.sum(sum, i);
+        }
+        return sum;
+    }
+
+    public static IloNumExpr getColumnSum(IloCplex cplex, IloNumVar[][] numVarMatrix, int column) throws IloException {
+        IloNumExpr sum = cplex.linearNumExpr();
+        for (IloNumVar[] row : numVarMatrix) {
+            sum = cplex.sum(sum, row[column]);
+        }
+        return sum;
+    }
+
+    public static IloIntExpr getColumnSum(IloCplex cplex, IloIntVar[][] numVarMatrix, int column) throws IloException {
+        IloIntExpr sum = cplex.linearIntExpr();
+        for (IloIntVar[] row : numVarMatrix) {
+            sum = cplex.sum(sum, row[column]);
+        }
+        return sum;
+    }
+
+    public static boolean isSolutionFeasible(IloCplex cplex) throws IloException {
+        return IloCplex.Status.Optimal.equals(cplex.getStatus()) || IloCplex.Status.Feasible.equals(cplex.getStatus());
+    }
+
+    public static boolean getBoolValue(IloCplex cplex, IloNumVar iloNumVar) throws IloException {
+        return Math.round(cplex.getValue(iloNumVar)) == 1;
+    }
+
+    public static boolean getBoolValue(IloCplex cplex, IloNumVar iloNumVar, int solutionIndex) throws IloException {
+        return Math.round(cplex.getValue(iloNumVar, solutionIndex)) == 1;
+    }
+
+    public static void printNonZero(IloCplex cplex, IloNumVar[][] iloNumVar) throws IloException {
+        for (IloNumVar[] row : iloNumVar) {
+            printNonZero(cplex, row);
+        }
+    }
+
+    public static void printNonZero(IloCplex cplex, IloNumVar[] iloNumVar) throws IloException {
+        for (IloNumVar numVar : iloNumVar) {
+            if (getBoolValue(cplex, numVar)) {
+                System.out.println(numVar);
+            }
+        }
     }
 }

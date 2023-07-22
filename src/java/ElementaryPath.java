@@ -13,22 +13,21 @@ public class ElementaryPath {
         this.nodes = nodes;
         this.customersServed = customersServed;
         this.weights = weights;
-        checkRep();
     }
 
-    public static ElementaryPath emptyPath() {
-        return new ElementaryPath(new ArrayList<>(), new HashSet<>(), new ArrayList<>());
+    public ElementaryPath() {
+        this.nodes = new ArrayList<>();
+        this.customersServed = new HashSet<>();
+        this.weights = new ArrayList<>();
     }
 
-    private void checkRep() {
-        assert nodes.size() == weights.size();
-    }
-
-    public void addNode(int node, Set<Integer> customersVisited, int weight) {
+    public void addNode(int node, int weight) {
         nodes.add(node);
-        customersServed.addAll(customersVisited);
         weights.add(weight);
-        checkRep();
+    }
+
+    public void addCustomers(Set<Integer> customers) {
+        customersServed.addAll(customers);
     }
 
     public Integer getCost() {
