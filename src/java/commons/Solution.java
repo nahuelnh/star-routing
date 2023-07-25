@@ -1,3 +1,5 @@
+package commons;
+
 import java.util.List;
 
 public class Solution {
@@ -5,7 +7,7 @@ public class Solution {
     private final int cost;
     private final int numberOfVehicles;
 
-    Solution(List<ElementaryPath> paths) {
+    public Solution(List<ElementaryPath> paths) {
         this.paths = paths;
         this.cost = paths.stream().mapToInt(ElementaryPath::getCost).sum();
         this.numberOfVehicles = paths.size();
@@ -14,7 +16,7 @@ public class Solution {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Solution{cost=").append(cost).append(", numberOfVehicles=").append(numberOfVehicles)
+        builder.append("commons.Solution{cost=").append(cost).append(", numberOfVehicles=").append(numberOfVehicles)
                 .append(", paths=[");
         if (!paths.isEmpty()) {
             builder.append('\n');

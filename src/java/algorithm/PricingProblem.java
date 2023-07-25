@@ -1,3 +1,6 @@
+package algorithm;
+
+import commons.ElementaryPath;
 import ilog.concert.IloException;
 import ilog.cplex.IloCplex;
 

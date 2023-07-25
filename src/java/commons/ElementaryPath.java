@@ -1,3 +1,5 @@
+package commons;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,8 +38,8 @@ public class ElementaryPath {
 
     @Override
     public String toString() {
-        return "ElementaryPath{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" + weights +
-                '}';
+        return "commons.ElementaryPath{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" +
+                weights + '}';
     }
 
     public boolean isCustomerServed(int customer) {

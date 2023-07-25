@@ -1,3 +1,5 @@
+package commons;
+
 import ilog.concert.IloException;
 import ilog.concert.IloIntExpr;
 import ilog.concert.IloIntVar;

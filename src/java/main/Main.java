@@ -1,3 +1,11 @@
+package main;
+
+import algorithm.ColumnGeneration;
+import algorithm.FeasibleSolutionHeuristic;
+import algorithm.MTZRestrictedMasterProblem;
+import algorithm.SecondPricingProblem;
+import algorithm.StarRoutingModel;
+import commons.Instance;
 import ilog.concert.IloException;
 
 public class Main {
@@ -11,7 +19,6 @@ public class Main {
         runInstance("instance_neighbors_12");
         runInstance("instance_random_10");
         runInstance("instance_random_12");
-
     }
 
     private static void runInstance(String instanceName) {
@@ -27,5 +34,4 @@ public class Main {
             System.err.println("Concert exception '" + e + "' caught");
         }
     }
-
 }

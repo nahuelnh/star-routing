@@ -1,3 +1,8 @@
+package algorithm;
+
+import commons.ElementaryPath;
+import commons.Instance;
+import commons.Utils;
 import ilog.concert.IloException;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;

@@ -1,6 +1,12 @@
+package algorithm;
+
+import commons.ElementaryPath;
+import commons.Instance;
+import commons.Solution;
+
 import java.util.List;
 
-class ColumnGeneration {
+public class ColumnGeneration {
 
     private final Instance instance;
     private final RestrictedMasterProblem rmp;

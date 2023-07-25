@@ -1,3 +1,9 @@
+package algorithm;
+
+import commons.ElementaryPath;
+import commons.Instance;
+import commons.Solution;
+import commons.Utils;
 import ilog.concert.IloException;
 import ilog.concert.IloIntExpr;
 import ilog.concert.IloIntVar;

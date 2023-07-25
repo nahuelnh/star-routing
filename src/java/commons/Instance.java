@@ -1,3 +1,5 @@
+package commons;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -186,7 +188,7 @@ public class Instance {
 
     @Override
     public String toString() {
-        return "Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
+        return "commons.Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
                 ", capacity=" + capacity + ", depot=" + depot + ", customers=" + customers + ", neighbors=" +
                 neighbors + ", demand=" + demand + ", allowUnusedVehicles=" + allowUnusedVehicles + '}';
     }
