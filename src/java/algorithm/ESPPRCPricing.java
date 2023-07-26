@@ -20,8 +20,8 @@ public class ESPPRCPricing implements PricingProblem {
     @Override
     public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
         PulseAlgorithm pulseAlgorithm = new PulseAlgorithm(instance, rmpSolution);
-        paths = List.of(pulseAlgorithm.getOptimalPath());
-        double cost = paths.stream().mapToInt(FeasiblePath::getCost).sum() - rmpSolution.getVehiclesDual();
+        paths = pulseAlgorithm.getOptimalPaths();
+        double cost = paths.stream().mapToInt(FeasiblePath::getCost).sum();
         return new Solution(IloCplex.Status.Optimal, cost, this);
     }
 

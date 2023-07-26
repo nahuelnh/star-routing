@@ -1,6 +1,7 @@
 package commons;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ public class Instance {
     private final int depot;
     private final List<List<Integer>> graphWeights;
     private final List<Integer> customers;
+    private final int[] customerIndex;
     private final Map<Integer, Set<Integer>> neighbors;
     private final Map<Integer, Integer> demand;
     private final boolean allowUnusedVehicles;
@@ -43,6 +45,7 @@ public class Instance {
 
         List<List<Integer>> customersAndDemand = Utils.parseIntegerMatrix(getFullPath(instanceName, packagesFilename));
         this.customers = createCustomerList(customersAndDemand);
+        this.customerIndex = createCustomerIndex(customers, numberOfNodes);
         this.demand = createDemandMap(customersAndDemand);
 
         List<List<Integer>> neighbors = Utils.parseIntegerMatrix(getFullPath(instanceName, neighborsFilename));
@@ -107,6 +110,15 @@ public class Instance {
             customers.add(customer);
         }
         return customers.stream().distinct().sorted().toList();
+    }
+
+    private static int[] createCustomerIndex(List<Integer> customers, int numberOfNodes) {
+        int[] customerIndex = new int[numberOfNodes];
+        Arrays.fill(customerIndex, -1);
+        for (int i = 0; i < customers.size(); i++) {
+            customerIndex[customers.get(i)] = i;
+        }
+        return customerIndex;
     }
 
     private static Map<Integer, Set<Integer>> createNeighborsMap(List<List<Integer>> customersAndDemand,
@@ -191,5 +203,13 @@ public class Instance {
         return "commons.Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
                 ", capacity=" + capacity + ", depot=" + depot + ", customers=" + customers + ", neighbors=" +
                 neighbors + ", demand=" + demand + ", allowUnusedVehicles=" + allowUnusedVehicles + '}';
+    }
+
+    public int getCustomerIndex(int customer) {
+        return customerIndex[customer];
+    }
+
+    public boolean isCustomer(int customer) {
+        return customerIndex[customer] != -1;
     }
 }

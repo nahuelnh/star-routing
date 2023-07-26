@@ -11,11 +11,11 @@ import ilog.concert.IloException;
 
 public class Main {
     public static void main(String[] args) {
-        runInstance("instance_rptd_path");
-        runInstance("instance_2v1");
-        runInstance("instance_2v2");
-        runInstance("instance_large");
-        runInstance("instance_simple");
+//        runInstance("instance_rptd_path");
+//        runInstance("instance_2v1");
+//        runInstance("instance_2v2");
+//        runInstance("instance_large");
+//        runInstance("instance_simple");
         runInstance("instance_neighbors_10");
         runInstance("instance_neighbors_12");
         runInstance("instance_random_10");

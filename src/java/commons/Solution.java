@@ -16,7 +16,7 @@ public class Solution {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("commons.Solution{cost=").append(cost).append(", numberOfVehicles=").append(numberOfVehicles)
+        builder.append("Solution{cost=").append(cost).append(", numberOfVehicles=").append(numberOfVehicles)
                 .append(", paths=[");
         if (!paths.isEmpty()) {
             builder.append('\n');
