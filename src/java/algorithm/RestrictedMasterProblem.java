@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.ElementaryPath;
+import commons.FeasiblePath;
 import commons.Utils;
 import ilog.concert.IloException;
 import ilog.concert.IloRange;
@@ -10,20 +10,20 @@ import java.util.List;
 
 public interface RestrictedMasterProblem {
 
-    void addPaths(List<ElementaryPath> newPaths);
+    void addPaths(List<FeasiblePath> newPaths);
 
-    Solution solveRelaxation();
+    RMPSolution solveRelaxation();
 
-    IntegerSolution solveInteger();
+    RMPIntegerSolution solveInteger();
 
-    List<ElementaryPath> computePathsFromSolution() throws IloException;
+    List<FeasiblePath> computePathsFromSolution();
 
-    class Solution {
+    class RMPSolution {
         private final double objectiveValue;
         private final double[] customerDuals;
         private final double vehiclesDual;
 
-        public Solution(IloCplex cplex, IloRange[] customerServedConstraints, IloRange numberOfVehiclesConstraint)
+        public RMPSolution(IloCplex cplex, IloRange[] customerServedConstraints, IloRange numberOfVehiclesConstraint)
                 throws IloException {
             if (!Utils.isSolutionFeasible(cplex)) {
                 throw new IllegalStateException("Restricted Master Problem is not feasible");
@@ -46,17 +46,17 @@ public interface RestrictedMasterProblem {
         }
     }
 
-    class IntegerSolution {
+    class RMPIntegerSolution {
 
         private final double objectiveValue;
-        private final List<ElementaryPath> usedPaths;
+        private final List<FeasiblePath> usedPaths;
 
-        public IntegerSolution(IloCplex cplex, RestrictedMasterProblem rmp) throws IloException {
+        public RMPIntegerSolution(IloCplex cplex, RestrictedMasterProblem rmp) throws IloException {
             this.objectiveValue = cplex.getObjValue();
             this.usedPaths = rmp.computePathsFromSolution();
         }
 
-        public List<ElementaryPath> getUsedPaths() {
+        public List<FeasiblePath> getUsedPaths() {
             return usedPaths;
         }
 

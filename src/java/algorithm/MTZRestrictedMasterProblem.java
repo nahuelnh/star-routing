@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.ElementaryPath;
+import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
 import ilog.concert.IloException;
@@ -16,7 +16,7 @@ import java.util.List;
 public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
 
     private final Instance instance;
-    private final List<ElementaryPath> paths;
+    private final List<FeasiblePath> paths;
     private IloCplex cplex;
     private IloNumVar[] theta;
     private IloRange[] customerConstraints;
@@ -28,7 +28,7 @@ public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
     }
 
     @Override
-    public void addPaths(List<ElementaryPath> newPaths) {
+    public void addPaths(List<FeasiblePath> newPaths) {
         paths.addAll(newPaths);
     }
 
@@ -80,11 +80,11 @@ public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
     }
 
     @Override
-    public Solution solveRelaxation() {
+    public RMPSolution solveRelaxation() {
         try {
             buildModel(false);
             cplex.solve();
-            Solution solution = new Solution(cplex, customerConstraints, vehiclesConstraint);
+            RMPSolution solution = new RMPSolution(cplex, customerConstraints, vehiclesConstraint);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -93,11 +93,11 @@ public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
     }
 
     @Override
-    public IntegerSolution solveInteger() {
+    public RMPIntegerSolution solveInteger() {
         try {
             buildModel(true);
             cplex.solve();
-            IntegerSolution solution = new IntegerSolution(cplex, this);
+            RMPIntegerSolution solution = new RMPIntegerSolution(cplex, this);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -106,17 +106,21 @@ public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
     }
 
     @Override
-    public List<ElementaryPath> computePathsFromSolution() throws IloException {
-        List<ElementaryPath> ret = new ArrayList<>();
-        if (!Utils.isSolutionFeasible(cplex)) {
-            return ret;
-        }
-        for (int i = 0; i < paths.size(); i++) {
-            if (Utils.getBoolValue(cplex, theta[i])) {
-                ret.add(paths.get(i));
+    public List<FeasiblePath> computePathsFromSolution() {
+        try {
+            List<FeasiblePath> ret = new ArrayList<>();
+            if (!Utils.isSolutionFeasible(cplex)) {
+                return ret;
             }
+            for (int i = 0; i < paths.size(); i++) {
+                if (Utils.getBoolValue(cplex, theta[i])) {
+                    ret.add(paths.get(i));
+                }
+            }
+            return ret;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
         }
-        return ret;
     }
 
 }

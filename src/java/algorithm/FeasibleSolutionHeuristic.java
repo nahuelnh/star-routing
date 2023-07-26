@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.ElementaryPath;
+import commons.FeasiblePath;
 import commons.Instance;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ public class FeasibleSolutionHeuristic {
         this.instance = instance;
     }
 
-    private ElementaryPath createOneRedundantPath() {
+    private FeasiblePath createOneRedundantPath() {
         int minCost = Integer.MAX_VALUE;
         int bestNode = instance.getDepot() + 1;
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
@@ -29,17 +29,17 @@ public class FeasibleSolutionHeuristic {
                 }
             }
         }
-        ElementaryPath path = new ElementaryPath();
+        FeasiblePath path = new FeasiblePath();
         path.addNode(bestNode, instance.getEdgeWeight(instance.getDepot(), bestNode));
         path.addNode(instance.getDepot(), instance.getEdgeWeight(bestNode, instance.getDepot()));
         return path;
     }
 
-    public List<ElementaryPath> run() {
+    public List<FeasiblePath> run() {
         int depot = instance.getDepot();
-        List<ElementaryPath> ret = new ArrayList<>();
+        List<FeasiblePath> ret = new ArrayList<>();
 
-        ElementaryPath currentPath = new ElementaryPath();
+        FeasiblePath currentPath = new FeasiblePath();
         int cumulativeDemand = 0;
         int lastNode = depot;
         Set<Integer> visitedCustomers = new HashSet<>();
@@ -48,7 +48,7 @@ public class FeasibleSolutionHeuristic {
             if (cumulativeDemand > instance.getCapacity()) {
                 currentPath.addNode(depot, instance.getEdgeWeight(lastNode, depot));
                 ret.add(currentPath);
-                currentPath = new ElementaryPath();
+                currentPath = new FeasiblePath();
                 cumulativeDemand = 0;
                 lastNode = depot;
                 visitedCustomers.clear();
@@ -62,7 +62,7 @@ public class FeasibleSolutionHeuristic {
         ret.add(currentPath);
         if (!instance.unusedVehiclesAllowed()) {
             // ret should have length equal to the number of vehicles
-            ElementaryPath redundantPath = createOneRedundantPath();
+            FeasiblePath redundantPath = createOneRedundantPath();
             while (ret.size() < instance.getNumberOfVehicles()) {
                 ret.add(redundantPath);
             }

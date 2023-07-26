@@ -3,13 +3,13 @@ package commons;
 import java.util.List;
 
 public class Solution {
-    private final List<ElementaryPath> paths;
+    private final List<FeasiblePath> paths;
     private final int cost;
     private final int numberOfVehicles;
 
-    public Solution(List<ElementaryPath> paths) {
+    public Solution(List<FeasiblePath> paths) {
         this.paths = paths;
-        this.cost = paths.stream().mapToInt(ElementaryPath::getCost).sum();
+        this.cost = paths.stream().mapToInt(FeasiblePath::getCost).sum();
         this.numberOfVehicles = paths.size();
     }
 
@@ -21,7 +21,7 @@ public class Solution {
         if (!paths.isEmpty()) {
             builder.append('\n');
         }
-        for (ElementaryPath path : paths) {
+        for (FeasiblePath path : paths) {
             builder.append("\t");
             builder.append(path);
             builder.append('\n');

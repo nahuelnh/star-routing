@@ -1,19 +1,32 @@
 package algorithm;
 
-import commons.ElementaryPath;
-import ilog.concert.IloException;
+import commons.FeasiblePath;
+import commons.Instance;
+import ilog.cplex.IloCplex;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ESPPRCPricing implements PricingProblem {
 
-    @Override
-    public Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
-        return null;
+    private final Instance instance;
+    private List<FeasiblePath> paths;
+
+    public ESPPRCPricing(Instance instance) {
+        this.instance = instance;
+        this.paths = new ArrayList<>();
     }
 
     @Override
-    public List<ElementaryPath> computePathsFromSolution() throws IloException {
-        return null;
+    public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
+        PulseAlgorithm pulseAlgorithm = new PulseAlgorithm(instance, rmpSolution);
+        paths = List.of(pulseAlgorithm.getOptimalPath());
+        double cost = paths.stream().mapToInt(FeasiblePath::getCost).sum() - rmpSolution.getVehiclesDual();
+        return new Solution(IloCplex.Status.Optimal, cost, this);
+    }
+
+    @Override
+    public List<FeasiblePath> computePathsFromSolution() {
+        return paths;
     }
 }

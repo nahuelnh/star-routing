@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.ElementaryPath;
+import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
 import ilog.concert.IloException;
@@ -112,7 +112,7 @@ public class SecondPricingProblem implements PricingProblem {
         createMTZConstraints();
     }
 
-    private void createObjective(RestrictedMasterProblem.Solution rmpSolution) throws IloException {
+    private void createObjective(RestrictedMasterProblem.RMPSolution rmpSolution) throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
@@ -135,7 +135,7 @@ public class SecondPricingProblem implements PricingProblem {
     }
 
     @Override
-    public Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
+    public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
         try {
             cplex = new IloCplex();
             cplex.setOut(null);
@@ -143,7 +143,7 @@ public class SecondPricingProblem implements PricingProblem {
             createConstraints();
             createObjective(rmpSolution);
             cplex.solve();
-            Solution solution = new Solution(cplex, this);
+            Solution solution = new Solution(cplex.getStatus(), cplex.getObjValue(), this);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -170,8 +170,8 @@ public class SecondPricingProblem implements PricingProblem {
         return visitedCustomers;
     }
 
-    private ElementaryPath getPathFromFeasibleSolutionInPool(int solutionIndex) throws IloException {
-        ElementaryPath path = new ElementaryPath();
+    private FeasiblePath getPathFromFeasibleSolutionInPool(int solutionIndex) throws IloException {
+        FeasiblePath path = new FeasiblePath();
         int lastNode = instance.getDepot();
         int currentNode = getNextNodeInPath(lastNode, solutionIndex);
         while (currentNode != instance.getDepot()) {
@@ -185,16 +185,20 @@ public class SecondPricingProblem implements PricingProblem {
     }
 
     @Override
-    public List<ElementaryPath> computePathsFromSolution() throws IloException {
-        List<ElementaryPath> ret = new ArrayList<>();
-        if (!Utils.isSolutionFeasible(cplex)) {
-            return ret;
-        }
-        for (int solutionIndex = 0; solutionIndex < cplex.getSolnPoolNsolns(); solutionIndex++) {
-            if (cplex.getObjValue(solutionIndex) < -EPSILON) {
-                ret.add(getPathFromFeasibleSolutionInPool(solutionIndex));
+    public List<FeasiblePath> computePathsFromSolution() {
+        try {
+            List<FeasiblePath> ret = new ArrayList<>();
+            if (!Utils.isSolutionFeasible(cplex)) {
+                return ret;
             }
+            for (int solutionIndex = 0; solutionIndex < cplex.getSolnPoolNsolns(); solutionIndex++) {
+                if (cplex.getObjValue(solutionIndex) < -EPSILON) {
+                    ret.add(getPathFromFeasibleSolutionInPool(solutionIndex));
+                }
+            }
+            return ret;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
         }
-        return ret;
     }
 }

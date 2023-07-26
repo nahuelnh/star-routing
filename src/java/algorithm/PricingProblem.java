@@ -1,29 +1,28 @@
 package algorithm;
 
-import commons.ElementaryPath;
-import ilog.concert.IloException;
+import commons.FeasiblePath;
 import ilog.cplex.IloCplex;
 
 import java.util.List;
 
 public interface PricingProblem {
 
-    PricingProblem.Solution solve(RestrictedMasterProblem.Solution rmpSolution);
+    PricingProblem.Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution);
 
-    List<ElementaryPath> computePathsFromSolution() throws IloException;
+    List<FeasiblePath> computePathsFromSolution() ;
 
     class Solution {
         private final IloCplex.Status status;
         private final double objectiveValue;
-        private final List<ElementaryPath> negativeReducedCostPaths;
+        private final List<FeasiblePath> negativeReducedCostPaths;
 
-        Solution(IloCplex cplex, PricingProblem pricingProblem) throws IloException {
-            this.status = cplex.getStatus();
-            this.objectiveValue = cplex.getObjValue();
+        Solution(IloCplex.Status status, double objectiveValue,PricingProblem pricingProblem)  {
+            this.status = status;
+            this.objectiveValue = objectiveValue;
             this.negativeReducedCostPaths = pricingProblem.computePathsFromSolution();
         }
 
-        public List<ElementaryPath> getNegativeReducedCostPaths() {
+        public List<FeasiblePath> getNegativeReducedCostPaths() {
             return negativeReducedCostPaths;
         }
 

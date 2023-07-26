@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.ElementaryPath;
+import commons.FeasiblePath;
 import commons.Instance;
 import commons.Solution;
 
@@ -30,17 +30,17 @@ public class ColumnGeneration {
     }
 
     public Solution solve() {
-        List<ElementaryPath> newPaths = heuristic.run();
+        List<FeasiblePath> newPaths = heuristic.run();
         double relaxationOptimal = Double.MAX_VALUE;
         while (!newPaths.isEmpty()) {
             rmp.addPaths(newPaths);
-            RestrictedMasterProblem.Solution rmpSolution = rmp.solveRelaxation();
+            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation();
             relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
             PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
             newPaths = pricingSolution.getNegativeReducedCostPaths();
         }
         System.out.println("Relaxation optimal:" + relaxationOptimal);
-        RestrictedMasterProblem.IntegerSolution solution = rmp.solveInteger();
+        RestrictedMasterProblem.RMPIntegerSolution solution = rmp.solveInteger();
         System.out.println("Integer optimal:" + solution.getObjectiveValue());
         return new Solution(solution.getUsedPaths());
     }

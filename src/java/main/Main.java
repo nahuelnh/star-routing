@@ -1,6 +1,7 @@
 package main;
 
 import algorithm.ColumnGeneration;
+import algorithm.ESPPRCPricing;
 import algorithm.FeasibleSolutionHeuristic;
 import algorithm.MTZRestrictedMasterProblem;
 import algorithm.SecondPricingProblem;
@@ -28,7 +29,7 @@ public class Main {
             StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
             System.out.println(starRoutingModel.solve());
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new MTZRestrictedMasterProblem(instance),
-                    new SecondPricingProblem(instance), new FeasibleSolutionHeuristic(instance));
+                    new ESPPRCPricing(instance), new FeasibleSolutionHeuristic(instance));
             System.out.println(columnGeneration.solve());
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");

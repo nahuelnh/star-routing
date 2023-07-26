@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.ElementaryPath;
+import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
 import ilog.concert.IloException;
@@ -143,7 +143,7 @@ public class FirstPricingProblem implements PricingProblem {
         }
     }
 
-    private void createObjective(RestrictedMasterProblem.Solution rmpSolution) throws IloException {
+    private void createObjective(RestrictedMasterProblem.RMPSolution rmpSolution) throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
@@ -167,7 +167,7 @@ public class FirstPricingProblem implements PricingProblem {
     }
 
     @Override
-    public Solution solve(RestrictedMasterProblem.Solution rmpSolution) {
+    public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
         try {
             cplex = new IloCplex();
             cplex.setOut(null);
@@ -175,7 +175,7 @@ public class FirstPricingProblem implements PricingProblem {
             createConstraints();
             createObjective(rmpSolution);
             cplex.solve();
-            Solution solution = new Solution(cplex, this);
+            Solution solution = new Solution(cplex.getStatus(), cplex.getObjValue(), this);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -184,17 +184,21 @@ public class FirstPricingProblem implements PricingProblem {
     }
 
     @Override
-    public List<ElementaryPath> computePathsFromSolution() throws IloException {
-        List<ElementaryPath> ret = new ArrayList<>();
-        if (!Utils.isSolutionFeasible(cplex)) {
-            return ret;
-        }
-        for (int solutionIndex = 0; solutionIndex < cplex.getSolnPoolNsolns(); solutionIndex++) {
-            if (cplex.getObjValue(solutionIndex) < -EPSILON) {
-                ret.add(getPathFromFeasibleSolution(solutionIndex));
+    public List<FeasiblePath> computePathsFromSolution() {
+        try {
+            List<FeasiblePath> ret = new ArrayList<>();
+            if (!Utils.isSolutionFeasible(cplex)) {
+                return ret;
             }
+            for (int solutionIndex = 0; solutionIndex < cplex.getSolnPoolNsolns(); solutionIndex++) {
+                if (cplex.getObjValue(solutionIndex) < -EPSILON) {
+                    ret.add(getPathFromFeasibleSolution(solutionIndex));
+                }
+            }
+            return ret;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
         }
-        return ret;
     }
 
     private int getNextNodeInPath(int from, int solutionIndex) throws IloException {
@@ -206,8 +210,8 @@ public class FirstPricingProblem implements PricingProblem {
         throw new AssertionError(String.format("Path starting in %d has no end", from));
     }
 
-    private ElementaryPath getPathFromFeasibleSolution(int solutionIndex) throws IloException {
-        ElementaryPath elementaryPath = new ElementaryPath();
+    private FeasiblePath getPathFromFeasibleSolution(int solutionIndex) throws IloException {
+        FeasiblePath feasiblePath = new FeasiblePath();
         int lastNode = instance.getDepot();
         int currentNode = getNextNodeInPath(lastNode, solutionIndex);
         while (currentNode != instance.getDepot()) {
@@ -217,13 +221,13 @@ public class FirstPricingProblem implements PricingProblem {
                     customersVisited.add(instance.getCustomer(s));
                 }
             }
-            elementaryPath.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
-            elementaryPath.addCustomers(customersVisited);
+            feasiblePath.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
+            feasiblePath.addCustomers(customersVisited);
             lastNode = currentNode;
             currentNode = getNextNodeInPath(currentNode, solutionIndex);
         }
-        elementaryPath.addNode(instance.getDepot(), instance.getEdgeWeight(lastNode, instance.getDepot()));
-        return elementaryPath;
+        feasiblePath.addNode(instance.getDepot(), instance.getEdgeWeight(lastNode, instance.getDepot()));
+        return feasiblePath;
     }
 
 }

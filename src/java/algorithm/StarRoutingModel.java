@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.ElementaryPath;
+import commons.FeasiblePath;
 import commons.Instance;
 import commons.Solution;
 import commons.Utils;
@@ -223,11 +223,11 @@ public class StarRoutingModel {
         return false;
     }
 
-    private List<ElementaryPath> getPathsFromSolution() throws IloException {
-        List<ElementaryPath> ret = new ArrayList<>();
+    private List<FeasiblePath> getPathsFromSolution() throws IloException {
+        List<FeasiblePath> ret = new ArrayList<>();
         for (int k = 0; k < instance.getNumberOfVehicles(); k++) {
             if (isVehicleUsed(k)) {
-                ElementaryPath path = new ElementaryPath();
+                FeasiblePath path = new FeasiblePath();
                 int lastNode = instance.getDepot();
                 int currentNode = getNextNodeInPath(lastNode, k);
                 while (currentNode != instance.getDepot()) {

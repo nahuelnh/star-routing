@@ -5,19 +5,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ElementaryPath {
+public class FeasiblePath {
 
     private final List<Integer> nodes;
     private final Set<Integer> customersServed;
     private final List<Integer> weights;
 
-    public ElementaryPath(List<Integer> nodes, Set<Integer> customersServed, List<Integer> weights) {
+    public FeasiblePath(List<Integer> nodes, Set<Integer> customersServed, List<Integer> weights) {
         this.nodes = nodes;
         this.customersServed = customersServed;
         this.weights = weights;
     }
 
-    public ElementaryPath() {
+    public FeasiblePath() {
         this.nodes = new ArrayList<>();
         this.customersServed = new HashSet<>();
         this.weights = new ArrayList<>();
@@ -38,7 +38,7 @@ public class ElementaryPath {
 
     @Override
     public String toString() {
-        return "commons.ElementaryPath{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" +
+        return "FeasiblePath{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" +
                 weights + '}';
     }
 
