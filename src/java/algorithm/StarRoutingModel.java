@@ -10,6 +10,8 @@ import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearIntExpr;
 import ilog.cplex.IloCplex;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -38,10 +40,12 @@ public class StarRoutingModel {
     }
 
     public Solution solve() throws IloException {
+        Instant start = Instant.now();
         buildModel();
         cplex.solve();
         cplex.writeSolution("src/resources/star_routing_model.sol");
-        Solution solution = new Solution(getPathsFromSolution());
+        Instant finish = Instant.now();
+        Solution solution = new Solution(getPathsFromSolution(), Duration.between(start, finish));
         cplex.end();
         return solution;
     }

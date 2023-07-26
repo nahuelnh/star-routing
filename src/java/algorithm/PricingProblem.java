@@ -9,14 +9,14 @@ public interface PricingProblem {
 
     PricingProblem.Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution);
 
-    List<FeasiblePath> computePathsFromSolution() ;
+    List<FeasiblePath> computePathsFromSolution();
 
     class Solution {
         private final IloCplex.Status status;
         private final double objectiveValue;
         private final List<FeasiblePath> negativeReducedCostPaths;
 
-        Solution(IloCplex.Status status, double objectiveValue,PricingProblem pricingProblem)  {
+        Solution(IloCplex.Status status, double objectiveValue, PricingProblem pricingProblem) {
             this.status = status;
             this.objectiveValue = objectiveValue;
             this.negativeReducedCostPaths = pricingProblem.computePathsFromSolution();

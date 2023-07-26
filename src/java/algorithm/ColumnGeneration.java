@@ -4,6 +4,8 @@ import commons.FeasiblePath;
 import commons.Instance;
 import commons.Solution;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 public class ColumnGeneration {
@@ -23,13 +25,14 @@ public class ColumnGeneration {
 
     public static void main(String[] args) {
         Instance instance = new Instance("instance_neighbors_40", true);
-        ColumnGeneration columnGeneration = new ColumnGeneration(instance, new MTZRestrictedMasterProblem(instance),
+        ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
                 new SecondPricingProblem(instance), new FeasibleSolutionHeuristic(instance));
         Solution solution = columnGeneration.solve();
         System.out.println(solution);
     }
 
     public Solution solve() {
+        Instant start = Instant.now();
         List<FeasiblePath> newPaths = heuristic.run();
         double relaxationOptimal = Double.MAX_VALUE;
         while (!newPaths.isEmpty()) {
@@ -42,7 +45,8 @@ public class ColumnGeneration {
         System.out.println("Relaxation optimal:" + relaxationOptimal);
         RestrictedMasterProblem.RMPIntegerSolution solution = rmp.solveInteger();
         System.out.println("Integer optimal:" + solution.getObjectiveValue());
-        return new Solution(solution.getUsedPaths());
+        Instant finish = Instant.now();
+        return new Solution(solution.getUsedPaths(), Duration.between(start, finish));
     }
 }
 

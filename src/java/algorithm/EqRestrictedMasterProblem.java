@@ -13,7 +13,7 @@ import ilog.cplex.IloCplex;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
+public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
 
     private final Instance instance;
     private final List<FeasiblePath> paths;
@@ -22,7 +22,7 @@ public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
     private IloRange[] customerConstraints;
     private IloRange vehiclesConstraint;
 
-    public MTZRestrictedMasterProblem(Instance instance) {
+    public EqRestrictedMasterProblem(Instance instance) {
         this.instance = instance;
         this.paths = new ArrayList<>();
     }
@@ -49,7 +49,7 @@ public class MTZRestrictedMasterProblem implements RestrictedMasterProblem {
                     lhs = cplex.sum(lhs, theta[route]);
                 }
             }
-            customerConstraints[s] = cplex.addEq(lhs, 1, "customer_served_" + s);
+            customerConstraints[s] = cplex.addGe(lhs, 1, "customer_served_" + s);
         }
     }
 
