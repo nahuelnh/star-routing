@@ -7,7 +7,6 @@ public class Solution {
     private final List<FeasiblePath> paths;
     private final int cost;
     private final int numberOfVehicles;
-
     private final Duration elapsedTime;
 
     public Solution(List<FeasiblePath> paths, Duration elapsedTime) {
@@ -15,6 +14,10 @@ public class Solution {
         this.cost = paths.stream().mapToInt(FeasiblePath::getCost).sum();
         this.numberOfVehicles = paths.size();
         this.elapsedTime = elapsedTime;
+    }
+
+    public Duration getElapsedTime() {
+        return elapsedTime;
     }
 
     @Override

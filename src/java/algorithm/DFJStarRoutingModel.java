@@ -13,26 +13,27 @@ import ilog.cplex.IloCplex;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public class StarRoutingModel {
+public class DFJStarRoutingModel {
 
     private final Instance instance;
     private IloCplex cplex;
     private IloIntVar[][][] x;
     private IloIntVar[][] y;
-    private IloIntVar[][] u;
 
-    public StarRoutingModel(Instance instance) {
+    public DFJStarRoutingModel(Instance instance) {
         this.instance = instance;
     }
 
     public static void main(String[] args) {
         try {
-            Instance instance = new Instance("instance_rptd_path", true);
-            StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
+            Instance instance = new Instance("instance_large", true);
+            DFJStarRoutingModel starRoutingModel = new DFJStarRoutingModel(instance);
             starRoutingModel.solve();
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");
@@ -43,7 +44,6 @@ public class StarRoutingModel {
         Instant start = Instant.now();
         buildModel();
         cplex.solve();
-        cplex.writeSolution("src/resources/star_routing_model.sol");
         Instant finish = Instant.now();
         Solution solution = new Solution(getPathsFromSolution(), Duration.between(start, finish));
         cplex.end();
@@ -66,13 +66,6 @@ public class StarRoutingModel {
         for (int s = 0; s < S; s++) {
             for (int k = 0; k < K; k++) {
                 y[s][k] = cplex.boolVar("y_" + s + "_" + k);
-            }
-
-        }
-        u = new IloIntVar[N][K];
-        for (int i = 0; i < N; i++) {
-            for (int k = 0; k < K; k++) {
-                u[i][k] = cplex.intVar(1, N - 1, "u_" + i + "_" + k);
             }
         }
     }
@@ -133,22 +126,6 @@ public class StarRoutingModel {
         }
     }
 
-    private void createMTZConstraints() throws IloException {
-        // Subtour Elimination Constraints (SEC)
-        int N = instance.getNumberOfNodes();
-        int K = instance.getNumberOfVehicles();
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                for (int k = 0; k < K; k++) {
-                    if (i != instance.getDepot() && j != instance.getDepot() && j != i) {
-                        IloIntExpr mtz = cplex.sum(u[i][k], cplex.negative(u[j][k]), cplex.prod(x[i][j][k], N - 1));
-                        cplex.addLe(mtz, N - 2, "mtz_" + i + "_" + j + "_" + k);
-                    }
-                }
-            }
-        }
-    }
-
     private void createVisitConstraints() throws IloException {
         // A vehicle can only serve visited customers
         int N = instance.getNumberOfNodes();
@@ -192,9 +169,8 @@ public class StarRoutingModel {
         createDepotConstraints();
         createVisitConstraints();
         createCapacityConstraints();
-        createMTZConstraints();
         createObjective();
-        cplex.exportModel("src/resources/star_routing.lp");
+        cplex.use(new DFJConstraintsCallback());
     }
 
     private int getNextNodeInPath(int from, int vehicle) throws IloException {
@@ -246,4 +222,77 @@ public class StarRoutingModel {
         }
         return ret;
     }
+
+    private class DFJConstraintsCallback extends IloCplex.LazyConstraintCallback {
+
+        private int[] connectedComponent;
+
+        public DFJConstraintsCallback() {
+            this.connectedComponent = new int[instance.getNumberOfNodes()];
+        }
+
+        @Override
+        protected void main() throws IloException {
+            for (int k = 0; k < instance.getNumberOfVehicles(); k++) {
+                computeConnectedComponents(k);
+                Map<Integer, Set<Integer>> forbiddenCycles = getForbiddenCycles();
+                for (int ccIndex : forbiddenCycles.keySet()) {
+                    addSubtourBreakingConstraint(forbiddenCycles.get(ccIndex), k);
+                }
+            }
+        }
+
+        private int merge(int x) {
+            if (connectedComponent[x] == x) {
+                return x;
+            }
+            return merge(connectedComponent[x]);
+        }
+
+        private void computeConnectedComponents(int vehicle) throws IloException {
+            int N = instance.getNumberOfNodes();
+            connectedComponent = new int[N];
+            for (int i = 0; i < N; i++) {
+                connectedComponent[i] = i;
+            }
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    if (Math.round(this.getValue(x[i][j][vehicle])) == 1) {
+                        connectedComponent[merge(i)] = merge(j);
+                    }
+                }
+            }
+            for (int i = 0; i < N; i++) {
+                connectedComponent[i] = merge(connectedComponent[i]);
+            }
+        }
+
+        private Map<Integer, Set<Integer>> getForbiddenCycles() {
+            Map<Integer, Set<Integer>> forbiddenCycles = new HashMap<>();
+            int onlyValidComponent = connectedComponent[instance.getDepot()];
+            for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+                int ccNumber = connectedComponent[i];
+                if (ccNumber != i && ccNumber != onlyValidComponent && !forbiddenCycles.containsKey(ccNumber)) {
+                    forbiddenCycles.put(ccNumber, new HashSet<>());
+                    for (int j = 0; j < instance.getNumberOfNodes(); j++) {
+                        if (connectedComponent[j] == ccNumber) {
+                            forbiddenCycles.get(ccNumber).add(j);
+                        }
+                    }
+                }
+            }
+            return forbiddenCycles;
+        }
+
+        private void addSubtourBreakingConstraint(Set<Integer> forbiddenCycle, int k) throws IloException {
+            IloLinearIntExpr inCycleEdges = cplex.linearIntExpr();
+            for (int i : forbiddenCycle) {
+                for (int j : forbiddenCycle) {
+                    inCycleEdges.addTerm(x[i][j][k], 1);
+                }
+            }
+            this.add(cplex.le(inCycleEdges, forbiddenCycle.size() - 1));
+        }
+    }
 }
+

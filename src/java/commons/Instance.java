@@ -209,7 +209,7 @@ public class Instance {
         return customerIndex[customer];
     }
 
-    public boolean isCustomer(int customer) {
-        return customerIndex[customer] != -1;
+    public boolean isCustomer(int node) {
+        return customerIndex[node] != -1;
     }
 }

@@ -13,40 +13,43 @@ import java.util.TreeSet;
 
 public class PulseAlgorithm {
     private static final double EPSILON = 1e-6;
-
     private final Instance instance;
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
-    private final double[][] lowerBounds;
     private final int endNode;
     private final int startNode;
     private final int numberOfNodes;
     private final List<Node> graph;
+    private double[][] lowerBounds;
     private double bestSolutionFound;
-    private List<Node> bestPath;
-    private Set<Integer> bestCustomers;
-    private int counter;
+    private List<List<Node>> foundPaths;
+    private List<Set<Integer>> foundCustomerSets;
 
     public PulseAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
-
         this.numberOfNodes = instance.getNumberOfNodes() + 1;
         this.startNode = instance.getDepot();
-        this.endNode = instance.getNumberOfNodes();
-        graph = new ArrayList<>();
-        generateGraph();
+        this.endNode = numberOfNodes - 1;
+        this.graph = createGraph();
+    }
 
-        this.lowerBounds = new double[numberOfNodes][instance.getCapacity() + 1];
+    public List<FeasiblePath> run() {
+        lowerBounds = new double[numberOfNodes][instance.getCapacity() + 1];
         for (int i = 0; i < numberOfNodes; i++) {
             Arrays.fill(lowerBounds[i], Double.MIN_VALUE);
         }
-        this.bestSolutionFound = Double.MAX_VALUE;
-        bestPath = new ArrayList<>();
-        bestCustomers = new HashSet<>();
-        counter = 0;
+        bestSolutionFound = Double.MAX_VALUE;
+        foundPaths = new ArrayList<>();
+        foundCustomerSets = new ArrayList<>();
+
+        bound();
+        bestSolutionFound = Double.MAX_VALUE;
+        pulseWithNodeRule(graph.get(startNode), 0.0, new PartialPath(), true);
+        return computePathsFromSolution();
     }
 
-    private void generateGraph() {
+    private List<Node> createGraph() {
+        List<Node> graph = new ArrayList<>();
         for (int i = 0; i < numberOfNodes; i++) {
             graph.add(new Node(i));
         }
@@ -57,41 +60,33 @@ public class PulseAlgorithm {
                 }
             }
         }
+        return graph;
     }
 
     private List<FeasiblePath> computePathsFromSolution() {
-        if (bestSolutionFound - rmpSolution.getVehiclesDual() < -EPSILON) {
+        List<FeasiblePath> ret = new ArrayList<>();
+        for (int i = 0; i < foundPaths.size(); i++) {
+            List<Node> foundPath = foundPaths.get(i);
+            Set<Integer> foundCustomers = foundCustomerSets.get(i);
             FeasiblePath path = new FeasiblePath();
-            int lastNode = bestPath.get(0).getNumber();
+            int lastNode = foundPath.get(0).getNumber();
             assert lastNode == instance.getDepot();
             assert lastNode == startNode;
-            for (int i = 1; i < bestPath.size(); i++) {
-                int currentNode = bestPath.get(i).getNumber();
+            for (int j = 1; j < foundPath.size(); j++) {
+                int currentNode = foundPath.get(j).getNumber();
                 if (currentNode == endNode) {
                     currentNode = instance.getDepot();
                 }
                 path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
                 lastNode = currentNode;
             }
-            path.addCustomers(bestCustomers);
-            return List.of(path);
+            path.addCustomers(foundCustomers);
+            ret.add(path);
         }
-        return new ArrayList<>();
-
+        return ret;
     }
 
-    public List<FeasiblePath> getOptimalPaths() {
-        bound();
-        bestSolutionFound = Double.MAX_VALUE;
-        pulse(graph.get(startNode), 0.0, new PartialPath());
-        //        System.out.println(bestSolutionFound);
-        //        System.out.println(bestPath);
-        //        System.out.println(bestCustomers);
-        //        System.out.println(computePathsFromSolution());
-        return computePathsFromSolution();
-    }
-
-    private boolean prune(Node currentNode, double edgeCost, PartialPath visitedPath) {
+    private boolean pruneWithNodeRule(Node currentNode, double edgeCost, PartialPath visitedPath) {
         int currentDemand = visitedPath.getTotalDemand();
         double currentCost = visitedPath.getTotalCost() + edgeCost;
         if (!isFeasible(currentNode, currentDemand)) {
@@ -106,10 +101,14 @@ public class PulseAlgorithm {
         return false;
     }
 
-    private boolean prunePulseCustomer(Node currentNode, int deltaDemand, double deltaCost, PartialPath visitedPath) {
+    private boolean isNegativeReducedCost(double cost) {
+        return cost - rmpSolution.getVehiclesDual() < -EPSILON;
+    }
+
+    private boolean pruneWithCustomerRule(Node currentNode, int deltaDemand, double deltaCost,
+                                          PartialPath visitedPath) {
         int currentDemand = visitedPath.getTotalDemand() + deltaDemand;
         double currentCost = visitedPath.getTotalCost() - deltaCost;
-
         if (deltaCost < EPSILON) {
             return true;
         }
@@ -122,47 +121,44 @@ public class PulseAlgorithm {
         return false;
     }
 
-    private void propagate(Node currentNode, PartialPath visitedPath) {
-        //        System.out.println(
-        //                currentNode.getNumber() + " " + visitedPath.nodes.stream().map(Node::getNumber).toList() + " " +
-        //                        visitedPath.visitedCustomers + " " + bestSolutionFound);
-        counter++;
+    private void propagate(Node currentNode, PartialPath visitedPath, boolean saveSolution) {
         if (currentNode.getNumber() == endNode) {
             if (visitedPath.getTotalCost() < bestSolutionFound) {
                 bestSolutionFound = visitedPath.getTotalCost();
-                bestPath = visitedPath.getCopyOfNodes();
-                bestCustomers = visitedPath.getCopyOfCustomers();
+                if (saveSolution && isNegativeReducedCost(visitedPath.getTotalCost())) {
+                    foundPaths.add(visitedPath.getCopyOfNodes());
+                    foundCustomerSets.add(visitedPath.getCopyOfCustomers());
+                }
             }
         } else {
-
             for (Edge edge : currentNode.getOutgoingEdges()) {
                 Node nextNode = graph.get(edge.getHead());
-                pulse(nextNode, edge.getCost(), visitedPath);
+                pulseWithNodeRule(nextNode, edge.getCost(), visitedPath, saveSolution);
             }
             for (int nextCustomer : currentNode.getReverseNeighborhood()) {
                 if (!visitedPath.isVisited(nextCustomer)) {
-                    pulseCustomer(currentNode, nextCustomer, visitedPath);
+                    pulseWithCustomerRule(currentNode, nextCustomer, visitedPath, saveSolution);
                 }
             }
         }
     }
 
-    private void pulse(Node currentNode, double edgeCost, PartialPath visitedPath) {
-        if (!prune(currentNode, edgeCost, visitedPath)) {
+    private void pulseWithNodeRule(Node currentNode, double edgeCost, PartialPath visitedPath, boolean saveSolution) {
+        if (!pruneWithNodeRule(currentNode, edgeCost, visitedPath)) {
             currentNode.visit();
             visitedPath.addNode(currentNode, edgeCost);
-            propagate(currentNode, visitedPath);
+            propagate(currentNode, visitedPath, saveSolution);
             currentNode.unvisit();
             visitedPath.removeLast(edgeCost);
         }
     }
 
-    private void pulseCustomer(Node currentNode, int customer, PartialPath visitedPath) {
+    private void pulseWithCustomerRule(Node currentNode, int customer, PartialPath visitedPath, boolean saveSolution) {
         int deltaDemand = instance.getDemand(customer);
         double deltaCost = rmpSolution.getCustomerDual(instance.getCustomerIndex(customer));
-        if (!prunePulseCustomer(currentNode, deltaDemand, deltaCost, visitedPath)) {
+        if (!pruneWithCustomerRule(currentNode, deltaDemand, deltaCost, visitedPath)) {
             visitedPath.addCustomer(customer, deltaDemand, deltaCost);
-            propagate(currentNode, visitedPath);
+            propagate(currentNode, visitedPath, saveSolution);
             visitedPath.removeCustomer(customer, deltaDemand, deltaCost);
         }
     }
@@ -173,9 +169,8 @@ public class PulseAlgorithm {
             for (Node node : graph) {
                 bestSolutionFound = Double.MAX_VALUE;
                 PartialPath partialPath = new PartialPath(0.0, capacity);
-                pulse(node, 0.0, partialPath);
+                pulseWithNodeRule(node, 0.0, partialPath, false);
                 lowerBounds[node.getNumber()][capacity] = bestSolutionFound;
-                counter = 0;
             }
         }
     }
@@ -208,11 +203,8 @@ public class PulseAlgorithm {
 
     private class Node {
         private final int number;
-
         private final Collection<Edge> outgoingEdges;
-
         private final Set<Integer> reverseNeighborhood;
-
         private boolean visited;
         private double actualCost;
 
@@ -278,22 +270,16 @@ public class PulseAlgorithm {
 
     private class Edge implements Comparable<Edge> {
         private final int head;
-        private final int tail;
         private final double cost;
 
         public Edge(int head, int tail) {
             this.head = head;
-            this.tail = tail;
             int fakeHead = head == endNode ? instance.getDepot() : head;
             this.cost = instance.getEdgeWeight(tail, fakeHead);
         }
 
         public int getHead() {
             return head;
-        }
-
-        public int getTail() {
-            return tail;
         }
 
         public double getCost() {
@@ -329,7 +315,6 @@ public class PulseAlgorithm {
             this.totalDemand = totalDemand;
             this.visitedCustomers = new boolean[numberOfNodes];
             Arrays.fill(visitedCustomers, false);
-
         }
 
         public int size() {
@@ -390,7 +375,6 @@ public class PulseAlgorithm {
         }
 
         public Node getNodeAt(int index) {
-
             return nodes[index];
         }
 
