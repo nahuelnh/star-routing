@@ -2,6 +2,7 @@ package main;
 
 import algorithm.ColumnGeneration;
 import algorithm.DFJStarRoutingModel;
+import algorithm.DPPricing;
 import algorithm.PulsePricing;
 import algorithm.FeasibleSolutionHeuristic;
 import algorithm.EqRestrictedMasterProblem;
@@ -28,12 +29,12 @@ public class Main {
             Instance instance = new Instance(instanceName, true);
             StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
             System.out.println("MTZ: " +starRoutingModel.solve());
-//            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-//                    new PulsePricing(instance), new FeasibleSolutionHeuristic(instance));
-//            System.out.println(columnGeneration.solve());
-            DFJStarRoutingModel dfjStarRoutingModel = new DFJStarRoutingModel(instance);
-            System.out.println("DFJ:" + dfjStarRoutingModel.solve());
-            System.out.println();
+            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
+                    new DPPricing(instance), new FeasibleSolutionHeuristic(instance));
+            System.out.println("ColGen: " + columnGeneration.solve());
+//            DFJStarRoutingModel dfjStarRoutingModel = new DFJStarRoutingModel(instance);
+//            System.out.println("DFJ:" + dfjStarRoutingModel.solve());
+//            System.out.println();
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");
         }
