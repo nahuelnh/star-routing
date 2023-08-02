@@ -11,11 +11,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 
 public class ESPPRCAlgorithmDP {
+
     private static final double EPSILON = 1e-6;
     private final Instance instance;
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
@@ -34,10 +34,6 @@ public class ESPPRCAlgorithmDP {
 
     }
 
-    private boolean dominates(Label former, Label latter) {
-        return former.getCost() <= latter.getCost();
-    }
-
     private List<List<Integer>> createGraph() {
         List<List<Integer>> graph = new ArrayList<>();
         for (int i = 0; i < numberOfNodes; i++) {
@@ -53,13 +49,24 @@ public class ESPPRCAlgorithmDP {
         return graph;
     }
 
-    private FeasiblePath computePathFromSolution(Label bestLabel) {
+    private List<FeasiblePath> computePathFromSolution(Label bestLabel) {
+        if (bestLabel.cost() - rmpSolution.getVehiclesDual() < -EPSILON) {
+            return new ArrayList<>();
+        }
         Set<Integer> customers = new HashSet<>();
         Deque<Integer> nodes = new LinkedList<>();
+        nodes.addFirst(bestLabel.node());
+        customers.add(bestLabel.customer());
+
+        Label lastLabel = bestLabel;
+        bestLabel = bestLabel.parent();
         while (bestLabel != null) {
-            nodes.addFirst(bestLabel.getNode());
-            customers.add(bestLabel.getCustomer());
-            bestLabel = bestLabel.getParent();
+            if (lastLabel.node() != bestLabel.node()) {
+                nodes.addFirst(bestLabel.node());
+            }
+            customers.add(bestLabel.customer());
+            lastLabel = bestLabel;
+            bestLabel = bestLabel.parent();
         }
         customers.remove(-1);
 
@@ -77,59 +84,50 @@ public class ESPPRCAlgorithmDP {
             lastNode = currentNode;
         }
         path.addCustomers(customers);
-        return path;
+        return List.of(path);
     }
 
     public List<FeasiblePath> run() {
-        FeasiblePath feasiblePath = new FeasiblePath();
         Label bestLabel = RighiniSalani();
-        return List.of(computePathFromSolution(bestLabel));
+        return computePathFromSolution(bestLabel);
     }
 
-    private Optional<Label> extendCustomer(Label label, int customer) {
-        // Returns empty if node is unreachable
-        if (label.isCustomerVisited(customer)) {
-            return Optional.empty();
-        }
-        int updatedDemand = label.getDemand() + instance.getDemand(customer);
-        if (updatedDemand >= instance.getCapacity()) {
-            return Optional.empty();
-        }
-        double updatedCost = label.getCost() - rmpSolution.getCustomerDual(instance.getCustomerIndex(customer));
-        boolean[] updatedVisited = label.getVisitedCustomers();
+    private Label extendCustomer(Label label, int customer) {
+        int updatedDemand = label.demand() + instance.getDemand(customer);
+        double updatedCost = label.cost() - rmpSolution.getCustomerDual(instance.getCustomerIndex(customer));
+        boolean[] updatedVisited = label.visitedCustomers();
         updatedVisited[customer] = true;
-        return Optional.of(new Label(updatedDemand, updatedCost, label.getNode(), customer, label.getVisitedNodes(),
-                updatedVisited, label));
+        return new Label(updatedDemand, updatedCost, label.node(), customer, label.visitedNodes(), updatedVisited,
+                label);
 
     }
 
-    private Optional<Label> extendNode(Label label, int nextNode) {
-        // Returns empty if node is unreachable
-        if (label.isNodeVisited(nextNode)) {
-            return Optional.empty();
-        }
-        if (label.getDemand() >= instance.getCapacity()) {
-            return Optional.empty();
-        }
+    private Label extendNode(Label label, int nextNode) {
         int fakeNode = nextNode == endNode ? instance.getDepot() : nextNode;
-        double updatedCost = label.getCost() + instance.getEdgeWeight(label.getNode(), fakeNode);
-
-        boolean[] updatedVisited = label.getVisitedNodes();
+        double updatedCost = label.cost() + instance.getEdgeWeight(label.node(), fakeNode);
+        boolean[] updatedVisited = label.visitedNodes();
         updatedVisited[nextNode] = true;
-        return Optional.of(
-                new Label(label.getDemand(), updatedCost, nextNode, -1, updatedVisited, label.getVisitedCustomers(),
-                        label));
+        return new Label(label.demand(), updatedCost, nextNode, -1, updatedVisited, label.visitedCustomers(), label);
     }
-
-    //    private boolean EFF(Label[][] labels, Label nextLabel) {
-    //        //TODO implement segment tree to search best demand found
-    //        if (labels[nextLabel.getNode()][nextLabel.getDemand()] == null ||
-    //                !dominates(labels[nextLabel.getNode()][nextLabel.getDemand()], nextLabel)) {
-    //            labels[nextLabel.getNode()][nextLabel.getDemand()] = nextLabel;
-    //            return true;
-    //        }
-    //        return false;
-    //    }
+private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelStore labelStore){
+    if ( previousLabel.isCustomerVisited(label.customer())) {
+        return true;
+    }
+    if (label.demand() >= instance.getCapacity()) {
+        return true;
+    }
+    return labelStore.isDominated(label);
+}
+    private boolean isNodeUnreachable(Label label, Label previousLabel, LabelStore labelStore) {
+        // returns true if node is infeasible or dominated
+        if (previousLabel.isNodeVisited(label.node())) {
+            return true;
+        }
+        if (label.demand() >= instance.getCapacity()) {
+            return true;
+        }
+        return labelStore.isDominated(label);
+    }
 
     private Set<Integer> computeReverseNeighborhood(int node) {
         Set<Integer> ret = new HashSet<>();
@@ -141,16 +139,6 @@ public class ESPPRCAlgorithmDP {
         return ret;
     }
 
-    private boolean EFF(Label[][] labels, Label nextLabel) {
-        for (int q = 0; q <= nextLabel.getDemand(); q++) {
-            if (labels[nextLabel.getNode()][q] != null &&
-                    labels[nextLabel.getNode()][q].getCost() <= nextLabel.getCost()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     // TODO optimize complexity
     private Label RighiniSalani() {
 
@@ -158,59 +146,70 @@ public class ESPPRCAlgorithmDP {
         for (int i = 0; i < numberOfNodes; i++) {
             reverseNeighborhoods.put(i, computeReverseNeighborhood(i));
         }
-        Label[][] labels = new Label[numberOfNodes][instance.getCapacity() + 1];
-        labels[startNode][0] = Label.getRootLabel(startNode, numberOfNodes);
+        LabelStore labels = new LabelStore(numberOfNodes, instance.getCapacity() + 1);
+        Label root = Label.getRootLabel(startNode, numberOfNodes);
+        labels.addLabel(root);
         PriorityQueue<Label> queue = new PriorityQueue<>();
-        queue.add(labels[startNode][0]);
+        queue.add(root);
         while (!queue.isEmpty()) {
             Label currentLabel = queue.remove();
-            for (int customer : reverseNeighborhoods.get(currentLabel.getNode())) {
-                Optional<Label> nextLabel = extendCustomer(currentLabel, customer);
-                if (nextLabel.isPresent() && EFF(labels, nextLabel.get())) {
-                    Label l = nextLabel.get();
-                    labels[l.getNode()][l.getDemand()] = l;
-                    queue.add(l);
+            for (int customer : reverseNeighborhoods.get(currentLabel.node())) {
+                Label nextLabel = extendCustomer(currentLabel, customer);
+                if (!isCustomerUnreachable(nextLabel, currentLabel, labels)) {
+                    labels.addLabel(nextLabel);
+                    queue.add(nextLabel);
                 }
             }
-            for (int nextNode : graph.get(currentLabel.getNode())) {
-                Optional<Label> nextLabel = extendNode(currentLabel, nextNode);
-                if (nextLabel.isPresent() && EFF(labels, nextLabel.get())) {
-                    Label l = nextLabel.get();
-                    labels[l.getNode()][l.getDemand()] = l;
-                    queue.add(l);
-                }
-            }
-        }
-        Label bestLabel = null;
-        for (int q = 0; q < instance.getCapacity() + 1; q++) {
-            if (labels[endNode][q] != null) {
-                if (bestLabel == null || bestLabel.getCost() < labels[endNode][q].getCost()) {
-                    bestLabel = labels[endNode][q];
+            for (int nextNode : graph.get(currentLabel.node())) {
+                Label nextLabel = extendNode(currentLabel, nextNode);
+                if (!isNodeUnreachable(nextLabel, currentLabel, labels)) {
+                    labels.addLabel(nextLabel);
+                    queue.add(nextLabel);
                 }
             }
         }
-        return bestLabel;
+        return labels.getBest(endNode);
     }
 
-    private static class Label implements Comparable<Label> {
-        private final int node;
-        private final int customer;
-        private final boolean[] visitedNodes;
-        private final boolean[] visitedCustomers;
-        private final int demand;
-        private final double cost;
-        private final Label parent;
+    private static class LabelStore {
+        private final Label[][] labels;
+        private final MinSegmentTree[] trees;
 
-        public Label(int demand, double cost, int node, int customer, boolean[] visitedNodes,
-                     boolean[] visitedCustomers, Label parent) {
-            this.demand = demand;
-            this.cost = cost;
-            this.node = node;
-            this.customer = customer;
-            this.visitedNodes = visitedNodes;
-            this.visitedCustomers = visitedCustomers;
-            this.parent = parent;
+        public LabelStore(int numberOfNodes, int capacity) {
+            this.labels = new Label[numberOfNodes][capacity + 1];
+            this.trees = new MinSegmentTree[numberOfNodes];
+            double[] arr = new double[capacity + 1];
+            Arrays.fill(arr, Double.MAX_VALUE);
+            for (int i = 0; i < numberOfNodes; i++) {
+                trees[i] = new MinSegmentTree(arr);
+            }
         }
+
+        public void addLabel(Label l) {
+            labels[l.node()][l.demand()] = l;
+            trees[l.node()].update(l.demand(), l.cost());
+        }
+
+        public boolean isDominated(Label l) {
+            return trees[l.node()].query(0, l.demand() + 1) < l.cost();
+        }
+
+        public Label getBest(int node) {
+            Label ret = null;
+            for (int q = 0; q < labels[node].length; q++) {
+                if (labels[node][q] != null) {
+                    if (ret == null || labels[node][q].cost() < ret.cost()) {
+                        ret = labels[node][q];
+                    }
+                }
+            }
+            return ret;
+        }
+
+    }
+
+    private record Label(int demand, double cost, int node, int customer, boolean[] visitedNodes,
+                         boolean[] visitedCustomers, ESPPRCAlgorithmDP.Label parent) implements Comparable<Label> {
 
         public static Label getRootLabel(int startNode, int numberOfNodes) {
             boolean[] visitedNodes = new boolean[numberOfNodes];
@@ -221,18 +220,6 @@ public class ESPPRCAlgorithmDP {
             return new Label(0, 0, startNode, -1, visitedNodes, visitedCustomers, null);
         }
 
-        public int getDemand() {
-            return demand;
-        }
-
-        public double getCost() {
-            return cost;
-        }
-
-        public int getNode() {
-            return node;
-        }
-
         public boolean isNodeVisited(int node) {
             return visitedNodes[node];
         }
@@ -241,20 +228,14 @@ public class ESPPRCAlgorithmDP {
             return visitedCustomers[customer];
         }
 
-        public boolean[] getVisitedNodes() {
+        @Override
+        public boolean[] visitedNodes() {
             return Arrays.copyOf(visitedNodes, visitedNodes.length);
         }
 
-        public boolean[] getVisitedCustomers() {
+        @Override
+        public boolean[] visitedCustomers() {
             return Arrays.copyOf(visitedCustomers, visitedCustomers.length);
-        }
-
-        public int getCustomer() {
-            return customer;
-        }
-
-        public Label getParent() {
-            return parent;
         }
 
         @Override
