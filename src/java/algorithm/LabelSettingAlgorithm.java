@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-public class ESPPRCAlgorithmDP {
+public class LabelSettingAlgorithm {
 
     private static final double EPSILON = 1e-6;
     private final Instance instance;
@@ -24,7 +24,7 @@ public class ESPPRCAlgorithmDP {
     private final int numberOfNodes;
     private final List<List<Integer>> graph;
 
-    public ESPPRCAlgorithmDP(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
+    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
         this.numberOfNodes = instance.getNumberOfNodes() + 1;
@@ -49,47 +49,48 @@ public class ESPPRCAlgorithmDP {
         return graph;
     }
 
-    private List<FeasiblePath> computePathFromSolution(Label bestLabel) {
-        if (bestLabel.cost() - rmpSolution.getVehiclesDual() < -EPSILON) {
-            return new ArrayList<>();
-        }
-        Set<Integer> customers = new HashSet<>();
-        Deque<Integer> nodes = new LinkedList<>();
-        nodes.addFirst(bestLabel.node());
-        customers.add(bestLabel.customer());
+    private List<FeasiblePath> computePathFromSolution(List<Label> negativeReducedCostLabels) {
+        List<FeasiblePath> ret = new ArrayList<>();
+        for (Label currentLabel : negativeReducedCostLabels) {
+            Set<Integer> customers = new HashSet<>();
+            Deque<Integer> nodes = new LinkedList<>();
+            nodes.addFirst(currentLabel.node());
+            customers.add(currentLabel.customer());
 
-        Label lastLabel = bestLabel;
-        bestLabel = bestLabel.parent();
-        while (bestLabel != null) {
-            if (lastLabel.node() != bestLabel.node()) {
-                nodes.addFirst(bestLabel.node());
+            Label lastLabel = currentLabel;
+            currentLabel = currentLabel.parent();
+            while (currentLabel != null) {
+                if (lastLabel.node() != currentLabel.node()) {
+                    nodes.addFirst(currentLabel.node());
+                }
+                customers.add(currentLabel.customer());
+                lastLabel = currentLabel;
+                currentLabel = currentLabel.parent();
             }
-            customers.add(bestLabel.customer());
-            lastLabel = bestLabel;
-            bestLabel = bestLabel.parent();
-        }
-        customers.remove(-1);
+            customers.remove(-1);
 
-        int size = nodes.size();
-        FeasiblePath path = new FeasiblePath();
-        int lastNode = nodes.remove();
-        assert lastNode == instance.getDepot();
-        assert lastNode == startNode;
-        for (int j = 1; j < size; j++) {
-            int currentNode = nodes.remove();
-            if (currentNode == endNode) {
-                currentNode = instance.getDepot();
+            int size = nodes.size();
+            FeasiblePath path = new FeasiblePath();
+            int lastNode = nodes.remove();
+            assert lastNode == instance.getDepot();
+            assert lastNode == startNode;
+            for (int j = 1; j < size; j++) {
+                int currentNode = nodes.remove();
+                if (currentNode == endNode) {
+                    currentNode = instance.getDepot();
+                }
+                path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
+                lastNode = currentNode;
             }
-            path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
-            lastNode = currentNode;
+            path.addCustomers(customers);
+            ret.add(path);
         }
-        path.addCustomers(customers);
-        return List.of(path);
+        return ret;
     }
 
     public List<FeasiblePath> run() {
-        Label bestLabel = RighiniSalani();
-        return computePathFromSolution(bestLabel);
+        List<Label> negativeReducedCostLabels = RighiniSalani();
+        return computePathFromSolution(negativeReducedCostLabels);
     }
 
     private Label extendCustomer(Label label, int customer) {
@@ -109,21 +110,23 @@ public class ESPPRCAlgorithmDP {
         updatedVisited[nextNode] = true;
         return new Label(label.demand(), updatedCost, nextNode, -1, updatedVisited, label.visitedCustomers(), label);
     }
-private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelStore labelStore){
-    if ( previousLabel.isCustomerVisited(label.customer())) {
-        return true;
+
+    private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelStore labelStore) {
+        if (previousLabel.isCustomerVisited(label.customer())) {
+            return true;
+        }
+        if (label.demand() > instance.getCapacity()) {
+            return true;
+        }
+        return labelStore.isDominated(label);
     }
-    if (label.demand() >= instance.getCapacity()) {
-        return true;
-    }
-    return labelStore.isDominated(label);
-}
+
     private boolean isNodeUnreachable(Label label, Label previousLabel, LabelStore labelStore) {
         // returns true if node is infeasible or dominated
         if (previousLabel.isNodeVisited(label.node())) {
             return true;
         }
-        if (label.demand() >= instance.getCapacity()) {
+        if (label.demand() > instance.getCapacity()) {
             return true;
         }
         return labelStore.isDominated(label);
@@ -140,8 +143,7 @@ private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelSto
     }
 
     // TODO optimize complexity
-    private Label RighiniSalani() {
-
+    private List<Label> RighiniSalani() {
         Map<Integer, Set<Integer>> reverseNeighborhoods = new HashMap<>();
         for (int i = 0; i < numberOfNodes; i++) {
             reverseNeighborhoods.put(i, computeReverseNeighborhood(i));
@@ -168,7 +170,7 @@ private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelSto
                 }
             }
         }
-        return labels.getBest(endNode);
+        return labels.getNegativeReducedCostLabels(endNode, rmpSolution.getVehiclesDual());
     }
 
     private static class LabelStore {
@@ -194,13 +196,11 @@ private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelSto
             return trees[l.node()].query(0, l.demand() + 1) < l.cost();
         }
 
-        public Label getBest(int node) {
-            Label ret = null;
+        public List<Label> getNegativeReducedCostLabels(int node, double maxCost) {
+            List<Label> ret = new ArrayList<>();
             for (int q = 0; q < labels[node].length; q++) {
-                if (labels[node][q] != null) {
-                    if (ret == null || labels[node][q].cost() < ret.cost()) {
-                        ret = labels[node][q];
-                    }
+                if (labels[node][q] != null && labels[node][q].cost() - maxCost < -EPSILON) {
+                    ret.add(labels[node][q]);
                 }
             }
             return ret;
@@ -209,7 +209,7 @@ private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelSto
     }
 
     private record Label(int demand, double cost, int node, int customer, boolean[] visitedNodes,
-                         boolean[] visitedCustomers, ESPPRCAlgorithmDP.Label parent) implements Comparable<Label> {
+                         boolean[] visitedCustomers, LabelSettingAlgorithm.Label parent) implements Comparable<Label> {
 
         public static Label getRootLabel(int startNode, int numberOfNodes) {
             boolean[] visitedNodes = new boolean[numberOfNodes];

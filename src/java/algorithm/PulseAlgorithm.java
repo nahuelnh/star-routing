@@ -55,7 +55,7 @@ public class PulseAlgorithm {
         }
         for (int i = 0; i < numberOfNodes; i++) {
             for (int j = 0; j < numberOfNodes; j++) {
-                if (i != j && i != endNode && j != startNode) {
+                if (i != j && i != endNode && j != startNode && !(i == startNode && j == endNode)) {
                     graph.get(i).addEdge(j);
                 }
             }

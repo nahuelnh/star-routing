@@ -49,7 +49,7 @@ public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
                     lhs = cplex.sum(lhs, theta[route]);
                 }
             }
-            customerConstraints[s] = cplex.addGe(lhs, 1, "customer_served_" + s);
+            customerConstraints[s] = cplex.addEq(lhs, 1, "customer_served_" + s);
         }
     }
 
