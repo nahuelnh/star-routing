@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class PulseAlgorithm {
     private static final double EPSILON = 1e-6;
@@ -36,7 +35,7 @@ public class PulseAlgorithm {
     public List<FeasiblePath> run() {
         lowerBounds = new double[numberOfNodes][instance.getCapacity() + 1];
         for (int i = 0; i < numberOfNodes; i++) {
-            Arrays.fill(lowerBounds[i], Double.MIN_VALUE);
+            Arrays.fill(lowerBounds[i], -Double.MAX_VALUE);
         }
         bestSolutionFound = Double.MAX_VALUE;
         foundPaths = new ArrayList<>();
@@ -109,9 +108,9 @@ public class PulseAlgorithm {
                                           PartialPath visitedPath) {
         int currentDemand = visitedPath.getTotalDemand() + deltaDemand;
         double currentCost = visitedPath.getTotalCost() - deltaCost;
-        if (deltaCost < EPSILON) {
-            return true;
-        }
+        //        if (deltaCost < EPSILON) {
+        //            return true;
+        //        }
         if (currentDemand > instance.getCapacity()) {
             return true;
         }
@@ -131,14 +130,14 @@ public class PulseAlgorithm {
                 }
             }
         } else {
-            for (Edge edge : currentNode.getOutgoingEdges()) {
-                Node nextNode = graph.get(edge.getHead());
-                pulseWithNodeRule(nextNode, edge.getCost(), visitedPath, saveSolution);
-            }
             for (int nextCustomer : currentNode.getReverseNeighborhood()) {
                 if (!visitedPath.isVisited(nextCustomer)) {
                     pulseWithCustomerRule(currentNode, nextCustomer, visitedPath, saveSolution);
                 }
+            }
+            for (Edge edge : currentNode.getOutgoingEdges()) {
+                Node nextNode = graph.get(edge.getHead());
+                pulseWithNodeRule(nextNode, edge.getCost(), visitedPath, saveSolution);
             }
         }
     }
@@ -164,8 +163,8 @@ public class PulseAlgorithm {
     }
 
     private void bound() {
-        for (int capacity = 0; capacity <= instance.getCapacity(); capacity++) {
-            //for (int capacity = instance.getCapacity(); capacity >=0; capacity--) {
+        //for (int capacity = 0; capacity <= instance.getCapacity(); capacity++) {
+        for (int capacity = instance.getCapacity(); capacity >= 0; capacity--) {
             for (Node node : graph) {
                 bestSolutionFound = Double.MAX_VALUE;
                 PartialPath partialPath = new PartialPath(0.0, capacity);
@@ -181,6 +180,9 @@ public class PulseAlgorithm {
             return true;
         }
         if (bestSolutionFound == Double.MAX_VALUE) {
+            return false;
+        }
+        if (lowerBounds[currentNode.getNumber()][demand] == -Double.MAX_VALUE) {
             return false;
         }
         return cost + lowerBounds[currentNode.getNumber()][demand] >= bestSolutionFound;
@@ -210,7 +212,7 @@ public class PulseAlgorithm {
 
         public Node(int number) {
             this.number = number;
-            this.outgoingEdges = new TreeSet<>();
+            this.outgoingEdges = new ArrayList<>();
             this.reverseNeighborhood = computeReverseNeighborhood();
             this.visited = false;
             this.actualCost = 0.0;
@@ -268,7 +270,7 @@ public class PulseAlgorithm {
 
     }
 
-    private class Edge implements Comparable<Edge> {
+    private class Edge {
         private final int head;
         private final double cost;
 
@@ -286,15 +288,15 @@ public class PulseAlgorithm {
             return cost;
         }
 
-        @Override
-        public int compareTo(Edge e) {
-            double objCost = e.cost;
-            if (this.cost == objCost) {
-                return 0;
-            }
-            return this.cost > objCost ? 1 : -1;
-
-        }
+        //        @Override
+        //        public int compareTo(Edge e) {
+        //            double objCost = e.cost;
+        //            if (this.cost == objCost && this.head == e.head) {
+        //                return 0;
+        //            }
+        //            return this.cost > objCost ? 1 : (this.head > e.head ? 1 : -1);
+        //
+        //        }
     }
 
     private class PartialPath {

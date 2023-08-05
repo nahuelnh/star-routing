@@ -1,9 +1,11 @@
 package main;
 
 import algorithm.ColumnGeneration;
+import algorithm.GeRestrictedMasterProblem;
 import algorithm.LabelSettingPricing;
 import algorithm.FeasibleSolutionHeuristic;
 import algorithm.EqRestrictedMasterProblem;
+import algorithm.PulsePricing;
 import algorithm.StarRoutingModel;
 import commons.Instance;
 import ilog.concert.IloException;
@@ -28,7 +30,7 @@ public class Main {
             StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
             System.out.println("MTZ: " +starRoutingModel.solve());
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-                    new LabelSettingPricing(instance), new FeasibleSolutionHeuristic(instance));
+                    new PulsePricing(instance), new FeasibleSolutionHeuristic(instance));
             System.out.println("ColGen: " + columnGeneration.solve());
 //            DFJStarRoutingModel dfjStarRoutingModel = new DFJStarRoutingModel(instance);
 //            System.out.println("DFJ:" + dfjStarRoutingModel.solve());

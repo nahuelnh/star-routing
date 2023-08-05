@@ -11,7 +11,9 @@ import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
 
@@ -105,6 +107,21 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
         }
     }
 
+    private void postProcess(List<FeasiblePath> paths) {
+        Set<Integer> customersProcessed = new HashSet<>();
+        for (FeasiblePath path : paths) {
+            for (Integer customer : customersProcessed) {
+                if (path.isCustomerServed(customer)) {
+                    path.removeCustomer(customer);
+                }
+            }
+            customersProcessed.addAll(path.getCustomersServed());
+            //            if(path.getCustomersServed().isEmpty()){
+            //                paths.remove(path);
+            //            }
+        }
+    }
+
     @Override
     public List<FeasiblePath> computePathsFromSolution() {
         try {
@@ -117,6 +134,7 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
                     ret.add(paths.get(i));
                 }
             }
+            postProcess(ret);
             return ret;
         } catch (IloException e) {
             throw new RuntimeException(e);

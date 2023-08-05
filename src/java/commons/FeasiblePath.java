@@ -10,7 +10,6 @@ public class FeasiblePath {
     private final List<Integer> nodes;
     private final Set<Integer> customersServed;
     private final List<Integer> weights;
-
     public FeasiblePath(List<Integer> nodes, Set<Integer> customersServed, List<Integer> weights) {
         this.nodes = nodes;
         this.customersServed = customersServed;
@@ -21,6 +20,10 @@ public class FeasiblePath {
         this.nodes = new ArrayList<>();
         this.customersServed = new HashSet<>();
         this.weights = new ArrayList<>();
+    }
+
+    public Set<Integer> getCustomersServed() {
+        return customersServed;
     }
 
     public void addNode(int node, int weight) {
@@ -38,11 +41,15 @@ public class FeasiblePath {
 
     @Override
     public String toString() {
-        return "FeasiblePath{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" +
-                weights + '}';
+        return "FeasiblePath{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" + weights +
+                '}';
     }
 
     public boolean isCustomerServed(int customer) {
         return customersServed.contains(customer);
+    }
+
+    public void removeCustomer(int customer) {
+        customersServed.remove(customer);
     }
 }
