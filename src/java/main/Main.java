@@ -29,8 +29,8 @@ public class Main {
             Instance instance = new Instance(instanceName, true);
             StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
             System.out.println("MTZ: " +starRoutingModel.solve());
-            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-                    new PulsePricing(instance), new FeasibleSolutionHeuristic(instance));
+            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+                    new LabelSettingPricing(instance), new FeasibleSolutionHeuristic(instance));
             System.out.println("ColGen: " + columnGeneration.solve());
 //            DFJStarRoutingModel dfjStarRoutingModel = new DFJStarRoutingModel(instance);
 //            System.out.println("DFJ:" + dfjStarRoutingModel.solve());

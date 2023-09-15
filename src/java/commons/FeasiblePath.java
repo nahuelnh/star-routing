@@ -10,6 +10,7 @@ public class FeasiblePath {
     private final List<Integer> nodes;
     private final Set<Integer> customersServed;
     private final List<Integer> weights;
+
     public FeasiblePath(List<Integer> nodes, Set<Integer> customersServed, List<Integer> weights) {
         this.nodes = nodes;
         this.customersServed = customersServed;
@@ -17,9 +18,11 @@ public class FeasiblePath {
     }
 
     public FeasiblePath() {
-        this.nodes = new ArrayList<>();
-        this.customersServed = new HashSet<>();
-        this.weights = new ArrayList<>();
+        this(new ArrayList<>(), new HashSet<>(), new ArrayList<>());
+    }
+
+    public static FeasiblePath getCopyWithoutCustomers(FeasiblePath p) {
+        return new FeasiblePath(new ArrayList<>(p.nodes), new HashSet<>(), new ArrayList<>(p.weights));
     }
 
     public Set<Integer> getCustomersServed() {
@@ -51,5 +54,9 @@ public class FeasiblePath {
 
     public void removeCustomer(int customer) {
         customersServed.remove(customer);
+    }
+
+    public boolean containsNode(int node) {
+        return nodes.contains(node);
     }
 }

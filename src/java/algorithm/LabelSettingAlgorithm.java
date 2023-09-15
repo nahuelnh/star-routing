@@ -23,15 +23,36 @@ public class LabelSettingAlgorithm {
     private final int startNode;
     private final int numberOfNodes;
     private final List<List<Integer>> graph;
+    private final boolean applyCostHeuristic;
+    private final double costFactor;
 
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
+        this(instance, rmpSolution, false);
+    }
+
+    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
+                                 boolean applyCostHeuristic) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
+        this.applyCostHeuristic = applyCostHeuristic;
         this.numberOfNodes = instance.getNumberOfNodes() + 1;
         this.startNode = instance.getDepot();
         this.endNode = numberOfNodes - 1;
         this.graph = createGraph();
+        this.costFactor = computeCostFactor();
+    }
 
+    private double computeCostFactor() {
+        int maxEdge = 0;
+        for (int i = 0; i < numberOfNodes; i++) {
+            for (int j = 0; j < numberOfNodes; j++) {
+                if (i != j && i != endNode && j != startNode && !(i == startNode && j == endNode)) {
+                    int fakeNode = j == endNode ? instance.getDepot() : j;
+                    maxEdge = Math.max(maxEdge, instance.getEdgeWeight(i, fakeNode));
+                }
+            }
+        }
+        return 1.0 / (numberOfNodes * maxEdge);
     }
 
     private List<List<Integer>> createGraph() {
@@ -93,9 +114,20 @@ public class LabelSettingAlgorithm {
         return computePathFromSolution(negativeReducedCostLabels);
     }
 
+    private double getLittleFakeCost(Label label, int customer) {
+        if (customer != label.node()) {
+            int fakeNode = label.node() == endNode ? instance.getDepot() : label.node();
+            return instance.getEdgeWeight(customer, fakeNode) * costFactor;
+        }
+        return 0.0;
+    }
+
     private Label extendCustomer(Label label, int customer) {
         int updatedDemand = label.demand() + instance.getDemand(customer);
         double updatedCost = label.cost() - rmpSolution.getCustomerDual(instance.getCustomerIndex(customer));
+        if (applyCostHeuristic) {
+            updatedCost += getLittleFakeCost(label, customer);
+        }
         boolean[] updatedVisited = label.visitedCustomers();
         updatedVisited[customer] = true;
         return new Label(updatedDemand, updatedCost, label.node(), customer, label.visitedNodes(), updatedVisited,
@@ -111,17 +143,17 @@ public class LabelSettingAlgorithm {
         return new Label(label.demand(), updatedCost, nextNode, -1, updatedVisited, label.visitedCustomers(), label);
     }
 
-    private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelStore labelStore) {
+    private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelCollection labelCollection) {
         if (previousLabel.isCustomerVisited(label.customer())) {
             return true;
         }
         if (label.demand() > instance.getCapacity()) {
             return true;
         }
-        return labelStore.isDominated(label);
+        return labelCollection.isDominated(label);
     }
 
-    private boolean isNodeUnreachable(Label label, Label previousLabel, LabelStore labelStore) {
+    private boolean isNodeUnreachable(Label label, Label previousLabel, LabelCollection labelCollection) {
         // returns true if node is infeasible or dominated
         if (previousLabel.isNodeVisited(label.node())) {
             return true;
@@ -129,7 +161,7 @@ public class LabelSettingAlgorithm {
         if (label.demand() > instance.getCapacity()) {
             return true;
         }
-        return labelStore.isDominated(label);
+        return labelCollection.isDominated(label);
     }
 
     private Set<Integer> computeReverseNeighborhood(int node) {
@@ -142,13 +174,12 @@ public class LabelSettingAlgorithm {
         return ret;
     }
 
-    // TODO optimize complexity
     private List<Label> RighiniSalani() {
         Map<Integer, Set<Integer>> reverseNeighborhoods = new HashMap<>();
         for (int i = 0; i < numberOfNodes; i++) {
             reverseNeighborhoods.put(i, computeReverseNeighborhood(i));
         }
-        LabelStore labels = new LabelStore(numberOfNodes, instance.getCapacity() + 1);
+        LabelCollection labels = new LabelCollection(numberOfNodes, instance.getCapacity() + 1);
         Label root = Label.getRootLabel(startNode, numberOfNodes);
         labels.addLabel(root);
         PriorityQueue<Label> queue = new PriorityQueue<>();
@@ -173,11 +204,11 @@ public class LabelSettingAlgorithm {
         return labels.getNegativeReducedCostLabels(endNode, rmpSolution.getVehiclesDual());
     }
 
-    private static class LabelStore {
+    private static class LabelCollection {
         private final Label[][] labels;
         private final MinSegmentTree[] trees;
 
-        public LabelStore(int numberOfNodes, int capacity) {
+        public LabelCollection(int numberOfNodes, int capacity) {
             this.labels = new Label[numberOfNodes][capacity + 1];
             this.trees = new MinSegmentTree[numberOfNodes];
             double[] arr = new double[capacity + 1];
@@ -209,7 +240,7 @@ public class LabelSettingAlgorithm {
     }
 
     private record Label(int demand, double cost, int node, int customer, boolean[] visitedNodes,
-                         boolean[] visitedCustomers, LabelSettingAlgorithm.Label parent) implements Comparable<Label> {
+                         boolean[] visitedCustomers, Label parent) implements Comparable<Label> {
 
         public static Label getRootLabel(int startNode, int numberOfNodes) {
             boolean[] visitedNodes = new boolean[numberOfNodes];

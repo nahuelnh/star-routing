@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class FirstPricingProblem implements PricingProblem {
+public class DeprecatedPricingProblem implements PricingProblem {
     private static final double EPSILON = 1e-6;
     private final Instance instance;
     private IloCplex cplex;
@@ -25,7 +25,7 @@ public class FirstPricingProblem implements PricingProblem {
     private IloIntVar[][] u;
     private IloIntVar[] v;
 
-    public FirstPricingProblem(Instance instance) {
+    public DeprecatedPricingProblem(Instance instance) {
         this.instance = instance;
     }
 

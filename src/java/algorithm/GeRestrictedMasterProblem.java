@@ -86,6 +86,10 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
         try {
             buildModel(false);
             cplex.solve();
+            //paths.forEach(System.out::println);
+            System.out.println(cplex.getObjValue());
+            //Utils.printNonZero(cplex, theta);
+            System.out.println("-----");
             RMPSolution solution = new RMPSolution(cplex, customerConstraints, vehiclesConstraint);
             cplex.end();
             return solution;

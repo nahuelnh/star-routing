@@ -19,7 +19,7 @@ public class LabelSettingPricing implements PricingProblem {
 
     @Override
     public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
-        paths = new LabelSettingAlgorithm(instance, rmpSolution).run();
+        paths = new LabelSettingAlgorithm(instance, rmpSolution, true).run();
         return new Solution(IloCplex.Status.Optimal, 0.0, this);
     }
 

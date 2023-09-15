@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Utils {
-
+    private static final double EPSILON = 1e-6;
     private static final String DELIMITER = " ";
 
     private static List<Integer> readIntegerLine(String line) {
@@ -114,6 +114,10 @@ public class Utils {
         return Math.round(cplex.getValue(iloNumVar, solutionIndex)) == 1;
     }
 
+    public static long getIntValue(IloCplex cplex, IloNumVar iloNumVar) throws IloException {
+        return Math.round(cplex.getValue(iloNumVar));
+    }
+
     public static void printNonZero(IloCplex cplex, IloNumVar[][] iloNumVar) throws IloException {
         for (IloNumVar[] row : iloNumVar) {
             printNonZero(cplex, row);
@@ -122,8 +126,8 @@ public class Utils {
 
     public static void printNonZero(IloCplex cplex, IloNumVar[] iloNumVar) throws IloException {
         for (IloNumVar numVar : iloNumVar) {
-            if (getBoolValue(cplex, numVar)) {
-                System.out.println(numVar);
+            if (cplex.getValue(numVar) - EPSILON > 0) {
+                System.out.println(numVar + " " + cplex.getValue(numVar));
             }
         }
     }

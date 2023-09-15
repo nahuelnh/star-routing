@@ -1,9 +1,6 @@
 package algorithm;
 
-import java.util.Arrays;
-
 public class MinSegmentTree {
-//TODO make generic
     private final int size;
     private final double[] tree;
 
