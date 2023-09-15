@@ -3,6 +3,7 @@ package main;
 import algorithm.ColumnGeneration;
 import algorithm.FeasibleSolutionHeuristic;
 import algorithm.EqRestrictedMasterProblem;
+import algorithm.pricing.LabelSettingPricing;
 import algorithm.pricing.PulsePricing;
 import algorithm.CompactModel;
 import commons.Instance;
