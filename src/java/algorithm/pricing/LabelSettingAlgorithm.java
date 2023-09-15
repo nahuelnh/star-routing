@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.function.Predicate;
 
 public class LabelSettingAlgorithm {
 
@@ -106,11 +107,12 @@ public class LabelSettingAlgorithm {
         if (label.demand() > instance.getCapacity()) {
             return true;
         }
-       return labelDump.dominates(label);
+        return labelDump.dominates(label);
     }
 
     private List<Label> monoDirectionalBacktracking() {
-        LabelDump labelDump = new LabelDump(graph.getSize(), instance.getCapacity() + 1);
+        //RelaxedLabelDump labelDump = new RelaxedLabelDump(graph.getSize(), instance.getCapacity() + 1);
+        LabelDump labelDump = new LabelDump();
         Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
         labelDump.addLabel(root);
         PriorityQueue<Label> queue = new PriorityQueue<>();
@@ -135,11 +137,11 @@ public class LabelSettingAlgorithm {
         return labelDump.getNegativeReducedCostLabels(graph.getEnd());
     }
 
-    private static class LabelDump {
+    private static class RelaxedLabelDump {
         private final Label[][] labels;
         private final MinSegmentTree[] trees;
 
-        public LabelDump(int numberOfNodes, int capacity) {
+        public RelaxedLabelDump(int numberOfNodes, int capacity) {
             this.labels = new Label[numberOfNodes][capacity + 1];
             this.trees = new MinSegmentTree[numberOfNodes];
             double[] arr = new double[capacity + 1];
@@ -155,7 +157,7 @@ public class LabelSettingAlgorithm {
         }
 
         public boolean dominates(Label l) {
-            return trees[l.node()].query(0, l.demand() +1) < l.cost();
+            return trees[l.node()].query(0, l.demand() + 1) < l.cost();
         }
 
         public List<Label> getNegativeReducedCostLabels(int node) {
@@ -201,7 +203,8 @@ public class LabelSettingAlgorithm {
 
         @Override
         public String toString() {
-            return "Label{" + "demand=" + demand + ", cost=" + cost + ", node=" + node + ", parent=" + (parent==null?null:parent.node )+ '}';
+            return "Label{" + "demand=" + demand + ", cost=" + cost + ", node=" + node + ", parent=" +
+                    (parent == null ? null : parent.node) + '}';
         }
 
         @Override
@@ -210,6 +213,45 @@ public class LabelSettingAlgorithm {
                 return 0;
             }
             return this.node < label.node ? 1 : -1;
+        }
+    }
+
+    private class LabelDump {
+
+        private final PrefixTreeMap<PrefixTreeMap<Label>> dump;
+
+        public LabelDump() {
+            dump = new PrefixTreeMap<>(graph.getSize());
+        }
+
+        public void addLabel(Label l) {
+            PrefixTreeMap<Label> prefixTreeMap = dump.contains(l.visitedNodes) ? dump.get(l.visitedNodes) :
+                    new PrefixTreeMap<>(graph.getSize());
+            prefixTreeMap.insert(l.visitedCustomers, l);
+            dump.insert(l.visitedNodes, prefixTreeMap);
+        }
+
+        public boolean dominates(Label l) {
+            for (PrefixTreeMap<Label> p : dump.getValuesAtAllPrefixes(l.visitedNodes)) {
+                for (Label other : p.getValuesAtAllPrefixes(l.visitedCustomers)) {
+                    if (other.cost() <= l.cost()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public List<Label> getNegativeReducedCostLabels(int node) {
+            List<Label> ret = new ArrayList<>();
+            for (PrefixTreeMap<Label> p :dump.getAllValues()){
+                for(Label l : p.getAllValues()){
+                    if(l.node() == node && l.cost() < -EPSILON){
+                        ret.add(l);
+                    }
+                }
+            }
+            return ret;
         }
     }
 

@@ -22,10 +22,6 @@ public class LabelSettingPricing implements PricingProblem {
     @Override
     public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
         paths = new LabelSettingAlgorithm(instance, rmpSolution).run();
-//        System.out.println(instance.getCapacity());
-//       IntStream.rangeClosed(0, instance.getNumberOfCustomers()-1).mapToDouble(
-//                rmpSolution::getCustomerDual).forEach(System.out::println);
-//        System.out.println(paths);
         return new Solution(IloCplex.Status.Optimal, 0.0, this);
     }
 

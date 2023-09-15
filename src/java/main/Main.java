@@ -29,7 +29,7 @@ public class Main {
             CompactModel compactModel = new CompactModel(instance);
             System.out.println("MTZ: " + compactModel.solve());
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-                    new PulsePricing(instance), new InitialSolutionHeuristic(instance));
+                    new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
             System.out.println("ColGen: " + columnGeneration.solve());
 //            DFJStarRoutingModel dfjStarRoutingModel = new DFJStarRoutingModel(instance);
 //            System.out.println("DFJ:" + dfjStarRoutingModel.solve());
