@@ -3,14 +3,13 @@ package algorithm.pricing;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
+import commons.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PulseAlgorithm {
     private static final double EPSILON = 1e-6;
@@ -67,7 +66,7 @@ public class PulseAlgorithm {
                 path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
                 lastNode = currentNode;
             }
-            path.addCustomers(currentPulse.getVisitedCustomersAsSet());
+            path.addCustomers(Utils.boolArrayToIntSet(currentPulse.getVisitedCustomers()));
             ret.add(path);
         }
         return ret;
@@ -227,6 +226,10 @@ public class PulseAlgorithm {
             this.totalDemand = p.totalDemand;
         }
 
+        public boolean[] getVisitedCustomers() {
+            return visitedCustomers;
+        }
+
         public double getTotalCost() {
             return totalCost;
         }
@@ -287,16 +290,6 @@ public class PulseAlgorithm {
 
         public int getSize() {
             return size;
-        }
-
-        public Set<Integer> getVisitedCustomersAsSet() {
-            Set<Integer> ret = new HashSet<>();
-            for (int i = 0; i < numberOfNodes; i++) {
-                if (visitedCustomers[i]) {
-                    ret.add(i);
-                }
-            }
-            return ret;
         }
     }
 }

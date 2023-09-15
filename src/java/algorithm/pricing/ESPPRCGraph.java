@@ -45,9 +45,9 @@ public class ESPPRCGraph {
                     } else {
                         weights[i][j] = instance.getEdgeWeight(i, j);
                     }
-                    reverseNeighborhoods.add(computeReverseNeighborhood(i));
                 }
             }
+            reverseNeighborhoods.add(computeReverseNeighborhood(i));
         }
     }
 

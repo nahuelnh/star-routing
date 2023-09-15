@@ -13,8 +13,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Utils {
 
@@ -127,4 +129,16 @@ public class Utils {
             }
         }
     }
+
+
+    public static Set<Integer> boolArrayToIntSet(boolean[] arr) {
+        Set<Integer> ret = new HashSet<>();
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i]) {
+                ret.add(i);
+            }
+        }
+        return ret;
+    }
+
 }

@@ -15,10 +15,10 @@ public class ColumnGeneration {
     private final Instance instance;
     private final RestrictedMasterProblem rmp;
     private final PricingProblem pricing;
-    private final FeasibleSolutionHeuristic heuristic;
+    private final InitialSolutionHeuristic heuristic;
 
     public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
-                            FeasibleSolutionHeuristic heuristic) {
+                            InitialSolutionHeuristic heuristic) {
         this.instance = instance;
         this.rmp = rmp;
         this.pricing = pricingProblem;
@@ -28,7 +28,7 @@ public class ColumnGeneration {
     public static void main(String[] args) {
         Instance instance = new Instance("instance_neighbors_40", true);
         ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-                new LabelSettingPricing(instance), new FeasibleSolutionHeuristic(instance));
+                new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
         Solution solution = columnGeneration.solve();
         System.out.println(solution);
     }

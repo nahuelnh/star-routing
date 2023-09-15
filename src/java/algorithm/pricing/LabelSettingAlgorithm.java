@@ -3,17 +3,16 @@ package algorithm.pricing;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
+import commons.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Set;
 
 public class LabelSettingAlgorithm {
 
@@ -22,7 +21,6 @@ public class LabelSettingAlgorithm {
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final Map<Integer, Double> dualValues;
-
 
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
         this.instance = instance;
@@ -37,10 +35,11 @@ public class LabelSettingAlgorithm {
     private List<FeasiblePath> translateLabelsToPaths(List<Label> negativeReducedCostLabels) {
         List<FeasiblePath> ret = new ArrayList<>();
         for (Label currentLabel : negativeReducedCostLabels) {
-            Set<Integer> customers = new HashSet<>();
             Deque<Integer> nodes = new LinkedList<>();
             nodes.addFirst(currentLabel.node());
-            customers.add(currentLabel.customer());
+
+            FeasiblePath path = new FeasiblePath();
+            path.addCustomers(Utils.boolArrayToIntSet(currentLabel.visitedCustomers()));
 
             Label lastLabel = currentLabel;
             currentLabel = currentLabel.parent();
@@ -48,14 +47,10 @@ public class LabelSettingAlgorithm {
                 if (lastLabel.node() != currentLabel.node()) {
                     nodes.addFirst(currentLabel.node());
                 }
-                customers.add(currentLabel.customer());
                 lastLabel = currentLabel;
                 currentLabel = currentLabel.parent();
             }
-            customers.remove(-1);
-
             int size = nodes.size();
-            FeasiblePath path = new FeasiblePath();
             int lastNode = nodes.remove();
             assert lastNode == instance.getDepot();
             assert lastNode == graph.getStart();
@@ -67,14 +62,13 @@ public class LabelSettingAlgorithm {
                 path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
                 lastNode = currentNode;
             }
-            path.addCustomers(customers);
             ret.add(path);
         }
         return ret;
     }
 
     public List<FeasiblePath> run() {
-        List<Label> negativeReducedCostLabels = RighiniSalani();
+        List<Label> negativeReducedCostLabels = monoDirectionalBacktracking();
         return translateLabelsToPaths(negativeReducedCostLabels);
     }
 
@@ -83,8 +77,7 @@ public class LabelSettingAlgorithm {
         double updatedCost = label.cost() - dualValues.get(customer);
         boolean[] updatedVisited = label.visitedCustomers();
         updatedVisited[customer] = true;
-        return new Label(updatedDemand, updatedCost, label.node(), customer, label.visitedNodes(), updatedVisited,
-                label);
+        return new Label(updatedDemand, updatedCost, label.node(), label.visitedNodes(), updatedVisited, label);
 
     }
 
@@ -92,17 +85,17 @@ public class LabelSettingAlgorithm {
         double updatedCost = label.cost() + graph.getWeight(label.node(), nextNode);
         boolean[] updatedVisited = label.visitedNodes();
         updatedVisited[nextNode] = true;
-        return new Label(label.demand(), updatedCost, nextNode, -1, updatedVisited, label.visitedCustomers(), label);
+        return new Label(label.demand(), updatedCost, nextNode, updatedVisited, label.visitedCustomers(), label);
     }
 
-    private boolean isCustomerUnreachable(Label label, Label previousLabel, LabelDump labelStore) {
-        if (previousLabel.isCustomerVisited(label.customer())) {
+    private boolean isCustomerUnreachable(Label label, int customer, Label previousLabel, LabelDump labelDump) {
+        if (previousLabel.isCustomerVisited(customer)) {
             return true;
         }
         if (label.demand() > instance.getCapacity()) {
             return true;
         }
-        return labelStore.dominates(label);
+        return labelDump.dominates(label);
     }
 
     private boolean isNodeUnreachable(Label label, Label previousLabel, LabelDump labelDump) {
@@ -113,48 +106,33 @@ public class LabelSettingAlgorithm {
         if (label.demand() > instance.getCapacity()) {
             return true;
         }
-        return labelDump.dominates(label);
+       return labelDump.dominates(label);
     }
 
-    private Set<Integer> computeReverseNeighborhood(int node) {
-        Set<Integer> ret = new HashSet<>();
-        for (int customer : instance.getCustomers()) {
-            if (instance.getNeighbors(customer).contains(node)) {
-                ret.add(customer);
-            }
-        }
-        return ret;
-    }
-
-    // TODO optimize complexity
-    private List<Label> RighiniSalani() {
-        Map<Integer, Set<Integer>> reverseNeighborhoods = new HashMap<>();
-        for (int i = 0; i < graph.getSize(); i++) {
-            reverseNeighborhoods.put(i, computeReverseNeighborhood(i));
-        }
-        LabelDump labels = new LabelDump(graph.getSize(), instance.getCapacity() + 1);
-        Label root = Label.getRootLabel(graph.getStart(), graph.getSize());
-        labels.addLabel(root);
+    private List<Label> monoDirectionalBacktracking() {
+        LabelDump labelDump = new LabelDump(graph.getSize(), instance.getCapacity() + 1);
+        Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
+        labelDump.addLabel(root);
         PriorityQueue<Label> queue = new PriorityQueue<>();
         queue.add(root);
         while (!queue.isEmpty()) {
             Label currentLabel = queue.remove();
-            for (int customer : reverseNeighborhoods.get(currentLabel.node())) {
+            for (int customer : graph.getReverseNeighborhood(currentLabel.node())) {
                 Label nextLabel = extendCustomer(currentLabel, customer);
-                if (!isCustomerUnreachable(nextLabel, currentLabel, labels)) {
-                    labels.addLabel(nextLabel);
+                if (!isCustomerUnreachable(nextLabel, customer, currentLabel, labelDump)) {
+                    labelDump.addLabel(nextLabel);
                     queue.add(nextLabel);
                 }
             }
             for (int nextNode : graph.getAdjacentNodes(currentLabel.node())) {
                 Label nextLabel = extendNode(currentLabel, nextNode);
-                if (!isNodeUnreachable(nextLabel, currentLabel, labels)) {
-                    labels.addLabel(nextLabel);
+                if (!isNodeUnreachable(nextLabel, currentLabel, labelDump)) {
+                    labelDump.addLabel(nextLabel);
                     queue.add(nextLabel);
                 }
             }
         }
-        return labels.getNegativeReducedCostLabels(graph.getEnd(), rmpSolution.getVehiclesDual());
+        return labelDump.getNegativeReducedCostLabels(graph.getEnd());
     }
 
     private static class LabelDump {
@@ -177,31 +155,30 @@ public class LabelSettingAlgorithm {
         }
 
         public boolean dominates(Label l) {
-            return trees[l.node()].query(0, l.demand() + 1) < l.cost();
+            return trees[l.node()].query(0, l.demand() +1) < l.cost();
         }
 
-        public List<Label> getNegativeReducedCostLabels(int node, double maxCost) {
+        public List<Label> getNegativeReducedCostLabels(int node) {
             List<Label> ret = new ArrayList<>();
             for (int q = 0; q < labels[node].length; q++) {
-                if (labels[node][q] != null && labels[node][q].cost() - maxCost < -EPSILON) {
+                if (labels[node][q] != null && labels[node][q].cost() < -EPSILON) {
                     ret.add(labels[node][q]);
                 }
             }
             return ret;
         }
-
     }
 
-    private record Label(int demand, double cost, int node, int customer, boolean[] visitedNodes,
-                         boolean[] visitedCustomers, LabelSettingAlgorithm.Label parent) implements Comparable<Label> {
+    private record Label(int demand, double cost, int node, boolean[] visitedNodes, boolean[] visitedCustomers,
+                         LabelSettingAlgorithm.Label parent) implements Comparable<Label> {
 
-        public static Label getRootLabel(int startNode, int numberOfNodes) {
+        public static Label getRootLabel(int startNode, int numberOfNodes, double cost) {
             boolean[] visitedNodes = new boolean[numberOfNodes];
             boolean[] visitedCustomers = new boolean[numberOfNodes];
             Arrays.fill(visitedNodes, false);
             visitedNodes[startNode] = true;
             Arrays.fill(visitedCustomers, false);
-            return new Label(0, 0, startNode, -1, visitedNodes, visitedCustomers, null);
+            return new Label(0, cost, startNode, visitedNodes, visitedCustomers, null);
         }
 
         public boolean isNodeVisited(int node) {
@@ -224,9 +201,7 @@ public class LabelSettingAlgorithm {
 
         @Override
         public String toString() {
-            return "Label{" + "node=" + node + ", customer=" + customer + ", visitedNodes=" +
-                    Arrays.toString(visitedNodes) + ", visitedCustomers=" + Arrays.toString(visitedCustomers) +
-                    ", demand=" + demand + ", cost=" + cost + ", parent=" + parent + '}';
+            return "Label{" + "demand=" + demand + ", cost=" + cost + ", node=" + node + ", parent=" + (parent==null?null:parent.node )+ '}';
         }
 
         @Override
