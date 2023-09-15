@@ -1,5 +1,6 @@
-package algorithm;
+package algorithm.pricing;
 
+import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import ilog.cplex.IloCplex;
 

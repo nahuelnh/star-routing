@@ -1,5 +1,7 @@
 package algorithm;
 
+import algorithm.pricing.LabelSettingPricing;
+import algorithm.pricing.PricingProblem;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Solution;

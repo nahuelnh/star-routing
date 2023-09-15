@@ -1,4 +1,4 @@
-package algorithm;
+package algorithm.pricing;
 
 import java.util.Arrays;
 

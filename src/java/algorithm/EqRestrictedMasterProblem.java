@@ -122,5 +122,4 @@ public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
             throw new RuntimeException(e);
         }
     }
-
 }

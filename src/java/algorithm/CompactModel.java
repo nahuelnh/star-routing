@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class StarRoutingModel {
+public class CompactModel {
 
     private final Instance instance;
     private IloCplex cplex;
@@ -25,14 +25,14 @@ public class StarRoutingModel {
     private IloIntVar[][] y;
     private IloIntVar[][] u;
 
-    public StarRoutingModel(Instance instance) {
+    public CompactModel(Instance instance) {
         this.instance = instance;
     }
 
     public static void main(String[] args) {
         try {
             Instance instance = new Instance("instance_rptd_path", true);
-            StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
+            CompactModel starRoutingModel = new CompactModel(instance);
             starRoutingModel.solve();
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");

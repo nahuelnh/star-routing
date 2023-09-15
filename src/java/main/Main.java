@@ -1,12 +1,10 @@
 package main;
 
 import algorithm.ColumnGeneration;
-import algorithm.GeRestrictedMasterProblem;
-import algorithm.LabelSettingPricing;
 import algorithm.FeasibleSolutionHeuristic;
 import algorithm.EqRestrictedMasterProblem;
-import algorithm.PulsePricing;
-import algorithm.StarRoutingModel;
+import algorithm.pricing.PulsePricing;
+import algorithm.CompactModel;
 import commons.Instance;
 import ilog.concert.IloException;
 
@@ -27,8 +25,8 @@ public class Main {
         try {
             System.out.println("Running instance: " + instanceName);
             Instance instance = new Instance(instanceName, true);
-            StarRoutingModel starRoutingModel = new StarRoutingModel(instance);
-            System.out.println("MTZ: " +starRoutingModel.solve());
+            CompactModel compactModel = new CompactModel(instance);
+            System.out.println("MTZ: " + compactModel.solve());
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
                     new PulsePricing(instance), new FeasibleSolutionHeuristic(instance));
             System.out.println("ColGen: " + columnGeneration.solve());

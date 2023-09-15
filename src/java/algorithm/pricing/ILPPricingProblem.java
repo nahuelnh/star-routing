@@ -1,5 +1,6 @@
-package algorithm;
+package algorithm.pricing;
 
+import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
@@ -16,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class SecondPricingProblem implements PricingProblem {
+public class ILPPricingProblem implements PricingProblem {
     private static final double EPSILON = 1e-6;
     private final Instance instance;
     private IloCplex cplex;
@@ -24,7 +25,7 @@ public class SecondPricingProblem implements PricingProblem {
     private IloIntVar[] y;
     private IloIntVar[] u;
 
-    public SecondPricingProblem(Instance instance) {
+    public ILPPricingProblem(Instance instance) {
         this.instance = instance;
     }
 

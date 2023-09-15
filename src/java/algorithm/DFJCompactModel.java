@@ -19,21 +19,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DFJStarRoutingModel {
+public class DFJCompactModel {
 
     private final Instance instance;
     private IloCplex cplex;
     private IloIntVar[][][] x;
     private IloIntVar[][] y;
 
-    public DFJStarRoutingModel(Instance instance) {
+    public DFJCompactModel(Instance instance) {
         this.instance = instance;
     }
 
     public static void main(String[] args) {
         try {
             Instance instance = new Instance("instance_large", true);
-            DFJStarRoutingModel starRoutingModel = new DFJStarRoutingModel(instance);
+            DFJCompactModel starRoutingModel = new DFJCompactModel(instance);
             starRoutingModel.solve();
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");
