@@ -1,11 +1,10 @@
 package main;
 
 import algorithm.ColumnGeneration;
-import algorithm.InitialSolutionHeuristic;
-import algorithm.EqRestrictedMasterProblem;
-import algorithm.pricing.LabelSettingPricing;
-import algorithm.pricing.PulsePricing;
 import algorithm.CompactModel;
+import algorithm.EqRestrictedMasterProblem;
+import algorithm.InitialSolutionHeuristic;
+import algorithm.pricing.PulsePricing;
 import commons.Instance;
 import ilog.concert.IloException;
 
@@ -20,6 +19,8 @@ public class Main {
         runInstance("instance_neighbors_12");
         runInstance("instance_random_10");
         runInstance("instance_random_12");
+        //        runInstance("instance_random_20");
+        //        runInstance("instance_random_30");
     }
 
     private static void runInstance(String instanceName) {
@@ -30,8 +31,9 @@ public class Main {
             CompactModel compactModel = new CompactModel(instance);
             System.out.println("MTZ: " + compactModel.solve());
 
-            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-                    new PulsePricing(instance), new InitialSolutionHeuristic(instance));
+            ColumnGeneration columnGeneration =
+                    new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance), new PulsePricing(instance),
+                            new InitialSolutionHeuristic(instance));
             System.out.println("ColGen: " + columnGeneration.solve());
 
         } catch (IloException e) {

@@ -13,6 +13,7 @@ import java.util.Map;
 
 public class PulseAlgorithm {
     private static final double EPSILON = 1e-6;
+    private static final int STEP = 1;
     private final Instance instance;
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
@@ -135,29 +136,36 @@ public class PulseAlgorithm {
         }
     }
 
+    private int bucketNumber(int q) {
+        return q / STEP;
+    }
+
     private void bound() {
         int N = graph.getSize();
         int Q = instance.getCapacity();
 
-        lowerBounds = new double[N][Q + 1];
+        lowerBounds = new double[N][bucketNumber(Q) + 1];
         for (int i = 0; i < N; i++) {
             Arrays.fill(lowerBounds[i], -Double.MAX_VALUE);
         }
 
-        //for (int capacity = 0; capacity <= instance.getCapacity(); capacity++) {
-        for (int capacity = Q; capacity >= 0; capacity--) {
+        // for (int demand = 0; demand <= Q; demand += STEP) {
+        for (int demand = Q - (Q % STEP); demand >= 0; demand -= STEP) {
             for (int node = 0; node < N; node++) {
                 resetGlobalOptimum();
-                PartialPath partialPath = new PartialPath(0.0, capacity);
+                PartialPath partialPath = new PartialPath(0.0, demand);
                 pulseWithNodeRule(node, partialPath);
-                lowerBounds[node][capacity] = bestSolutionFound;
+                lowerBounds[node][bucketNumber(demand)] = bestSolutionFound;
             }
         }
     }
 
     private boolean checkBounds(int currentNode, double cost, int demand) {
         // Returns true if the branch is to be pruned
-        if (lowerBounds[currentNode][demand] == Double.MAX_VALUE) {
+
+        int bucket = bucketNumber(demand);
+
+        if (lowerBounds[currentNode][bucket] == Double.MAX_VALUE) {
             // No feasible path to end node exists
             return true;
         }
@@ -165,11 +173,11 @@ public class PulseAlgorithm {
             // Global solution not initialized, any solution will be better
             return false;
         }
-        if (lowerBounds[currentNode][demand] == -Double.MAX_VALUE) {
+        if (lowerBounds[currentNode][bucket] == -Double.MAX_VALUE) {
             // Matrix not initialized. Should only happen during bound phase
             return false;
         }
-        return cost + lowerBounds[currentNode][demand] >= bestSolutionFound;
+        return cost + lowerBounds[currentNode][bucket] >= bestSolutionFound;
     }
 
     private boolean isFeasible(int nextNode, PartialPath visitedPath) {
@@ -179,21 +187,26 @@ public class PulseAlgorithm {
 
     private boolean rollback(int nextNode, PartialPath visitedPath) {
         // True iff node is to be pruned using rollback strategy
-
         int size = visitedPath.getSize();
         if (size <= 1) {
             return false;
         }
         int lastNode = visitedPath.getLastNode();
-        int secondLastNode = visitedPath.getNodeAt(size - 2);
-        if (!graph.edgeExists(secondLastNode, nextNode) || !graph.edgeExists(lastNode, nextNode)) {
+        if (!graph.edgeExists(lastNode, nextNode)) {
             return false;
         }
         double newEdgeCost = graph.getWeight(lastNode, nextNode);
-        double directEdgeCost = graph.getWeight(secondLastNode, nextNode);
-
-        return visitedPath.getPartialCostAt(size - 1) + newEdgeCost >=
-                visitedPath.getPartialCostAt(size - 2) + directEdgeCost;
+        double newTotalCost = visitedPath.getPartialCostAt(size - 1) + newEdgeCost;
+        for (int i = size - 2; i >= 0; i--) {
+            int innerNode = visitedPath.getNodeAt(i);
+            if (graph.edgeExists(innerNode, nextNode)) {
+                double directEdgeCost = graph.getWeight(innerNode, nextNode);
+                if (newTotalCost >= visitedPath.getPartialCostAt(i) + directEdgeCost) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private class PartialPath {
