@@ -77,12 +77,13 @@ public class Instance {
     private static List<List<Integer>> createWeightsMatrix(List<List<Integer>> adjacencyMatrix, int size) {
         List<List<Integer>> weightsMatrix = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            weightsMatrix.add(new ArrayList<>(Collections.nCopies(size, Integer.MAX_VALUE)));
+            weightsMatrix.add(new ArrayList<>(Collections.nCopies(size, -1)));
         }
         for (List<Integer> line : adjacencyMatrix) {
             int i = line.get(0) - 1;
             int j = line.get(1) - 1;
             int weight = line.get(2);
+            assert weight>=0;
             if (i != j) {
                 weightsMatrix.get(i).set(j, weight);
             }
@@ -159,6 +160,7 @@ public class Instance {
     }
 
     public Integer getEdgeWeight(int i, int j) {
+        assert graphWeights.get(i).get(j) >=0;
         return graphWeights.get(i).get(j);
     }
 

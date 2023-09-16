@@ -26,14 +26,14 @@ public class Main {
         try {
             System.out.println("Running instance: " + instanceName);
             Instance instance = new Instance(instanceName, true);
+
             CompactModel compactModel = new CompactModel(instance);
             System.out.println("MTZ: " + compactModel.solve());
+
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-                    new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
+                    new PulsePricing(instance), new InitialSolutionHeuristic(instance));
             System.out.println("ColGen: " + columnGeneration.solve());
-//            DFJStarRoutingModel dfjStarRoutingModel = new DFJStarRoutingModel(instance);
-//            System.out.println("DFJ:" + dfjStarRoutingModel.solve());
-//            System.out.println();
+
         } catch (IloException e) {
             System.err.println("Concert exception '" + e + "' caught");
         }

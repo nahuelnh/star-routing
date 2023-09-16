@@ -75,6 +75,12 @@ public class CompactModel {
                 u[i][k] = cplex.intVar(1, N - 1, "u_" + i + "_" + k);
             }
         }
+
+        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+            for (int k = 0; k < instance.getNumberOfVehicles(); k++) {
+                cplex.addEq(x[i][i][k], 0);
+            }
+        }
     }
 
     private void createFlowConstraints() throws IloException {
@@ -174,8 +180,10 @@ public class CompactModel {
         IloLinearIntExpr objective = cplex.linearIntExpr();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                for (int k = 0; k < K; k++) {
-                    objective.addTerm(x[i][j][k], instance.getEdgeWeight(i, j));
+                if (i != j) {
+                    for (int k = 0; k < K; k++) {
+                        objective.addTerm(x[i][j][k], instance.getEdgeWeight(i, j));
+                    }
                 }
             }
         }

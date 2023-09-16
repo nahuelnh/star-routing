@@ -22,8 +22,7 @@ public class PulsePricing implements PricingProblem {
     public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
         PulseAlgorithm pulseAlgorithm = new PulseAlgorithm(instance, rmpSolution);
         paths = pulseAlgorithm.run();
-        double objectiveValue =
-                paths.stream().mapToDouble(x -> x.getCost() - rmpSolution.getVehiclesDual()).min().orElse(0);
+        double objectiveValue = paths.stream().mapToDouble(FeasiblePath::getCost).min().orElse(0);
         return new Solution(IloCplex.Status.Optimal, objectiveValue, this);
     }
 

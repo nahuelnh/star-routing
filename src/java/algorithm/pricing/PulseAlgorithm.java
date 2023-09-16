@@ -46,7 +46,7 @@ public class PulseAlgorithm {
 
         resetGlobalOptimum();
         saveSolution = true;
-        pulseWithNodeRule(graph.getStart(), new PartialPath());
+        pulseWithNodeRule(graph.getStart(), new PartialPath(-rmpSolution.getVehiclesDual(), 0));
 
         return translatePulsesToPaths();
     }
@@ -72,29 +72,29 @@ public class PulseAlgorithm {
         return ret;
     }
 
-    private boolean pruneWithNodeRule(int currentNode, PartialPath visitedPath) {
+    private boolean pruneWithNodeRule(int nextNode, PartialPath visitedPath) {
         int totalDemand = visitedPath.getTotalDemand();
-        double newEdgeCost = visitedPath.getSize() == 0 ? 0 : graph.getWeight(visitedPath.getLastNode(), currentNode);
+        double newEdgeCost = visitedPath.getSize() == 0 ? 0 : graph.getWeight(visitedPath.getLastNode(), nextNode);
         double totalCost = visitedPath.getTotalCost() + newEdgeCost;
-        if (!isFeasible(currentNode, visitedPath)) {
+        if (!isFeasible(nextNode, visitedPath)) {
             return true;
         }
-        if (checkBounds(currentNode, totalCost, totalDemand)) {
+        if (checkBounds(nextNode, totalCost, totalDemand)) {
             return true;
         }
-        return rollback(currentNode, visitedPath);
+        //return false;
+        return rollback(nextNode, visitedPath);
     }
 
-    private boolean isNegativeReducedCost(double cost) {
-        return cost - rmpSolution.getVehiclesDual() < -EPSILON;
-    }
-
-    private boolean pruneWithCustomerRule(int currentCustomer, int currentNode, PartialPath visitedPath) {
-        int currentDemand = visitedPath.getTotalDemand() + instance.getDemand(currentCustomer);
-        double currentCost = visitedPath.getTotalCost() - dualValues.get(currentCustomer);
-        //        if (dualValues.get(currentCustomer) < EPSILON) {
-        //            return true;
-        //        }
+    private boolean pruneWithCustomerRule(int nextCustomer, int currentNode, PartialPath visitedPath) {
+        int currentDemand = visitedPath.getTotalDemand() + instance.getDemand(nextCustomer);
+        double currentCost = visitedPath.getTotalCost() - dualValues.get(nextCustomer);
+        if (dualValues.get(nextCustomer) < EPSILON) {
+            return true;
+        }
+        if (visitedPath.isCustomerVisited(nextCustomer)) {
+            return true;
+        }
         if (currentDemand > instance.getCapacity()) {
             return true;
         }
@@ -105,15 +105,13 @@ public class PulseAlgorithm {
         if (currentNode == graph.getEnd()) {
             if (visitedPath.getTotalCost() < bestSolutionFound) {
                 bestSolutionFound = visitedPath.getTotalCost();
-                if (saveSolution && isNegativeReducedCost(visitedPath.getTotalCost())) {
+                if (saveSolution && bestSolutionFound < -EPSILON) {
                     foundPartialPaths.add(new PartialPath(visitedPath));
                 }
             }
         } else {
             for (int nextCustomer : graph.getReverseNeighborhood(currentNode)) {
-                if (!visitedPath.isCustomerVisited(nextCustomer)) {
-                    pulseWithCustomerRule(currentNode, nextCustomer, visitedPath);
-                }
+                pulseWithCustomerRule(currentNode, nextCustomer, visitedPath);
             }
             for (int nextNode : graph.getAdjacentNodes(currentNode)) {
                 pulseWithNodeRule(nextNode, visitedPath);
@@ -138,15 +136,19 @@ public class PulseAlgorithm {
     }
 
     private void bound() {
-        lowerBounds = new double[numberOfNodes][instance.getCapacity() + 1];
-        for (int i = 0; i < numberOfNodes; i++) {
+        int N = graph.getSize();
+        int Q = instance.getCapacity();
+
+        lowerBounds = new double[N][Q + 1];
+        for (int i = 0; i < N; i++) {
             Arrays.fill(lowerBounds[i], -Double.MAX_VALUE);
         }
+
         //for (int capacity = 0; capacity <= instance.getCapacity(); capacity++) {
-        for (int capacity = instance.getCapacity(); capacity >= 0; capacity--) {
-            for (int node = 0; node < numberOfNodes; node++) {
+        for (int capacity = Q; capacity >= 0; capacity--) {
+            for (int node = 0; node < N; node++) {
                 resetGlobalOptimum();
-                PartialPath partialPath = new PartialPath(-rmpSolution.getVehiclesDual(), capacity);
+                PartialPath partialPath = new PartialPath(0.0, capacity);
                 pulseWithNodeRule(node, partialPath);
                 lowerBounds[node][capacity] = bestSolutionFound;
             }
@@ -155,7 +157,6 @@ public class PulseAlgorithm {
 
     private boolean checkBounds(int currentNode, double cost, int demand) {
         // Returns true if the branch is to be pruned
-
         if (lowerBounds[currentNode][demand] == Double.MAX_VALUE) {
             // No feasible path to end node exists
             return true;
@@ -165,29 +166,34 @@ public class PulseAlgorithm {
             return false;
         }
         if (lowerBounds[currentNode][demand] == -Double.MAX_VALUE) {
-            // Should never happen
+            // Matrix not initialized. Should only happen during bound phase
             return false;
         }
         return cost + lowerBounds[currentNode][demand] >= bestSolutionFound;
     }
 
-    private boolean isFeasible(int currentNode, PartialPath partialPath) {
+    private boolean isFeasible(int nextNode, PartialPath visitedPath) {
         // Adding node produces no cycles and demand does not exceed capacity
-        return !partialPath.isNodeVisited(currentNode) && partialPath.getTotalDemand() <= instance.getCapacity();
+        return !visitedPath.isNodeVisited(nextNode) && visitedPath.getTotalDemand() <= instance.getCapacity();
     }
 
-    private boolean rollback(int currentNode, PartialPath visitedPath) {
+    private boolean rollback(int nextNode, PartialPath visitedPath) {
         // True iff node is to be pruned using rollback strategy
 
         int size = visitedPath.getSize();
         if (size <= 1) {
             return false;
         }
-        double directEdgeCost = graph.getWeight(visitedPath.getNodeAt(size - 2), currentNode);
-        double newEdgeCost = graph.getWeight(visitedPath.getLastNode(), currentNode);
+        int lastNode = visitedPath.getLastNode();
+        int secondLastNode = visitedPath.getNodeAt(size - 2);
+        if (!graph.edgeExists(secondLastNode, nextNode) || !graph.edgeExists(lastNode, nextNode)) {
+            return false;
+        }
+        double newEdgeCost = graph.getWeight(lastNode, nextNode);
+        double directEdgeCost = graph.getWeight(secondLastNode, nextNode);
+
         return visitedPath.getPartialCostAt(size - 1) + newEdgeCost >=
                 visitedPath.getPartialCostAt(size - 2) + directEdgeCost;
-
     }
 
     private class PartialPath {
@@ -198,10 +204,6 @@ public class PulseAlgorithm {
         private int size;
         private double totalCost;
         private int totalDemand;
-
-        public PartialPath() {
-            this(-rmpSolution.getVehiclesDual(), 0);
-        }
 
         public PartialPath(double totalCost, int totalDemand) {
             this.nodes = new int[numberOfNodes];
@@ -214,6 +216,8 @@ public class PulseAlgorithm {
             Arrays.fill(visitedNodes, false);
             this.partialCosts = new double[numberOfNodes];
             Arrays.fill(partialCosts, 0.0);
+
+            Arrays.fill(nodes, -1);
         }
 
         public PartialPath(PartialPath p) {
@@ -250,7 +254,8 @@ public class PulseAlgorithm {
             assert size >= 1;
             partialCosts[size - 1] = 0.0;
             visitedNodes[nodes[size - 1]] = false;
-            totalCost -= size <= 2 ? 0.0 : graph.getWeight(nodes[size - 2], nodes[size - 1]);
+            totalCost -= size < 2 ? 0.0 : graph.getWeight(nodes[size - 2], nodes[size - 1]);
+            nodes[size - 1] = -1;
             size--;
         }
 
@@ -290,6 +295,12 @@ public class PulseAlgorithm {
 
         public int getSize() {
             return size;
+        }
+
+        @Override
+        public String toString() {
+            return "PartialPath{" + "nodes=" + Arrays.toString(nodes) + ", size=" + size + ", totalCost=" + totalCost +
+                    ", totalDemand=" + totalDemand + '}';
         }
     }
 }

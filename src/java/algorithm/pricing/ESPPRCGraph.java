@@ -81,7 +81,12 @@ public class ESPPRCGraph {
     }
 
     public int getWeight(int i, int j) {
+        assert weights[i][j]!=-1;
         return weights[i][j];
+    }
+
+    public boolean edgeExists(int i, int j){
+        return weights[i][j]!=-1;
     }
 
     public Set<Integer> getReverseNeighborhood(int node) {
