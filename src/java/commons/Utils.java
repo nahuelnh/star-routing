@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -131,10 +132,10 @@ public class Utils {
     }
 
 
-    public static Set<Integer> boolArrayToIntSet(boolean[] arr) {
+    public static Set<Integer> bitSetToIntSet(BitSet arr) {
         Set<Integer> ret = new HashSet<>();
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i]) {
+        for (int i = 0; i < arr.length(); i++) {
+            if (arr.get(i)) {
                 ret.add(i);
             }
         }

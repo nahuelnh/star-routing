@@ -7,13 +7,13 @@ import commons.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.function.Predicate;
 
 public class LabelSettingAlgorithm {
 
@@ -26,35 +26,36 @@ public class LabelSettingAlgorithm {
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
-        this.graph = new ESPPRCGraph(instance);
         this.dualValues = new HashMap<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
+        this.graph = new ESPPRCGraph(instance, dualValues);
+    }
+
+    private Deque<Integer> getNodesFromLabelPath(Label currentLabel) {
+        Deque<Integer> nodes = new LinkedList<>();
+        nodes.addFirst(currentLabel.node());
+        Label lastLabel = currentLabel;
+        currentLabel = currentLabel.parent();
+        while (currentLabel != null) {
+            if (lastLabel.node() != currentLabel.node()) {
+                nodes.addFirst(currentLabel.node());
+            }
+            lastLabel = currentLabel;
+            currentLabel = currentLabel.parent();
+        }
+        return nodes;
     }
 
     private List<FeasiblePath> translateLabelsToPaths(List<Label> negativeReducedCostLabels) {
         List<FeasiblePath> ret = new ArrayList<>();
         for (Label currentLabel : negativeReducedCostLabels) {
-            Deque<Integer> nodes = new LinkedList<>();
-            nodes.addFirst(currentLabel.node());
-
             FeasiblePath path = new FeasiblePath();
-            path.addCustomers(Utils.boolArrayToIntSet(currentLabel.visitedCustomers()));
-
-            Label lastLabel = currentLabel;
-            currentLabel = currentLabel.parent();
-            while (currentLabel != null) {
-                if (lastLabel.node() != currentLabel.node()) {
-                    nodes.addFirst(currentLabel.node());
-                }
-                lastLabel = currentLabel;
-                currentLabel = currentLabel.parent();
-            }
+            path.addCustomers(Utils.bitSetToIntSet(currentLabel.visitedCustomers()));
+            Deque<Integer> nodes = getNodesFromLabelPath(currentLabel);
             int size = nodes.size();
             int lastNode = nodes.remove();
-            assert lastNode == instance.getDepot();
-            assert lastNode == graph.getStart();
             for (int j = 1; j < size; j++) {
                 int currentNode = nodes.remove();
                 if (currentNode == graph.getEnd()) {
@@ -76,16 +77,16 @@ public class LabelSettingAlgorithm {
     private Label extendCustomer(Label label, int customer) {
         int updatedDemand = label.demand() + instance.getDemand(customer);
         double updatedCost = label.cost() - dualValues.get(customer);
-        boolean[] updatedVisited = label.visitedCustomers();
-        updatedVisited[customer] = true;
+        BitSet updatedVisited = label.visitedCustomers();
+        updatedVisited.set(customer);
         return new Label(updatedDemand, updatedCost, label.node(), label.visitedNodes(), updatedVisited, label);
 
     }
 
     private Label extendNode(Label label, int nextNode) {
         double updatedCost = label.cost() + graph.getWeight(label.node(), nextNode);
-        boolean[] updatedVisited = label.visitedNodes();
-        updatedVisited[nextNode] = true;
+        BitSet updatedVisited = label.visitedNodes();
+        updatedVisited.set(nextNode);
         return new Label(label.demand(), updatedCost, nextNode, updatedVisited, label.visitedCustomers(), label);
     }
 
@@ -94,6 +95,10 @@ public class LabelSettingAlgorithm {
             return true;
         }
         if (label.demand() > instance.getCapacity()) {
+            return true;
+        }
+        if (dualValues.get(customer) < EPSILON) {
+            // Heuristic: if customer provides no reduction in total cost, can be pruned
             return true;
         }
         return labelDump.dominates(label);
@@ -171,34 +176,32 @@ public class LabelSettingAlgorithm {
         }
     }
 
-    private record Label(int demand, double cost, int node, boolean[] visitedNodes, boolean[] visitedCustomers,
+    private record Label(int demand, double cost, int node, BitSet visitedNodes, BitSet visitedCustomers,
                          LabelSettingAlgorithm.Label parent) implements Comparable<Label> {
 
         public static Label getRootLabel(int startNode, int numberOfNodes, double cost) {
-            boolean[] visitedNodes = new boolean[numberOfNodes];
-            boolean[] visitedCustomers = new boolean[numberOfNodes];
-            Arrays.fill(visitedNodes, false);
-            visitedNodes[startNode] = true;
-            Arrays.fill(visitedCustomers, false);
+            BitSet visitedNodes = new BitSet(numberOfNodes);
+            BitSet visitedCustomers = new BitSet(numberOfNodes);
+            visitedNodes.set(startNode);
             return new Label(0, cost, startNode, visitedNodes, visitedCustomers, null);
         }
 
         public boolean isNodeVisited(int node) {
-            return visitedNodes[node];
+            return visitedNodes.get(node);
         }
 
         public boolean isCustomerVisited(int customer) {
-            return visitedCustomers[customer];
+            return visitedCustomers.get(customer);
         }
 
         @Override
-        public boolean[] visitedNodes() {
-            return Arrays.copyOf(visitedNodes, visitedNodes.length);
+        public BitSet visitedNodes() {
+            return (BitSet) visitedNodes.clone();
         }
 
         @Override
-        public boolean[] visitedCustomers() {
-            return Arrays.copyOf(visitedCustomers, visitedCustomers.length);
+        public BitSet visitedCustomers() {
+            return (BitSet) visitedCustomers.clone();
         }
 
         @Override
@@ -218,21 +221,24 @@ public class LabelSettingAlgorithm {
 
     private class LabelDump {
 
-        private final PrefixTreeMap<PrefixTreeMap<Label>> dump;
+        private final List<PrefixTreeMap<PrefixTreeMap<Label>>> dump;
 
         public LabelDump() {
-            dump = new PrefixTreeMap<>(graph.getSize());
+            dump = new ArrayList<>(graph.getSize());
+            for (int i = 0; i < graph.getSize(); i++) {
+                dump.add(new PrefixTreeMap<>(graph.getSize()));
+            }
         }
 
         public void addLabel(Label l) {
-            PrefixTreeMap<Label> prefixTreeMap = dump.contains(l.visitedNodes) ? dump.get(l.visitedNodes) :
-                    new PrefixTreeMap<>(graph.getSize());
+            PrefixTreeMap<Label> prefixTreeMap =
+                    dump.get(l.node()).contains(l.visitedNodes) ? dump.get(l.node()).get(l.visitedNodes) : new PrefixTreeMap<>(graph.getSize());
             prefixTreeMap.insert(l.visitedCustomers, l);
-            dump.insert(l.visitedNodes, prefixTreeMap);
+            dump.get(l.node()).insert(l.visitedNodes, prefixTreeMap);
         }
 
         public boolean dominates(Label l) {
-            for (PrefixTreeMap<Label> p : dump.getValuesAtAllPrefixes(l.visitedNodes)) {
+            for (PrefixTreeMap<Label> p : dump.get(l.node()).getValuesAtAllPrefixes(l.visitedNodes)) {
                 for (Label other : p.getValuesAtAllPrefixes(l.visitedCustomers)) {
                     if (other.cost() <= l.cost()) {
                         return true;
@@ -244,9 +250,9 @@ public class LabelSettingAlgorithm {
 
         public List<Label> getNegativeReducedCostLabels(int node) {
             List<Label> ret = new ArrayList<>();
-            for (PrefixTreeMap<Label> p :dump.getAllValues()){
-                for(Label l : p.getAllValues()){
-                    if(l.node() == node && l.cost() < -EPSILON){
+            for (PrefixTreeMap<Label> p : dump.get(node).getAllValues()) {
+                for (Label l : p.getAllValues()) {
+                    if (l.node() == node && l.cost() < -EPSILON) {
                         ret.add(l);
                     }
                 }

@@ -7,6 +7,7 @@ import commons.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class PulseAlgorithm {
                 path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
                 lastNode = currentNode;
             }
-            path.addCustomers(Utils.boolArrayToIntSet(currentPulse.getVisitedCustomers()));
+            path.addCustomers(Utils.bitSetToIntSet(currentPulse.getVisitedCustomers()));
             ret.add(path);
         }
         return ret;
@@ -90,13 +91,14 @@ public class PulseAlgorithm {
     private boolean pruneWithCustomerRule(int nextCustomer, int currentNode, PartialPath visitedPath) {
         int currentDemand = visitedPath.getTotalDemand() + instance.getDemand(nextCustomer);
         double currentCost = visitedPath.getTotalCost() - dualValues.get(nextCustomer);
-        if (dualValues.get(nextCustomer) < EPSILON) {
-            return true;
-        }
         if (visitedPath.isCustomerVisited(nextCustomer)) {
             return true;
         }
         if (currentDemand > instance.getCapacity()) {
+            return true;
+        }
+        if (dualValues.get(nextCustomer) < EPSILON) {
+            // Heuristic: if customer provides no reduction in total cost, can be pruned
             return true;
         }
         return checkBounds(currentNode, currentCost, currentDemand);
@@ -211,39 +213,34 @@ public class PulseAlgorithm {
 
     private class PartialPath {
         private final int[] nodes;
-        private final boolean[] visitedCustomers;
-        private final boolean[] visitedNodes;
+        private final BitSet visitedCustomers;
+        private final BitSet visitedNodes;
         private final double[] partialCosts;
         private int size;
         private double totalCost;
         private int totalDemand;
-
         public PartialPath(double totalCost, int totalDemand) {
             this.nodes = new int[numberOfNodes];
             this.size = 0;
             this.totalCost = totalCost;
             this.totalDemand = totalDemand;
-            this.visitedCustomers = new boolean[numberOfNodes];
-            Arrays.fill(visitedCustomers, false);
-            this.visitedNodes = new boolean[numberOfNodes];
-            Arrays.fill(visitedNodes, false);
+            this.visitedCustomers = new BitSet(numberOfNodes);
+            this.visitedNodes = new BitSet(numberOfNodes);
             this.partialCosts = new double[numberOfNodes];
             Arrays.fill(partialCosts, 0.0);
-
-            Arrays.fill(nodes, -1);
         }
 
         public PartialPath(PartialPath p) {
             this.nodes = Arrays.copyOf(p.nodes, numberOfNodes);
-            this.visitedCustomers = Arrays.copyOf(p.visitedCustomers, numberOfNodes);
-            this.visitedNodes = Arrays.copyOf(p.visitedNodes, numberOfNodes);
+            this.visitedCustomers = (BitSet) p.visitedCustomers.clone();
+            this.visitedNodes = (BitSet) p.visitedNodes.clone();
             this.partialCosts = Arrays.copyOf(p.partialCosts, numberOfNodes);
             this.size = p.size;
             this.totalCost = p.totalCost;
             this.totalDemand = p.totalDemand;
         }
 
-        public boolean[] getVisitedCustomers() {
+        public BitSet getVisitedCustomers() {
             return visitedCustomers;
         }
 
@@ -257,7 +254,7 @@ public class PulseAlgorithm {
 
         public void addNode(int node) {
             nodes[size] = node;
-            visitedNodes[node] = true;
+            visitedNodes.set(node);
             totalCost += size == 0 ? 0.0 : graph.getWeight(nodes[size - 1], node);
             partialCosts[size] = totalCost;
             size++;
@@ -266,32 +263,32 @@ public class PulseAlgorithm {
         public void removeLastNode() {
             assert size >= 1;
             partialCosts[size - 1] = 0.0;
-            visitedNodes[nodes[size - 1]] = false;
+            visitedNodes.flip(nodes[size - 1]);
             totalCost -= size < 2 ? 0.0 : graph.getWeight(nodes[size - 2], nodes[size - 1]);
             nodes[size - 1] = -1;
             size--;
         }
 
         public void addCustomer(int customer) {
-            visitedCustomers[customer] = true;
+            visitedCustomers.set(customer);
             totalDemand += instance.getDemand(customer);
             totalCost -= dualValues.get(customer);
             partialCosts[size - 1] = totalCost;
         }
 
         public void removeCustomer(int customer) {
-            visitedCustomers[customer] = false;
+            visitedCustomers.flip(customer);
             totalDemand -= instance.getDemand(customer);
             totalCost += dualValues.get(customer);
             partialCosts[size - 1] = totalCost;
         }
 
         public boolean isCustomerVisited(int customer) {
-            return visitedCustomers[customer];
+            return visitedCustomers.get(customer);
         }
 
         public boolean isNodeVisited(int node) {
-            return visitedNodes[node];
+            return visitedNodes.get(node);
         }
 
         public int getNodeAt(int index) {

@@ -1,6 +1,7 @@
 package algorithm.pricing;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 public class PrefixTreeMap<T> {
@@ -15,20 +16,30 @@ public class PrefixTreeMap<T> {
 
     public static void main(String[] args) {
         PrefixTreeMap<String> t = new PrefixTreeMap<>(5);
-        boolean[] b1 = {true, true, false, false, true};
+        BitSet b1 = new BitSet(5);
         t.insert(b1, "cachi");
-        boolean[] b2 = {true, true, false, false, false};
-        t.insert(b1, "fdsfdf");
+        BitSet b2 = new BitSet(5);
+        b2.set(1,2);
+        t.insert(b2, "fdsfdf");
+        BitSet b3 = new BitSet(5);
+        b3.set(1,3);
 
         System.out.println(t.contains(b1));
+        System.out.println(t.get(b1));
         System.out.println(t.contains(b2));
+        System.out.println(t.get(b2));
+
+        System.out.println(t.getValuesAtAllPrefixes(b1));
+        System.out.println(t.getValuesAtAllPrefixes(b2));
+        System.out.println(t.getValuesAtAllPrefixes(b3));
+
 
     }
 
-    public void insert(boolean[] bitset, T elem) {
+    public void insert(BitSet bitset, T elem) {
         TrieNode<T> crawl = root;
-        for (int i = 0; i < bitset.length; i++) {
-            if (bitset[i]) {
+        for (int i = 0; i < bitset.length(); i++) {
+            if (bitset.get(i)) {
                 if (crawl.getChild(i) == null) {
                     crawl.setChild(i, new TrieNode<>(alphabetSize));
                 }
@@ -38,10 +49,10 @@ public class PrefixTreeMap<T> {
         crawl.setElem(elem);
     }
 
-    public boolean contains(boolean[] bitset) {
+    public boolean contains(BitSet bitset) {
         TrieNode<T> crawl = root;
-        for (int i = 0; i < bitset.length; i++) {
-            if (bitset[i]) {
+        for (int i = 0; i < bitset.length(); i++) {
+            if (bitset.get(i)) {
                 if (crawl.getChild(i) == null) {
                     return false;
                 }
@@ -51,10 +62,10 @@ public class PrefixTreeMap<T> {
         return crawl.getElem() != null;
     }
 
-    public T get(boolean[] bitset) {
+    public T get(BitSet bitset) {
         TrieNode<T> crawl = root;
-        for (int i = 0; i < bitset.length; i++) {
-            if (bitset[i]) {
+        for (int i = 0; i < bitset.length(); i++) {
+            if (bitset.get(i)) {
                 if (crawl.getChild(i) == null) {
                     return null;
                 }
@@ -64,11 +75,14 @@ public class PrefixTreeMap<T> {
         return crawl.getElem();
     }
 
-    public List<T> getValuesAtAllPrefixes(boolean[] bitset) {
+    public List<T> getValuesAtAllPrefixes(BitSet bitset) {
         List<T> ret = new ArrayList<>();
         TrieNode<T> crawl = root;
-        for (int i = 0; i < bitset.length; i++) {
-            if (bitset[i]) {
+        if(crawl.getElem() != null){
+            ret.add(crawl.getElem());
+        }
+        for (int i = 0; i < bitset.length(); i++) {
+            if (bitset.get(i)) {
                 if (crawl.getChild(i) == null) {
                     return ret;
                 }
@@ -127,6 +141,8 @@ public class PrefixTreeMap<T> {
             children.set(i, child);
         }
     }
+
+
 }
 
 
