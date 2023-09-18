@@ -196,12 +196,12 @@ public class LabelSettingAlgorithm {
 
         @Override
         public BitSet visitedNodes() {
-            return (BitSet) visitedNodes.clone();
+            return visitedNodes.get(0, visitedNodes.length());
         }
 
         @Override
         public BitSet visitedCustomers() {
-            return (BitSet) visitedCustomers.clone();
+            return visitedCustomers.get(0, visitedCustomers.length());
         }
 
         @Override
@@ -221,27 +221,32 @@ public class LabelSettingAlgorithm {
 
     private class LabelDump {
 
-        private final List<PrefixTreeMap<PrefixTreeMap<Label>>> dump;
+        private final List<Map<BitSet, Map<BitSet, Label>>> dump;
 
         public LabelDump() {
             dump = new ArrayList<>(graph.getSize());
             for (int i = 0; i < graph.getSize(); i++) {
-                dump.add(new PrefixTreeMap<>(graph.getSize()));
+                dump.add(new HashMap<>());
             }
         }
 
         public void addLabel(Label l) {
-            PrefixTreeMap<Label> prefixTreeMap =
-                    dump.get(l.node()).contains(l.visitedNodes) ? dump.get(l.node()).get(l.visitedNodes) : new PrefixTreeMap<>(graph.getSize());
-            prefixTreeMap.insert(l.visitedCustomers, l);
-            dump.get(l.node()).insert(l.visitedNodes, prefixTreeMap);
+            Map<BitSet, Map<BitSet, Label>> currentNodeMap = dump.get(l.node());
+            currentNodeMap.putIfAbsent(l.visitedNodes, new HashMap<>());
+            currentNodeMap.get(l.visitedNodes).put(l.visitedCustomers, l);
+
         }
 
         public boolean dominates(Label l) {
-            for (PrefixTreeMap<Label> p : dump.get(l.node()).getValuesAtAllPrefixes(l.visitedNodes)) {
-                for (Label other : p.getValuesAtAllPrefixes(l.visitedCustomers)) {
-                    if (other.cost() <= l.cost()) {
-                        return true;
+            for (BitSet visitedNodes : dump.get(l.node()).keySet()) {
+                if (Utils.isSubset(visitedNodes, l.visitedNodes)) {
+                    Map<BitSet, Label> map = dump.get(l.node()).get(visitedNodes);
+                    for (BitSet visitedCustomers : map.keySet()) {
+                        if (Utils.isSubset(visitedCustomers, l.visitedCustomers)) {
+                            if (map.get(visitedCustomers).cost() <= l.cost()) {
+                                return true;
+                            }
+                        }
                     }
                 }
             }
@@ -250,10 +255,11 @@ public class LabelSettingAlgorithm {
 
         public List<Label> getNegativeReducedCostLabels(int node) {
             List<Label> ret = new ArrayList<>();
-            for (PrefixTreeMap<Label> p : dump.get(node).getAllValues()) {
-                for (Label l : p.getAllValues()) {
-                    if (l.node() == node && l.cost() < -EPSILON) {
-                        ret.add(l);
+            for (BitSet visitedNodes : dump.get(node).keySet()) {
+                Map<BitSet, Label> map = dump.get(node).get(visitedNodes);
+                for (BitSet visitedCustomers : map.keySet()) {
+                    if (map.get(visitedCustomers).cost() < -EPSILON) {
+                        ret.add(map.get(visitedCustomers));
                     }
                 }
             }

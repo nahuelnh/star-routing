@@ -131,7 +131,6 @@ public class Utils {
         }
     }
 
-
     public static Set<Integer> bitSetToIntSet(BitSet arr) {
         Set<Integer> ret = new HashSet<>();
         for (int i = 0; i < arr.length(); i++) {
@@ -140,6 +139,13 @@ public class Utils {
             }
         }
         return ret;
+    }
+
+    public static boolean isSubset(BitSet b1, BitSet b2) {
+        BitSet b3 = b2.get(0, b2.length());
+        b3.and(b1);
+        b3.xor(b1);
+        return b3.isEmpty();
     }
 
 }
