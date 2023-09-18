@@ -8,9 +8,7 @@ import commons.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -22,72 +20,83 @@ public class LabelSettingAlgorithm {
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final Map<Integer, Double> dualValues;
+    private final boolean applyRelaxedDominance;
+    private final boolean applyFakeCostHeuristic;
+    private final double alpha;
+    private final LabelDump labelDump;
 
-    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
+    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
+                                 boolean applyRelaxedDominance, boolean applyFakeCostHeuristic) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
+        this.applyRelaxedDominance = applyRelaxedDominance;
+        this.applyFakeCostHeuristic = applyFakeCostHeuristic;
         this.dualValues = new HashMap<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
         this.graph = new ESPPRCGraph(instance, dualValues);
-    }
-
-    private Deque<Integer> getNodesFromLabelPath(Label currentLabel) {
-        Deque<Integer> nodes = new LinkedList<>();
-        nodes.addFirst(currentLabel.node());
-        Label lastLabel = currentLabel;
-        currentLabel = currentLabel.parent();
-        while (currentLabel != null) {
-            if (lastLabel.node() != currentLabel.node()) {
-                nodes.addFirst(currentLabel.node());
-            }
-            lastLabel = currentLabel;
-            currentLabel = currentLabel.parent();
+        this.alpha = computeCostFactor();
+        if (applyRelaxedDominance) {
+            this.labelDump = new RelaxedLabelDump(graph.getSize(), instance.getCapacity() + 1);
+        } else {
+            this.labelDump = new StrictLabelDump(graph.getSize());
         }
-        return nodes;
     }
 
-    private List<FeasiblePath> translateLabelsToPaths(List<Label> negativeReducedCostLabels) {
-        List<FeasiblePath> ret = new ArrayList<>();
-        for (Label currentLabel : negativeReducedCostLabels) {
-            FeasiblePath path = new FeasiblePath();
-            path.addCustomers(Utils.bitSetToIntSet(currentLabel.visitedCustomers()));
-            Deque<Integer> nodes = getNodesFromLabelPath(currentLabel);
-            int size = nodes.size();
-            int lastNode = nodes.remove();
-            for (int j = 1; j < size; j++) {
-                int currentNode = nodes.remove();
-                if (currentNode == graph.getEnd()) {
-                    currentNode = instance.getDepot();
+    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
+        this(instance, rmpSolution, false, false);
+    }
+
+    private double computeCostFactor() {
+        int sum = 0;
+        for (int i = 0; i < graph.getSize(); i++) {
+            for (int j = 0; j < graph.getSize(); j++) {
+                if (graph.edgeExists(i, j)) {
+                    sum += graph.getWeight(i, j);
                 }
-                path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
-                lastNode = currentNode;
             }
-            ret.add(path);
+        }
+        return 1.0 / sum;
+    }
+
+    private List<FeasiblePath> getNegativeReducedCostPaths() {
+        List<FeasiblePath> ret = new ArrayList<>();
+        for (Label currentLabel : labelDump.getNegativeReducedCostLabels(graph.getEnd())) {
+            ret.add(currentLabel.translateToFeasiblePath(graph));
         }
         return ret;
     }
 
     public List<FeasiblePath> run() {
-        List<Label> negativeReducedCostLabels = monoDirectionalBacktracking();
-        return translateLabelsToPaths(negativeReducedCostLabels);
+        monoDirectionalBacktracking();
+        return getNegativeReducedCostPaths();
+    }
+
+    private double getLittleFakeCost(Label label, int customer) {
+        if (graph.edgeExists(customer, label.node())) {
+            return graph.getWeight(customer, label.node()) * alpha;
+        }
+        return 0.0;
     }
 
     private Label extendCustomer(Label label, int customer) {
         int updatedDemand = label.demand() + instance.getDemand(customer);
         double updatedCost = label.cost() - dualValues.get(customer);
-        BitSet updatedVisited = label.visitedCustomers();
+        if (applyFakeCostHeuristic) {
+            updatedCost += getLittleFakeCost(label, customer);
+        }
+        BitSet updatedVisited = label.copyOfVisitedCustomers();
         updatedVisited.set(customer);
-        return new Label(updatedDemand, updatedCost, label.node(), label.visitedNodes(), updatedVisited, label);
+        return new Label(updatedDemand, updatedCost, label.node(), label.copyOfVisitedNodes(), updatedVisited, label);
 
     }
 
     private Label extendNode(Label label, int nextNode) {
         double updatedCost = label.cost() + graph.getWeight(label.node(), nextNode);
-        BitSet updatedVisited = label.visitedNodes();
+        BitSet updatedVisited = label.copyOfVisitedNodes();
         updatedVisited.set(nextNode);
-        return new Label(label.demand(), updatedCost, nextNode, updatedVisited, label.visitedCustomers(), label);
+        return new Label(label.demand(), updatedCost, nextNode, updatedVisited, label.copyOfVisitedCustomers(), label);
     }
 
     private boolean isCustomerUnreachable(Label label, int customer, Label previousLabel, LabelDump labelDump) {
@@ -115,11 +124,11 @@ public class LabelSettingAlgorithm {
         return labelDump.dominates(label);
     }
 
-    private List<Label> monoDirectionalBacktracking() {
-        //RelaxedLabelDump labelDump = new RelaxedLabelDump(graph.getSize(), instance.getCapacity() + 1);
-        LabelDump labelDump = new LabelDump();
+    private void monoDirectionalBacktracking() {
+
         Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
         labelDump.addLabel(root);
+
         PriorityQueue<Label> queue = new PriorityQueue<>();
         queue.add(root);
         while (!queue.isEmpty()) {
@@ -139,10 +148,9 @@ public class LabelSettingAlgorithm {
                 }
             }
         }
-        return labelDump.getNegativeReducedCostLabels(graph.getEnd());
     }
 
-    private static class RelaxedLabelDump {
+    private static class RelaxedLabelDump implements LabelDump {
         private final Label[][] labels;
         private final MinSegmentTree[] trees;
 
@@ -156,15 +164,18 @@ public class LabelSettingAlgorithm {
             }
         }
 
+        @Override
         public void addLabel(Label l) {
             labels[l.node()][l.demand()] = l;
             trees[l.node()].update(l.demand(), l.cost());
         }
 
+        @Override
         public boolean dominates(Label l) {
             return trees[l.node()].query(0, l.demand() + 1) < l.cost();
         }
 
+        @Override
         public List<Label> getNegativeReducedCostLabels(int node) {
             List<Label> ret = new ArrayList<>();
             for (int q = 0; q < labels[node].length; q++) {
@@ -176,73 +187,32 @@ public class LabelSettingAlgorithm {
         }
     }
 
-    private record Label(int demand, double cost, int node, BitSet visitedNodes, BitSet visitedCustomers,
-                         LabelSettingAlgorithm.Label parent) implements Comparable<Label> {
-
-        public static Label getRootLabel(int startNode, int numberOfNodes, double cost) {
-            BitSet visitedNodes = new BitSet(numberOfNodes);
-            BitSet visitedCustomers = new BitSet(numberOfNodes);
-            visitedNodes.set(startNode);
-            return new Label(0, cost, startNode, visitedNodes, visitedCustomers, null);
-        }
-
-        public boolean isNodeVisited(int node) {
-            return visitedNodes.get(node);
-        }
-
-        public boolean isCustomerVisited(int customer) {
-            return visitedCustomers.get(customer);
-        }
-
-        @Override
-        public BitSet visitedNodes() {
-            return visitedNodes.get(0, visitedNodes.length());
-        }
-
-        @Override
-        public BitSet visitedCustomers() {
-            return visitedCustomers.get(0, visitedCustomers.length());
-        }
-
-        @Override
-        public String toString() {
-            return "Label{" + "demand=" + demand + ", cost=" + cost + ", node=" + node + ", parent=" +
-                    (parent == null ? null : parent.node) + '}';
-        }
-
-        @Override
-        public int compareTo(Label label) {
-            if (this.node == label.node) {
-                return 0;
-            }
-            return this.node < label.node ? 1 : -1;
-        }
-    }
-
-    private class LabelDump {
+    private static class StrictLabelDump implements LabelDump {
 
         private final List<Map<BitSet, Map<BitSet, Label>>> dump;
 
-        public LabelDump() {
-            dump = new ArrayList<>(graph.getSize());
-            for (int i = 0; i < graph.getSize(); i++) {
+        public StrictLabelDump(int size) {
+            dump = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
                 dump.add(new HashMap<>());
             }
         }
 
+        @Override
         public void addLabel(Label l) {
             Map<BitSet, Map<BitSet, Label>> currentNodeMap = dump.get(l.node());
-            currentNodeMap.putIfAbsent(l.visitedNodes, new HashMap<>());
-            currentNodeMap.get(l.visitedNodes).put(l.visitedCustomers, l);
+            currentNodeMap.putIfAbsent(l.visitedNodes(), new HashMap<>());
+            currentNodeMap.get(l.visitedNodes()).put(l.visitedCustomers(), l);
 
         }
 
+        @Override
         public boolean dominates(Label l) {
             for (BitSet visitedNodes : dump.get(l.node()).keySet()) {
-                if (Utils.isSubset(visitedNodes, l.visitedNodes)) {
+                if (Utils.isSubset(visitedNodes, l.visitedNodes())) {
                     Map<BitSet, Label> map = dump.get(l.node()).get(visitedNodes);
                     for (BitSet visitedCustomers : map.keySet()) {
-                        if (Utils.isSubset(visitedCustomers, l.visitedCustomers)) {
+                        if (Utils.isSubset(visitedCustomers, l.visitedCustomers())) {
                             if (map.get(visitedCustomers).cost() <= l.cost()) {
                                 return true;
                             }
@@ -253,6 +223,7 @@ public class LabelSettingAlgorithm {
             return false;
         }
 
+        @Override
         public List<Label> getNegativeReducedCostLabels(int node) {
             List<Label> ret = new ArrayList<>();
             for (BitSet visitedNodes : dump.get(node).keySet()) {
@@ -266,5 +237,4 @@ public class LabelSettingAlgorithm {
             return ret;
         }
     }
-
 }

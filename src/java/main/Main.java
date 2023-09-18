@@ -21,7 +21,7 @@ public class Main {
         runInstance("instance_random_10");
         runInstance("instance_random_12");
                 runInstance("instance_random_20");
-                runInstance("instance_random_30");
+                runInstance("instance_random_100");
     }
 
     private static void runInstance(String instanceName) {
