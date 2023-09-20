@@ -10,6 +10,7 @@ import ilog.cplex.IloCplex;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -20,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class Utils {
+
+    public static final Duration MAX_DURATION = Duration.ofDays(1);
 
     private static final String DELIMITER = " ";
 

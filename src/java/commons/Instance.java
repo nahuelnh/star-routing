@@ -18,6 +18,7 @@ public class Instance {
     private static final String CAPACITY_STRING = "capacity";
     private static final String DEPOT_STRING = "depot";
     private static final String VEHICLES_STRING = "vehicles";
+    private final String name;
     private final int numberOfNodes;
     private final int numberOfVehicles;
     private final int capacity;
@@ -30,6 +31,7 @@ public class Instance {
 
     public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename,
                     String paramsFilename, boolean allowUnusedVehicles) {
+        this.name = instanceName;
         this.allowUnusedVehicles = allowUnusedVehicles;
 
         List<List<Integer>> adjacencyMatrix = Utils.parseIntegerMatrix(getFullPath(instanceName, graphFilename));
@@ -193,5 +195,9 @@ public class Instance {
         return "commons.Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
                 ", capacity=" + capacity + ", depot=" + depot + ", customers=" + customers + ", neighbors=" +
                 neighbors + ", demand=" + demand + ", allowUnusedVehicles=" + allowUnusedVehicles + '}';
+    }
+
+    public String getName() {
+        return name;
     }
 }

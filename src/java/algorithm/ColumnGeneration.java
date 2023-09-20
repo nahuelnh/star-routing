@@ -45,11 +45,11 @@ public class ColumnGeneration {
             PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
             newPaths = pricingSolution.getNegativeReducedCostPaths();
         }
-        System.out.println("Relaxation optimal:" + relaxationOptimal);
+//        System.out.println("Relaxation optimal:" + relaxationOptimal);
         RestrictedMasterProblem.RMPIntegerSolution solution = rmp.solveInteger();
-        System.out.println("Integer optimal:" + solution.getObjectiveValue());
+//        System.out.println("Integer optimal:" + solution.getObjectiveValue());
         Instant finish = Instant.now();
-        return new Solution(solution.getUsedPaths(), Duration.between(start, finish));
+        return new Solution(Solution.Status.FINISHED, solution.getObjectiveValue(), solution.getUsedPaths(), Duration.between(start, finish));
     }
 
     public Solution solveRelaxation(){
@@ -63,9 +63,9 @@ public class ColumnGeneration {
             PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
             newPaths = pricingSolution.getNegativeReducedCostPaths();
         }
-        System.out.println("Relaxation optimal:" + relaxationOptimal);
+//        System.out.println("Relaxation optimal:" + relaxationOptimal);
         Instant finish = Instant.now();
-        return new Solution(relaxationOptimal, new ArrayList<>(), Duration.between(start, finish));
+        return new Solution(Solution.Status.FINISHED, relaxationOptimal, new ArrayList<>(), Duration.between(start, finish));
     }
 
 }

@@ -2,231 +2,186 @@
 <CPLEXSolution version="1.2">
  <header
    problemName="ilog.cplex"
-   objectiveValue="168"
-   solutionTypeValue="1"
-   solutionTypeString="basic"
-   solutionStatusValue="1"
-   solutionStatusString="optimal"
-   solutionMethodString="dual"
+   solutionName="incumbent"
+   solutionIndex="-1"
+   objectiveValue="224"
+   solutionTypeValue="3"
+   solutionTypeString="primal"
+   solutionStatusValue="107"
+   solutionStatusString="time limit exceeded"
+   solutionMethodString="mip"
    primalFeasible="1"
-   dualFeasible="1"
-   simplexIterations="18"
+   dualFeasible="0"
+   MIPNodes="14936"
+   MIPIterations="271208"
    writeLevel="3"/>
  <quality
+   epInt="1.0000000000000001e-05"
    epRHS="9.9999999999999995e-07"
-   epOpt="9.9999999999999995e-07"
+   maxIntInfeas="0"
    maxPrimalInfeas="0"
-   maxDualInfeas="2.2204460492503131e-16"
-   maxPrimalResidual="1.3322676295501878e-14"
-   maxDualResidual="2.4424906541753444e-15"
-   maxX="1"
-   maxPi="31"
-   maxSlack="100"
-   maxRedCost="100"
-   kappa="1415.1458957869538"/>
- <linearConstraints>
-  <constraint name="c5" index="4" status="LL" slack="0" dual="-16"/>
-  <constraint name="c6" index="5" status="LL" slack="0" dual="-16"/>
-  <constraint name="c7" index="6" status="LL" slack="0" dual="-16"/>
-  <constraint name="c8" index="7" status="LL" slack="0" dual="-16"/>
-  <constraint name="c9" index="8" status="LL" slack="0" dual="-31"/>
-  <constraint name="c10" index="9" status="LL" slack="0" dual="-31"/>
-  <constraint name="c11" index="10" status="LL" slack="0" dual="-31"/>
-  <constraint name="c12" index="11" status="LL" slack="0" dual="-31"/>
-  <constraint name="c21" index="20" status="LL" slack="0" dual="-12"/>
-  <constraint name="c22" index="21" status="LL" slack="0" dual="-12"/>
-  <constraint name="c23" index="22" status="LL" slack="0" dual="-12"/>
-  <constraint name="c24" index="23" status="LL" slack="0" dual="-12"/>
-  <constraint name="c25" index="24" status="LL" slack="0" dual="-30"/>
-  <constraint name="c26" index="25" status="LL" slack="0" dual="-30"/>
-  <constraint name="c27" index="26" status="LL" slack="0" dual="-30"/>
-  <constraint name="c28" index="27" status="LL" slack="0" dual="-30"/>
-  <constraint name="c29" index="28" status="LL" slack="0" dual="-16"/>
-  <constraint name="c30" index="29" status="LL" slack="0" dual="-16"/>
-  <constraint name="c31" index="30" status="LL" slack="0" dual="-16"/>
-  <constraint name="c32" index="31" status="LL" slack="0" dual="-16"/>
-  <constraint name="c33" index="32" status="LL" slack="0" dual="-4"/>
-  <constraint name="c34" index="33" status="LL" slack="0" dual="-4"/>
-  <constraint name="c35" index="34" status="LL" slack="0" dual="-4"/>
-  <constraint name="c36" index="35" status="LL" slack="0" dual="-4"/>
-  <constraint name="c37" index="36" status="LL" slack="0" dual="-20"/>
-  <constraint name="c38" index="37" status="LL" slack="0" dual="-20"/>
-  <constraint name="c39" index="38" status="LL" slack="0" dual="-20"/>
-  <constraint name="c40" index="39" status="LL" slack="0" dual="-20"/>
-  <constraint name="c41" index="40" status="LL" slack="0" dual="-28"/>
-  <constraint name="c42" index="41" status="LL" slack="0" dual="-28"/>
-  <constraint name="c43" index="42" status="LL" slack="0" dual="-28"/>
-  <constraint name="c44" index="43" status="LL" slack="0" dual="-28"/>
-  <constraint name="c45" index="44" status="LL" slack="0" dual="-27"/>
-  <constraint name="c46" index="45" status="LL" slack="0" dual="-27"/>
-  <constraint name="c47" index="46" status="LL" slack="0" dual="-27"/>
-  <constraint name="c48" index="47" status="LL" slack="0" dual="-27"/>
-  <constraint name="flow_1_0" index="52" status="LL" slack="0" dual="-15"/>
-  <constraint name="flow_1_1" index="53" status="LL" slack="0" dual="-15"/>
-  <constraint name="flow_1_2" index="54" status="LL" slack="0" dual="-15"/>
-  <constraint name="flow_1_3" index="55" status="LL" slack="0" dual="-15"/>
-  <constraint name="flow_2_0" index="56" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_2_1" index="57" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_2_2" index="58" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_2_3" index="59" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_3_0" index="60" status="LL" slack="0" dual="-4"/>
-  <constraint name="flow_3_1" index="61" status="LL" slack="0" dual="-4"/>
-  <constraint name="flow_3_2" index="62" status="LL" slack="0" dual="-4"/>
-  <constraint name="flow_3_3" index="63" status="LL" slack="0" dual="-4"/>
-  <constraint name="flow_4_0" index="64" status="LL" slack="0" dual="-10"/>
-  <constraint name="flow_4_1" index="65" status="LL" slack="0" dual="-10"/>
-  <constraint name="flow_4_2" index="66" status="LL" slack="0" dual="-10"/>
-  <constraint name="flow_4_3" index="67" status="LL" slack="0" dual="-10"/>
-  <constraint name="flow_5_0" index="68" status="LL" slack="0" dual="5"/>
-  <constraint name="flow_5_1" index="69" status="LL" slack="0" dual="5"/>
-  <constraint name="flow_5_2" index="70" status="LL" slack="0" dual="5"/>
-  <constraint name="flow_5_3" index="71" status="LL" slack="0" dual="5"/>
-  <constraint name="flow_6_0" index="72" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_6_1" index="73" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_6_2" index="74" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_6_3" index="75" status="LL" slack="0" dual="14"/>
-  <constraint name="flow_9_0" index="84" status="LL" slack="0" dual="3"/>
-  <constraint name="flow_9_1" index="85" status="LL" slack="0" dual="3"/>
-  <constraint name="flow_9_2" index="86" status="LL" slack="0" dual="3"/>
-  <constraint name="flow_9_3" index="87" status="LL" slack="0" dual="3"/>
-  <constraint name="flow_10_0" index="88" status="LL" slack="0" dual="12"/>
-  <constraint name="flow_10_1" index="89" status="LL" slack="0" dual="12"/>
-  <constraint name="flow_10_2" index="90" status="LL" slack="0" dual="12"/>
-  <constraint name="flow_10_3" index="91" status="LL" slack="0" dual="12"/>
-  <constraint name="flow_11_0" index="92" status="LL" slack="0" dual="-3"/>
-  <constraint name="flow_11_1" index="93" status="LL" slack="0" dual="-3"/>
-  <constraint name="flow_11_2" index="94" status="LL" slack="0" dual="-3"/>
-  <constraint name="flow_11_3" index="95" status="LL" slack="0" dual="-3"/>
-  <constraint name="serving_0" index="96" status="LL" slack="0" dual="16"/>
-  <constraint name="serving_1" index="97" status="LL" slack="0" dual="31"/>
-  <constraint name="serving_4" index="100" status="LL" slack="0" dual="12"/>
-  <constraint name="serving_5" index="101" status="LL" slack="0" dual="30"/>
-  <constraint name="serving_7" index="103" status="LL" slack="0" dual="4"/>
-  <constraint name="serving_8" index="104" status="LL" slack="0" dual="20"/>
-  <constraint name="serving_9" index="105" status="LL" slack="0" dual="28"/>
-  <constraint name="serving_10" index="106" status="LL" slack="0" dual="27"/>
-  <constraint name="visit_0_0" index="111" status="LL" slack="0" dual="-16"/>
-  <constraint name="visit_0_1" index="112" status="LL" slack="0" dual="-16"/>
-  <constraint name="visit_0_2" index="113" status="LL" slack="0" dual="-16"/>
-  <constraint name="visit_0_3" index="114" status="LL" slack="0" dual="-16"/>
-  <constraint name="visit_1_0" index="115" status="LL" slack="0" dual="-31"/>
-  <constraint name="visit_1_1" index="116" status="LL" slack="0" dual="-31"/>
-  <constraint name="visit_1_2" index="117" status="LL" slack="0" dual="-31"/>
-  <constraint name="visit_1_3" index="118" status="LL" slack="0" dual="-31"/>
-  <constraint name="visit_4_0" index="127" status="LL" slack="0" dual="-12"/>
-  <constraint name="visit_4_1" index="128" status="LL" slack="0" dual="-12"/>
-  <constraint name="visit_4_2" index="129" status="LL" slack="0" dual="-12"/>
-  <constraint name="visit_4_3" index="130" status="LL" slack="0" dual="-12"/>
-  <constraint name="visit_5_0" index="131" status="LL" slack="0" dual="-30"/>
-  <constraint name="visit_5_1" index="132" status="LL" slack="0" dual="-30"/>
-  <constraint name="visit_5_2" index="133" status="LL" slack="0" dual="-30"/>
-  <constraint name="visit_5_3" index="134" status="LL" slack="0" dual="-30"/>
-  <constraint name="visit_7_0" index="139" status="LL" slack="0" dual="-4"/>
-  <constraint name="visit_7_1" index="140" status="LL" slack="0" dual="-4"/>
-  <constraint name="visit_7_2" index="141" status="LL" slack="0" dual="-4"/>
-  <constraint name="visit_7_3" index="142" status="LL" slack="0" dual="-4"/>
-  <constraint name="visit_8_0" index="143" status="LL" slack="0" dual="-20"/>
-  <constraint name="visit_8_1" index="144" status="LL" slack="0" dual="-20"/>
-  <constraint name="visit_8_2" index="145" status="LL" slack="0" dual="-20"/>
-  <constraint name="visit_8_3" index="146" status="LL" slack="0" dual="-20"/>
-  <constraint name="visit_9_0" index="147" status="LL" slack="0" dual="-28"/>
-  <constraint name="visit_9_1" index="148" status="LL" slack="0" dual="-28"/>
-  <constraint name="visit_9_2" index="149" status="LL" slack="0" dual="-28"/>
-  <constraint name="visit_9_3" index="150" status="LL" slack="0" dual="-28"/>
-  <constraint name="visit_10_0" index="151" status="LL" slack="0" dual="-27"/>
-  <constraint name="visit_10_1" index="152" status="LL" slack="0" dual="-27"/>
-  <constraint name="visit_10_2" index="153" status="LL" slack="0" dual="-27"/>
-  <constraint name="visit_10_3" index="154" status="LL" slack="0" dual="-27"/>
-  <constraint name="mtz_8_9_0" index="467" status="LL" slack="0" dual="-2.2204460492503131e-16"/>
- </linearConstraints>
+   maxX="19"
+   maxSlack="100"/>
  <variables>
-  <variable index="234" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="251" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="270" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="287" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="305" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="337" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="372" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="373" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="400" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="401" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="457" status="BS" value="0.90909090909090917" reducedCost="0"/>
-  <variable index="463" status="BS" value="0.90909090909090917" reducedCost="0"/>
-  <variable index="467" status="BS" value="0.090909090909090828" reducedCost="0"/>
-  <variable index="473" status="BS" value="0.090909090909090828" reducedCost="0"/>
-  <variable index="498" status="BS" value="0.75757575757575757" reducedCost="0"/>
-  <variable index="502" status="BS" value="0.75757575757575757" reducedCost="0"/>
-  <variable index="522" status="BS" value="0.24242424242424243" reducedCost="0"/>
-  <variable index="526" status="BS" value="0.24242424242424243" reducedCost="0"/>
-  <variable index="528" status="BS" value="0.90909090909090917" reducedCost="0"/>
-  <variable index="534" status="BS" value="0.090909090909090828" reducedCost="0"/>
-  <variable index="576" status="BS" value="0.24242424242424243" reducedCost="0"/>
-  <variable index="579" status="BS" value="0.75757575757575757" reducedCost="0"/>
-  <variable index="580" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="582" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="584" status="BS" value="1" reducedCost="0"/>
-  <variable index="588" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="590" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="592" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="594" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="598" status="BS" value="0.090909090909090828" reducedCost="0"/>
-  <variable index="599" status="BS" value="0.90909090909090917" reducedCost="0"/>
-  <variable index="600" status="BS" value="0.24242424242424243" reducedCost="0"/>
-  <variable index="603" status="BS" value="0.75757575757575757" reducedCost="0"/>
-  <variable index="606" status="BS" value="0.090909090909090828" reducedCost="0"/>
-  <variable index="607" status="BS" value="0.90909090909090917" reducedCost="0"/>
-  <variable index="610" status="BS" value="0.090909090909090828" reducedCost="0"/>
-  <variable index="611" status="BS" value="0.90909090909090917" reducedCost="0"/>
-  <variable index="612" status="BS" value="0.24242424242424243" reducedCost="0"/>
-  <variable index="615" status="BS" value="0.75757575757575757" reducedCost="0"/>
-  <variable index="616" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="618" status="BS" value="0.5" reducedCost="0"/>
-  <variable index="620" status="LL" value="1" reducedCost="0"/>
-  <variable index="621" status="LL" value="1" reducedCost="0"/>
-  <variable index="622" status="LL" value="1" reducedCost="0"/>
-  <variable index="623" status="LL" value="1" reducedCost="0"/>
-  <variable index="624" status="LL" value="1" reducedCost="0"/>
-  <variable index="625" status="LL" value="1" reducedCost="0"/>
-  <variable index="626" status="LL" value="1" reducedCost="0"/>
-  <variable index="627" status="LL" value="1" reducedCost="0"/>
-  <variable index="628" status="LL" value="1" reducedCost="0"/>
-  <variable index="629" status="LL" value="1" reducedCost="0"/>
-  <variable index="630" status="LL" value="1" reducedCost="0"/>
-  <variable index="631" status="LL" value="1" reducedCost="0"/>
-  <variable index="632" status="LL" value="1" reducedCost="0"/>
-  <variable index="633" status="LL" value="1" reducedCost="0"/>
-  <variable index="634" status="LL" value="1" reducedCost="0"/>
-  <variable index="635" status="LL" value="1" reducedCost="0"/>
-  <variable index="636" status="LL" value="1" reducedCost="0"/>
-  <variable index="637" status="LL" value="1" reducedCost="0"/>
-  <variable index="638" status="LL" value="1" reducedCost="0"/>
-  <variable index="639" status="LL" value="1" reducedCost="0"/>
-  <variable index="640" status="LL" value="1" reducedCost="0"/>
-  <variable index="641" status="LL" value="1" reducedCost="0"/>
-  <variable index="642" status="LL" value="1" reducedCost="0"/>
-  <variable index="643" status="LL" value="1" reducedCost="0"/>
-  <variable index="644" status="LL" value="1" reducedCost="0"/>
-  <variable index="645" status="LL" value="1" reducedCost="0"/>
-  <variable index="646" status="LL" value="1" reducedCost="0"/>
-  <variable index="647" status="LL" value="1" reducedCost="0"/>
-  <variable index="648" status="LL" value="1" reducedCost="2.2204460492503131e-16"/>
-  <variable index="649" status="LL" value="1" reducedCost="0"/>
-  <variable index="650" status="LL" value="1" reducedCost="0"/>
-  <variable index="651" status="LL" value="1" reducedCost="0"/>
-  <variable index="652" status="LL" value="1" reducedCost="-2.2204460492503131e-16"/>
-  <variable index="653" status="LL" value="1" reducedCost="0"/>
-  <variable index="654" status="LL" value="1" reducedCost="0"/>
-  <variable index="655" status="LL" value="1" reducedCost="0"/>
-  <variable index="656" status="LL" value="1" reducedCost="0"/>
-  <variable index="657" status="LL" value="1" reducedCost="0"/>
-  <variable index="658" status="LL" value="1" reducedCost="0"/>
-  <variable index="659" status="LL" value="1" reducedCost="0"/>
-  <variable index="660" status="LL" value="1" reducedCost="0"/>
-  <variable index="661" status="LL" value="1" reducedCost="0"/>
-  <variable index="662" status="LL" value="1" reducedCost="0"/>
-  <variable index="663" status="LL" value="1" reducedCost="0"/>
+  <variable name="x_0_18_0" index="137" value="1"/>
+  <variable name="x_10_0_0" index="148" value="1"/>
+  <variable name="x_0_13_1" index="170" value="1"/>
+  <variable name="x_15_0_1" index="191" value="1"/>
+  <variable name="x_0_18_2" index="213" value="1"/>
+  <variable name="x_15_0_2" index="229" value="1"/>
+  <variable name="x_0_5_5" index="314" value="1"/>
+  <variable name="x_9_0_5" index="337" value="1"/>
+  <variable name="x_1_16_2" index="434" value="1"/>
+  <variable name="x_14_1_2" index="450" value="1"/>
+  <variable name="x_2_17_5" index="748" value="1"/>
+  <variable name="x_5_2_5" index="753" value="1"/>
+  <variable name="x_4_15_1" index="1000" value="1"/>
+  <variable name="x_8_4_1" index="1008" value="1"/>
+  <variable name="x_5_11_1" index="1173" value="1"/>
+  <variable name="x_13_5_1" index="1189" value="1"/>
+  <variable name="x_7_19_1" index="1499" value="1"/>
+  <variable name="x_11_7_1" index="1503" value="1"/>
+  <variable name="x_19_8_1" index="1651" value="1"/>
+  <variable name="x_17_9_5" index="1857" value="1"/>
+  <variable name="x_14_10_0" index="1872" value="1"/>
+  <variable name="x_18_14_0" index="2228" value="1"/>
+  <variable name="x_18_14_2" index="2248" value="1"/>
+  <variable name="x_16_15_2" index="2300" value="1"/>
+  <variable name="y_0_2" index="2403" value="1"/>
+  <variable name="y_1_5" index="2406" value="1"/>
+  <variable name="y_2_0" index="2417" value="1"/>
+  <variable name="y_3_2" index="2421" value="1"/>
+  <variable name="y_4_5" index="2424" value="1"/>
+  <variable name="y_5_1" index="2434" value="1"/>
+  <variable name="y_6_5" index="2436" value="1"/>
+  <variable name="y_7_1" index="2446" value="1"/>
+  <variable name="y_8_5" index="2448" value="1"/>
+  <variable name="y_9_0" index="2459" value="1"/>
+  <variable name="y_10_1" index="2464" value="1"/>
+  <variable name="y_11_2" index="2469" value="1"/>
+  <variable name="y_12_1" index="2476" value="1"/>
+  <variable name="y_13_0" index="2483" value="1"/>
+  <variable name="y_14_2" index="2487" value="1"/>
+  <variable name="y_15_2" index="2493" value="1"/>
+  <variable name="y_16_5" index="2496" value="1"/>
+  <variable name="y_17_0" index="2507" value="1"/>
+  <variable name="y_18_1" index="2512" value="1"/>
+  <variable name="u_1_0" index="2514" value="1"/>
+  <variable name="u_2_0" index="2515" value="1"/>
+  <variable name="u_1_1" index="2516" value="1"/>
+  <variable name="u_2_1" index="2517" value="1"/>
+  <variable name="u_1_2" index="2518" value="3"/>
+  <variable name="u_2_2" index="2519" value="1"/>
+  <variable name="u_1_3" index="2520" value="1"/>
+  <variable name="u_2_3" index="2521" value="1"/>
+  <variable name="u_1_4" index="2522" value="1"/>
+  <variable name="u_2_4" index="2523" value="1"/>
+  <variable name="u_1_5" index="2524" value="1"/>
+  <variable name="u_2_5" index="2525" value="2"/>
+  <variable name="u_3_0" index="2526" value="1"/>
+  <variable name="u_3_1" index="2527" value="1"/>
+  <variable name="u_3_2" index="2528" value="1"/>
+  <variable name="u_3_3" index="2529" value="1"/>
+  <variable name="u_3_4" index="2530" value="1"/>
+  <variable name="u_3_5" index="2531" value="1"/>
+  <variable name="u_4_0" index="2532" value="1"/>
+  <variable name="u_4_1" index="2533" value="18"/>
+  <variable name="u_4_2" index="2534" value="1"/>
+  <variable name="u_4_3" index="2535" value="1"/>
+  <variable name="u_4_4" index="2536" value="1"/>
+  <variable name="u_4_5" index="2537" value="1"/>
+  <variable name="u_5_0" index="2538" value="1"/>
+  <variable name="u_5_1" index="2539" value="2"/>
+  <variable name="u_5_2" index="2540" value="1"/>
+  <variable name="u_5_3" index="2541" value="1"/>
+  <variable name="u_5_4" index="2542" value="1"/>
+  <variable name="u_5_5" index="2543" value="1"/>
+  <variable name="u_6_0" index="2544" value="1"/>
+  <variable name="u_6_1" index="2545" value="1"/>
+  <variable name="u_6_2" index="2546" value="19"/>
+  <variable name="u_6_3" index="2547" value="1"/>
+  <variable name="u_6_4" index="2548" value="1"/>
+  <variable name="u_6_5" index="2549" value="1"/>
+  <variable name="u_7_0" index="2550" value="1"/>
+  <variable name="u_7_1" index="2551" value="4"/>
+  <variable name="u_7_2" index="2552" value="1"/>
+  <variable name="u_7_3" index="2553" value="1"/>
+  <variable name="u_7_4" index="2554" value="1"/>
+  <variable name="u_7_5" index="2555" value="1"/>
+  <variable name="u_8_0" index="2556" value="1"/>
+  <variable name="u_8_1" index="2557" value="17"/>
+  <variable name="u_8_2" index="2558" value="1"/>
+  <variable name="u_8_3" index="2559" value="1"/>
+  <variable name="u_8_4" index="2560" value="1"/>
+  <variable name="u_8_5" index="2561" value="1"/>
+  <variable name="u_9_0" index="2562" value="1"/>
+  <variable name="u_9_1" index="2563" value="1"/>
+  <variable name="u_9_2" index="2564" value="1"/>
+  <variable name="u_9_3" index="2565" value="1"/>
+  <variable name="u_9_4" index="2566" value="1"/>
+  <variable name="u_9_5" index="2567" value="4"/>
+  <variable name="u_10_0" index="2568" value="3"/>
+  <variable name="u_10_1" index="2569" value="1"/>
+  <variable name="u_10_2" index="2570" value="1"/>
+  <variable name="u_10_3" index="2571" value="1"/>
+  <variable name="u_10_4" index="2572" value="1"/>
+  <variable name="u_10_5" index="2573" value="19"/>
+  <variable name="u_11_0" index="2574" value="1"/>
+  <variable name="u_11_1" index="2575" value="3"/>
+  <variable name="u_11_2" index="2576" value="1"/>
+  <variable name="u_11_3" index="2577" value="1"/>
+  <variable name="u_11_4" index="2578" value="1"/>
+  <variable name="u_11_5" index="2579" value="1"/>
+  <variable name="u_12_0" index="2580" value="1"/>
+  <variable name="u_12_1" index="2581" value="1"/>
+  <variable name="u_12_2" index="2582" value="1"/>
+  <variable name="u_12_3" index="2583" value="1"/>
+  <variable name="u_12_4" index="2584" value="1"/>
+  <variable name="u_12_5" index="2585" value="1"/>
+  <variable name="u_13_0" index="2586" value="1"/>
+  <variable name="u_13_1" index="2587" value="1"/>
+  <variable name="u_13_2" index="2588" value="1"/>
+  <variable name="u_13_3" index="2589" value="1"/>
+  <variable name="u_13_4" index="2590" value="1"/>
+  <variable name="u_13_5" index="2591" value="1"/>
+  <variable name="u_14_0" index="2592" value="2"/>
+  <variable name="u_14_1" index="2593" value="1"/>
+  <variable name="u_14_2" index="2594" value="2"/>
+  <variable name="u_14_3" index="2595" value="1"/>
+  <variable name="u_14_4" index="2596" value="1"/>
+  <variable name="u_14_5" index="2597" value="1"/>
+  <variable name="u_15_0" index="2598" value="1"/>
+  <variable name="u_15_1" index="2599" value="19"/>
+  <variable name="u_15_2" index="2600" value="5"/>
+  <variable name="u_15_3" index="2601" value="1"/>
+  <variable name="u_15_4" index="2602" value="1"/>
+  <variable name="u_15_5" index="2603" value="1"/>
+  <variable name="u_16_0" index="2604" value="1"/>
+  <variable name="u_16_1" index="2605" value="1"/>
+  <variable name="u_16_2" index="2606" value="4"/>
+  <variable name="u_16_3" index="2607" value="1"/>
+  <variable name="u_16_4" index="2608" value="1"/>
+  <variable name="u_16_5" index="2609" value="1"/>
+  <variable name="u_17_0" index="2610" value="1"/>
+  <variable name="u_17_1" index="2611" value="19"/>
+  <variable name="u_17_2" index="2612" value="1"/>
+  <variable name="u_17_3" index="2613" value="1"/>
+  <variable name="u_17_4" index="2614" value="1"/>
+  <variable name="u_17_5" index="2615" value="3"/>
+  <variable name="u_18_0" index="2616" value="1"/>
+  <variable name="u_18_1" index="2617" value="19"/>
+  <variable name="u_18_2" index="2618" value="1"/>
+  <variable name="u_18_3" index="2619" value="1"/>
+  <variable name="u_18_4" index="2620" value="19"/>
+  <variable name="u_18_5" index="2621" value="1"/>
+  <variable name="u_19_0" index="2622" value="1"/>
+  <variable name="u_19_1" index="2623" value="16"/>
+  <variable name="u_19_2" index="2624" value="1"/>
+  <variable name="u_19_3" index="2625" value="1"/>
+  <variable name="u_19_4" index="2626" value="1"/>
+  <variable name="u_19_5" index="2627" value="1"/>
  </variables>
  <objectiveValues>
-  <objective index="0" name="" value="168"/>
+  <objective index="0" name="" value="224"/>
  </objectiveValues>
 </CPLEXSolution>

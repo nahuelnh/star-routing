@@ -40,26 +40,36 @@ public class CompactModel {
         }
     }
 
-    public Solution solve() throws IloException {
+    private Solution solve(boolean integral, Duration timeout) throws IloException {
         Instant start = Instant.now();
-        buildModel(true);
+        buildModel(integral, timeout);
         cplex.solve();
-        //cplex.writeSolution("src/resources/star_routing_model.sol");
         Instant finish = Instant.now();
-        Solution solution = new Solution(getPathsFromSolution(), Duration.between(start, finish));
+        cplex.writeSolution("src/resources/star_routing_model.sol");
+
+        Solution.Status status =
+                cplex.getStatus() == IloCplex.Status.Optimal ? Solution.Status.FINISHED : Solution.Status.TIMEOUT;
+        List<FeasiblePath> paths =
+                integral && Solution.Status.FINISHED.equals(status) ? getPathsFromSolution() : new ArrayList<>();
+        Solution solution = new Solution(status, cplex.getObjValue(), paths, Duration.between(start, finish));
         cplex.end();
         return solution;
     }
 
+    public Solution solve() throws IloException {
+        return solve(true, Utils.MAX_DURATION);
+    }
+
+    public Solution solve(Duration timeout) throws IloException {
+        return solve(true, timeout);
+    }
+
     public Solution solveRelaxation() throws IloException {
-        Instant start = Instant.now();
-        buildModel(false);
-        cplex.solve();
-        //cplex.writeSolution("src/resources/star_routing_model.sol");
-        Instant finish = Instant.now();
-        Solution solution = new Solution(cplex.getObjValue(), new ArrayList<>(), Duration.between(start, finish));
-        cplex.end();
-        return solution;
+        return solve(false, Utils.MAX_DURATION);
+    }
+
+    public Solution solveRelaxation(Duration timeout) throws IloException {
+        return solve(false, timeout);
     }
 
     private void createVariables(boolean integral) throws IloException {
@@ -70,21 +80,23 @@ public class CompactModel {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
-                    x[i][j][k] = integral ? cplex.boolVar("x_" + i + "_" + j + "_" + k) : cplex.numVar(0, 1);
+                    x[i][j][k] = integral ? cplex.boolVar("x_" + i + "_" + j + "_" + k) :
+                            cplex.numVar(0, 1, "x_" + i + "_" + j + "_" + k);
                 }
             }
         }
         y = new IloIntVar[S][K];
         for (int s = 0; s < S; s++) {
             for (int k = 0; k < K; k++) {
-                y[s][k] = integral ? cplex.boolVar("y_" + s + "_" + k) : cplex.numVar(0, 1);
+                y[s][k] = integral ? cplex.boolVar("y_" + s + "_" + k) : cplex.numVar(0, 1, "y_" + s + "_" + k);
             }
 
         }
         u = new IloIntVar[N][K];
         for (int i = 0; i < N; i++) {
             for (int k = 0; k < K; k++) {
-                u[i][k] = integral ? cplex.intVar(1, N - 1, "u_" + i + "_" + k) : cplex.numVar(1, N - 1);
+                u[i][k] = integral ? cplex.intVar(1, N - 1, "u_" + i + "_" + k) :
+                        cplex.numVar(1, N - 1, "u_" + i + "_" + k);
             }
         }
 
@@ -202,9 +214,10 @@ public class CompactModel {
         cplex.addMinimize(objective);
     }
 
-    private void buildModel(boolean integral) throws IloException {
+    private void buildModel(boolean integral, Duration timeout) throws IloException {
         cplex = new IloCplex();
         cplex.setParam(IloCplex.Param.Output.WriteLevel, IloCplex.WriteLevel.NonzeroVars);
+        cplex.setParam(IloCplex.Param.TimeLimit, timeout.getSeconds());
         cplex.setOut(null);
         //        if (!integral) {
         //            cplex.setParam(IloCplex.Param.MIP.Limits.Nodes, 0);

@@ -45,7 +45,10 @@ public class DFJCompactModel {
         buildModel();
         cplex.solve();
         Instant finish = Instant.now();
-        Solution solution = new Solution(getPathsFromSolution(), Duration.between(start, finish));
+        Solution.Status status =
+                cplex.getStatus() == IloCplex.Status.Error ? Solution.Status.TIMEOUT : Solution.Status.FINISHED;
+        Solution solution =
+                new Solution(status, cplex.getObjValue(), getPathsFromSolution(), Duration.between(start, finish));
         cplex.end();
         return solution;
     }
