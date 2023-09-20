@@ -3,7 +3,6 @@ package algorithm.pricing;
 import commons.Instance;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -17,14 +16,9 @@ public class ESPPRCGraph {
     private final int end;
     private final List<List<Integer>> adjacency;
     private final int[][] weights;
-    private final List<Collection<Integer>> reverseNeighborhoods;
-    private final Map<Integer, Double> dualValues;
+    private final List<List<Integer>> reverseNeighborhoods;
 
     public ESPPRCGraph(Instance instance) {
-        this(instance, new HashMap<>());
-    }
-
-    public ESPPRCGraph(Instance instance, Map<Integer, Double> dualValues) {
         this.instance = instance;
         this.size = instance.getNumberOfNodes() + 1;
         this.start = instance.getDepot();
@@ -32,7 +26,6 @@ public class ESPPRCGraph {
         this.adjacency = new ArrayList<>(size);
         this.weights = new int[size][size];
         this.reverseNeighborhoods = new ArrayList<>(size);
-        this.dualValues = dualValues;
         createGraph();
     }
 
@@ -69,9 +62,13 @@ public class ESPPRCGraph {
                 ret.add(customer);
             }
         }
-        // Heuristic: sort decreasingly by benefit/cost
-        ret.sort(Comparator.comparing(s -> dualValues.containsKey(s)? -dualValues.get(s) / instance.getDemand(s):0));
         return ret;
+    }
+
+    public void sortReverseNeighborhoods(Comparator<Integer> comparator) {
+        for (int i = 0; i < size; i++) {
+            reverseNeighborhoods.get(i).sort(comparator);
+        }
     }
 
     public int getSize() {
@@ -99,7 +96,7 @@ public class ESPPRCGraph {
         return weights[i][j] != -1;
     }
 
-    public Collection<Integer> getReverseNeighborhood(int node) {
+    public List<Integer> getReverseNeighborhood(int node) {
         return reverseNeighborhoods.get(node);
     }
 }

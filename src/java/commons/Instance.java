@@ -83,7 +83,7 @@ public class Instance {
             int i = line.get(0) - 1;
             int j = line.get(1) - 1;
             int weight = line.get(2);
-            assert weight>=0;
+            assert weight >= 0;
             if (i != j) {
                 weightsMatrix.get(i).set(j, weight);
             }
@@ -160,7 +160,7 @@ public class Instance {
     }
 
     public Integer getEdgeWeight(int i, int j) {
-        assert graphWeights.get(i).get(j) >=0;
+        assert graphWeights.get(i).get(j) >= 0;
         return graphWeights.get(i).get(j);
     }
 

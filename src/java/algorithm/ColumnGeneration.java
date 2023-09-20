@@ -8,6 +8,7 @@ import commons.Solution;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ColumnGeneration {
@@ -50,5 +51,22 @@ public class ColumnGeneration {
         Instant finish = Instant.now();
         return new Solution(solution.getUsedPaths(), Duration.between(start, finish));
     }
+
+    public Solution solveRelaxation(){
+        Instant start = Instant.now();
+        List<FeasiblePath> newPaths = heuristic.run();
+        double relaxationOptimal = Double.MAX_VALUE;
+        while (!newPaths.isEmpty()) {
+            rmp.addPaths(newPaths);
+            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation();
+            relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
+            PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
+            newPaths = pricingSolution.getNegativeReducedCostPaths();
+        }
+        System.out.println("Relaxation optimal:" + relaxationOptimal);
+        Instant finish = Instant.now();
+        return new Solution(relaxationOptimal, new ArrayList<>(), Duration.between(start, finish));
+    }
+
 }
 

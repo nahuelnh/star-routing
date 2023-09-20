@@ -5,9 +5,10 @@ import commons.Instance;
 import commons.Solution;
 import commons.Utils;
 import ilog.concert.IloException;
-import ilog.concert.IloIntExpr;
 import ilog.concert.IloIntVar;
-import ilog.concert.IloLinearIntExpr;
+import ilog.concert.IloLinearNumExpr;
+import ilog.concert.IloNumExpr;
+import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
 import java.time.Duration;
@@ -21,9 +22,9 @@ public class CompactModel {
 
     private final Instance instance;
     private IloCplex cplex;
-    private IloIntVar[][][] x;
-    private IloIntVar[][] y;
-    private IloIntVar[][] u;
+    private IloNumVar[][][] x;
+    private IloNumVar[][] y;
+    private IloNumVar[][] u;
 
     public CompactModel(Instance instance) {
         this.instance = instance;
@@ -41,16 +42,27 @@ public class CompactModel {
 
     public Solution solve() throws IloException {
         Instant start = Instant.now();
-        buildModel();
+        buildModel(true);
         cplex.solve();
-        cplex.writeSolution("src/resources/star_routing_model.sol");
+        //cplex.writeSolution("src/resources/star_routing_model.sol");
         Instant finish = Instant.now();
         Solution solution = new Solution(getPathsFromSolution(), Duration.between(start, finish));
         cplex.end();
         return solution;
     }
 
-    private void createVariables() throws IloException {
+    public Solution solveRelaxation() throws IloException {
+        Instant start = Instant.now();
+        buildModel(false);
+        cplex.solve();
+        //cplex.writeSolution("src/resources/star_routing_model.sol");
+        Instant finish = Instant.now();
+        Solution solution = new Solution(cplex.getObjValue(), new ArrayList<>(), Duration.between(start, finish));
+        cplex.end();
+        return solution;
+    }
+
+    private void createVariables(boolean integral) throws IloException {
         int N = instance.getNumberOfNodes();
         int K = instance.getNumberOfVehicles();
         int S = instance.getNumberOfCustomers();
@@ -58,21 +70,21 @@ public class CompactModel {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
-                    x[i][j][k] = cplex.boolVar("x_" + i + "_" + j + "_" + k);
+                    x[i][j][k] = integral ? cplex.boolVar("x_" + i + "_" + j + "_" + k) : cplex.numVar(0, 1);
                 }
             }
         }
         y = new IloIntVar[S][K];
         for (int s = 0; s < S; s++) {
             for (int k = 0; k < K; k++) {
-                y[s][k] = cplex.boolVar("y_" + s + "_" + k);
+                y[s][k] = integral ? cplex.boolVar("y_" + s + "_" + k) : cplex.numVar(0, 1);
             }
 
         }
         u = new IloIntVar[N][K];
         for (int i = 0; i < N; i++) {
             for (int k = 0; k < K; k++) {
-                u[i][k] = cplex.intVar(1, N - 1, "u_" + i + "_" + k);
+                u[i][k] = integral ? cplex.intVar(1, N - 1, "u_" + i + "_" + k) : cplex.numVar(1, N - 1);
             }
         }
 
@@ -89,8 +101,8 @@ public class CompactModel {
         int K = instance.getNumberOfVehicles();
         for (int i = 0; i < N; i++) {
             for (int k = 0; k < K; k++) {
-                IloLinearIntExpr inFlow = cplex.linearIntExpr();
-                IloLinearIntExpr outFlow = cplex.linearIntExpr();
+                IloLinearNumExpr inFlow = cplex.linearNumExpr();
+                IloLinearNumExpr outFlow = cplex.linearNumExpr();
                 for (int j = 0; j < N; j++) {
                     inFlow.addTerm(x[i][j][k], 1);
                     outFlow.addTerm(x[j][i][k], 1);
@@ -104,7 +116,7 @@ public class CompactModel {
         // Every customer is served by exactly one vehicle
         int S = instance.getNumberOfCustomers();
         for (int s = 0; s < S; s++) {
-            IloIntExpr numberOfVehiclesServingS = Utils.getRowSum(cplex, y, s);
+            IloNumExpr numberOfVehiclesServingS = Utils.getRowSum(cplex, y, s);
             cplex.addEq(numberOfVehiclesServingS, 1, "serving_" + s);
         }
     }
@@ -114,7 +126,7 @@ public class CompactModel {
         int N = instance.getNumberOfNodes();
         int K = instance.getNumberOfVehicles();
         for (int k = 0; k < K; k++) {
-            IloLinearIntExpr outgoingEdgesFromDepot = cplex.linearIntExpr();
+            IloLinearNumExpr outgoingEdgesFromDepot = cplex.linearNumExpr();
             for (int j = 0; j < N; j++) {
                 outgoingEdgesFromDepot.addTerm(x[instance.getDepot()][j][k], 1);
             }
@@ -131,7 +143,7 @@ public class CompactModel {
         int K = instance.getNumberOfVehicles();
         int S = instance.getNumberOfCustomers();
         for (int k = 0; k < K; k++) {
-            IloLinearIntExpr totalDemand = cplex.linearIntExpr();
+            IloLinearNumExpr totalDemand = cplex.linearNumExpr();
             for (int s = 0; s < S; s++) {
                 totalDemand.addTerm(y[s][k], instance.getDemand(instance.getCustomer(s)));
             }
@@ -147,7 +159,7 @@ public class CompactModel {
             for (int j = 0; j < N; j++) {
                 for (int k = 0; k < K; k++) {
                     if (i != instance.getDepot() && j != instance.getDepot() && j != i) {
-                        IloIntExpr mtz = cplex.sum(u[i][k], cplex.negative(u[j][k]), cplex.prod(x[i][j][k], N - 1));
+                        IloNumExpr mtz = cplex.sum(u[i][k], cplex.negative(u[j][k]), cplex.prod(x[i][j][k], N - 1));
                         cplex.addLe(mtz, N - 2, "mtz_" + i + "_" + j + "_" + k);
                     }
                 }
@@ -163,7 +175,7 @@ public class CompactModel {
         for (int s = 0; s < S; s++) {
             int currentCustomer = instance.getCustomer(s);
             for (int k = 0; k < K; k++) {
-                IloLinearIntExpr timesInNeighborhood = cplex.linearIntExpr();
+                IloLinearNumExpr timesInNeighborhood = cplex.linearNumExpr();
                 for (int i = 0; i < N; i++) {
                     for (int neighbor : instance.getNeighbors(currentCustomer)) {
                         timesInNeighborhood.addTerm(x[i][neighbor][k], 1);
@@ -177,7 +189,7 @@ public class CompactModel {
     private void createObjective() throws IloException {
         int N = instance.getNumberOfNodes();
         int K = instance.getNumberOfVehicles();
-        IloLinearIntExpr objective = cplex.linearIntExpr();
+        IloLinearNumExpr objective = cplex.linearNumExpr();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 if (i != j) {
@@ -190,11 +202,14 @@ public class CompactModel {
         cplex.addMinimize(objective);
     }
 
-    private void buildModel() throws IloException {
+    private void buildModel(boolean integral) throws IloException {
         cplex = new IloCplex();
         cplex.setParam(IloCplex.Param.Output.WriteLevel, IloCplex.WriteLevel.NonzeroVars);
         cplex.setOut(null);
-        createVariables();
+        //        if (!integral) {
+        //            cplex.setParam(IloCplex.Param.MIP.Limits.Nodes, 0);
+        //        }
+        createVariables(integral);
         createFlowConstraints();
         createServingConstraints();
         createDepotConstraints();

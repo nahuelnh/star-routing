@@ -8,6 +8,7 @@ import commons.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,6 @@ public class LabelSettingAlgorithm {
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final Map<Integer, Double> dualValues;
-    private final boolean applyRelaxedDominance;
     private final boolean applyFakeCostHeuristic;
     private final double alpha;
     private final LabelDump labelDump;
@@ -29,13 +29,17 @@ public class LabelSettingAlgorithm {
                                  boolean applyRelaxedDominance, boolean applyFakeCostHeuristic) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
-        this.applyRelaxedDominance = applyRelaxedDominance;
-        this.applyFakeCostHeuristic = applyFakeCostHeuristic;
         this.dualValues = new HashMap<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
-        this.graph = new ESPPRCGraph(instance, dualValues);
+        this.graph = new ESPPRCGraph(instance);
+
+        // Heuristic: sort decreasingly by benefit/cost
+        this.graph.sortReverseNeighborhoods(
+                Comparator.comparing(s -> dualValues.containsKey(s) ? -dualValues.get(s) / instance.getDemand(s) : 0));
+
+        this.applyFakeCostHeuristic = applyFakeCostHeuristic;
         this.alpha = computeCostFactor();
         if (applyRelaxedDominance) {
             this.labelDump = new RelaxedLabelDump(graph.getSize(), instance.getCapacity() + 1);
