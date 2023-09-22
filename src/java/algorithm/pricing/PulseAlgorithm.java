@@ -5,6 +5,8 @@ import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -20,6 +22,8 @@ public class PulseAlgorithm {
     private final ESPPRCGraph graph;
     private final int numberOfNodes;
     private final Map<Integer, Double> dualValues;
+    private Instant startTime;
+    private Duration timeLimit;
     private double[][] lowerBounds;
     private double bestSolutionFound;
     private List<PartialPath> foundPartialPaths;
@@ -28,6 +32,7 @@ public class PulseAlgorithm {
     public PulseAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
+        this.timeLimit = Utils.DEFAULT_TIMEOUT;
         this.graph = new ESPPRCGraph(instance);
         this.numberOfNodes = graph.getSize();
         this.dualValues = new HashMap<>();
@@ -42,7 +47,9 @@ public class PulseAlgorithm {
         saveSolution = false;
     }
 
-    public List<FeasiblePath> run() {
+    public List<FeasiblePath> run(Duration timeLimit) {
+        this.timeLimit = timeLimit;
+        this.startTime = Instant.now();
         resetGlobalOptimum();
         bound();
 
@@ -105,6 +112,9 @@ public class PulseAlgorithm {
     }
 
     private void propagate(int currentNode, PartialPath visitedPath) {
+        if (Utils.getRemainingTime(startTime, timeLimit).isNegative()) {
+            return;
+        }
         if (currentNode == graph.getEnd()) {
             if (visitedPath.getTotalCost() < bestSolutionFound) {
                 bestSolutionFound = visitedPath.getTotalCost();
@@ -219,6 +229,7 @@ public class PulseAlgorithm {
         private int size;
         private double totalCost;
         private int totalDemand;
+
         public PartialPath(double totalCost, int totalDemand) {
             this.nodes = new int[numberOfNodes];
             this.size = 0;

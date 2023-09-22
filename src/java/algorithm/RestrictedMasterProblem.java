@@ -6,15 +6,16 @@ import ilog.concert.IloException;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
+import java.time.Duration;
 import java.util.List;
 
 public interface RestrictedMasterProblem {
 
     void addPaths(List<FeasiblePath> newPaths);
 
-    RMPSolution solveRelaxation();
+    RMPSolution solveRelaxation(Duration remainingTime);
 
-    RMPIntegerSolution solveInteger();
+    RMPIntegerSolution solveInteger(Duration remainingTime);
 
     List<FeasiblePath> computePathsFromSolution();
 

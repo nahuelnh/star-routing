@@ -5,6 +5,8 @@ import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -72,8 +74,8 @@ public class LabelSettingAlgorithm {
         return ret;
     }
 
-    public List<FeasiblePath> run() {
-        monoDirectionalBacktracking();
+    public List<FeasiblePath> run(Duration timeLimit) {
+        monoDirectionalBacktracking(timeLimit);
         return getNegativeReducedCostPaths();
     }
 
@@ -128,14 +130,17 @@ public class LabelSettingAlgorithm {
         return labelDump.dominates(label);
     }
 
-    private void monoDirectionalBacktracking() {
-
+    private void monoDirectionalBacktracking(Duration timeLimit) {
+        Instant start = Instant.now();
         Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
         labelDump.addLabel(root);
 
         PriorityQueue<Label> queue = new PriorityQueue<>();
         queue.add(root);
         while (!queue.isEmpty()) {
+            if (Utils.getRemainingTime(start, timeLimit).isNegative()) {
+                return;
+            }
             Label currentLabel = queue.remove();
             for (int customer : graph.getReverseNeighborhood(currentLabel.node())) {
                 Label nextLabel = extendCustomer(currentLabel, customer);

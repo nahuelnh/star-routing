@@ -57,7 +57,7 @@ public class CompactModel {
     }
 
     public Solution solve() throws IloException {
-        return solve(true, Utils.MAX_DURATION);
+        return solve(true, Utils.DEFAULT_TIMEOUT);
     }
 
     public Solution solve(Duration timeout) throws IloException {
@@ -65,7 +65,7 @@ public class CompactModel {
     }
 
     public Solution solveRelaxation() throws IloException {
-        return solve(false, Utils.MAX_DURATION);
+        return solve(false, Utils.DEFAULT_TIMEOUT);
     }
 
     public Solution solveRelaxation(Duration timeout) throws IloException {
@@ -219,9 +219,6 @@ public class CompactModel {
         cplex.setParam(IloCplex.Param.Output.WriteLevel, IloCplex.WriteLevel.NonzeroVars);
         cplex.setParam(IloCplex.Param.TimeLimit, timeout.getSeconds());
         cplex.setOut(null);
-        //        if (!integral) {
-        //            cplex.setParam(IloCplex.Param.MIP.Limits.Nodes, 0);
-        //        }
         createVariables(integral);
         createFlowConstraints();
         createServingConstraints();

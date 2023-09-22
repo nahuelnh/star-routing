@@ -4,20 +4,21 @@ import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import ilog.cplex.IloCplex;
 
+import java.time.Duration;
 import java.util.List;
 
 public interface PricingProblem {
 
-    PricingProblem.Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution);
+    PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime);
 
     List<FeasiblePath> computePathsFromSolution();
 
-    class Solution {
+    class PricingSolution {
         private final IloCplex.Status status;
         private final double objectiveValue;
         private final List<FeasiblePath> negativeReducedCostPaths;
 
-        Solution(IloCplex.Status status, double objectiveValue, PricingProblem pricingProblem) {
+        PricingSolution(IloCplex.Status status, double objectiveValue, PricingProblem pricingProblem) {
             this.status = status;
             this.objectiveValue = objectiveValue;
             this.negativeReducedCostPaths = pricingProblem.computePathsFromSolution();

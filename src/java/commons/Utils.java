@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -22,7 +23,7 @@ import java.util.Set;
 
 public class Utils {
 
-    public static final Duration MAX_DURATION = Duration.ofDays(1);
+    public static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(60);
 
     private static final String DELIMITER = " ";
 
@@ -149,6 +150,14 @@ public class Utils {
         b3.and(b1);
         b3.xor(b1);
         return b3.isEmpty();
+    }
+
+    public static Duration getElapsedTime(Instant start) {
+        return Duration.between(start, Instant.now());
+    }
+
+    public static Duration getRemainingTime(Instant start, Duration timeLimit) {
+        return timeLimit.minus(getElapsedTime(start));
     }
 
 }

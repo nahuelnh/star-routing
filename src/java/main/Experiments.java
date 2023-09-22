@@ -16,15 +16,28 @@ import java.time.Duration;
 public class Experiments {
 
     private static final String DELIMITER = ";";
-    private static final Duration TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
     public static void main(String[] args) {
         experiment1_compactModelPerformance();
+        System.out.println("------------------------------");
+
         experiment2_ilpPricingPerformance();
+        System.out.println("------------------------------");
+
         experiment3_pulsePricingPerformance();
+        System.out.println("------------------------------");
+
         experiment4_labelSettingPricingPerformance();
+        System.out.println("------------------------------");
+
         experiment5_labelSettingHeuristics();
+        System.out.println("------------------------------");
+
         experiment6_columnGenerationHeuristics();
+        System.out.println("------------------------------");
+
+        experiment7_relaxationComparison();
     }
 
     private static String getLine(Instance instance, Solution solution) {
@@ -32,12 +45,13 @@ public class Experiments {
                 String.valueOf(instance.getNumberOfCustomers()), String.valueOf(instance.getNumberOfVehicles()),
                 solution.timedOut() ? "TLE" : String.valueOf(solution.getElapsedTime().toMillis()));
     }
+
     private static String getLine(Instance instance, Solution solution, double gap) {
         return String.join(DELIMITER, instance.getName(), String.valueOf(instance.getNumberOfNodes()),
                 String.valueOf(instance.getNumberOfCustomers()), String.valueOf(instance.getNumberOfVehicles()),
-                solution.timedOut() ? "TLE" : String.valueOf(solution.getElapsedTime().toMillis()), String.valueOf(gap));
+                solution.timedOut() ? "TLE" : String.valueOf(solution.getElapsedTime().toMillis()),
+                String.valueOf(gap));
     }
-
 
     private static void experiment1_compactModelPerformance() {
         for (InstanceEnum instanceEnum : InstanceEnum.values()) {
@@ -57,7 +71,7 @@ public class Experiments {
             Instance instance = instanceEnum.getInstance();
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
                     new ILPPricingProblem(instance), new InitialSolutionHeuristic(instance));
-            Solution solution = columnGeneration.solve();
+            Solution solution = columnGeneration.solve(TIMEOUT);
             System.out.println(getLine(instance, solution));
         }
     }
@@ -68,7 +82,7 @@ public class Experiments {
             ColumnGeneration columnGeneration =
                     new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
                             new InitialSolutionHeuristic(instance));
-            Solution solution = columnGeneration.solve();
+            Solution solution = columnGeneration.solve(TIMEOUT);
             System.out.println(getLine(instance, solution));
         }
     }
@@ -78,7 +92,7 @@ public class Experiments {
             Instance instance = instanceEnum.getInstance();
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-            Solution solution = columnGeneration.solve();
+            Solution solution = columnGeneration.solve(TIMEOUT);
             System.out.println(getLine(instance, solution));
         }
     }

@@ -5,6 +5,7 @@ import commons.FeasiblePath;
 import commons.Instance;
 import ilog.cplex.IloCplex;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,9 +32,10 @@ public class LabelSettingPricing implements PricingProblem {
     }
 
     @Override
-    public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
-        paths = new LabelSettingAlgorithm(instance, rmpSolution, applyRelaxedDominance, applyFakeCostHeuristic).run();
-        return new Solution(IloCplex.Status.Optimal, 0.0, this);
+    public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
+        paths = new LabelSettingAlgorithm(instance, rmpSolution, applyRelaxedDominance, applyFakeCostHeuristic).run(
+                remainingTime);
+        return new PricingSolution(IloCplex.Status.Optimal, 0.0, this);
     }
 
     @Override

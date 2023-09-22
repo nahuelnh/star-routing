@@ -5,6 +5,7 @@ import algorithm.pricing.PricingProblem;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Solution;
+import commons.Utils;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -34,38 +35,43 @@ public class ColumnGeneration {
         System.out.println(solution);
     }
 
-    public Solution solve() {
+
+
+    private Solution generateColumns(boolean integral, Duration timeout) {
         Instant start = Instant.now();
         List<FeasiblePath> newPaths = heuristic.run();
         double relaxationOptimal = Double.MAX_VALUE;
         while (!newPaths.isEmpty()) {
             rmp.addPaths(newPaths);
-            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation();
+            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation(Utils.getRemainingTime(start, timeout));
             relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
-            PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
+            PricingProblem.PricingSolution pricingSolution =
+                    pricing.solve(rmpSolution, Utils.getRemainingTime(start, timeout));
             newPaths = pricingSolution.getNegativeReducedCostPaths();
         }
-//        System.out.println("Relaxation optimal:" + relaxationOptimal);
-        RestrictedMasterProblem.RMPIntegerSolution solution = rmp.solveInteger();
-//        System.out.println("Integer optimal:" + solution.getObjectiveValue());
-        Instant finish = Instant.now();
-        return new Solution(Solution.Status.FINISHED, solution.getObjectiveValue(), solution.getUsedPaths(), Duration.between(start, finish));
+        if (integral) {
+            RestrictedMasterProblem.RMPIntegerSolution solution = rmp.solveInteger(Utils.getRemainingTime(start, timeout));
+            return new Solution(Solution.Status.FINISHED, solution.getObjectiveValue(), solution.getUsedPaths(),
+                    Utils.getElapsedTime(start));
+        } else {
+            return new Solution(Solution.Status.FINISHED, relaxationOptimal, new ArrayList<>(), Utils.getElapsedTime(start));
+        }
     }
 
-    public Solution solveRelaxation(){
-        Instant start = Instant.now();
-        List<FeasiblePath> newPaths = heuristic.run();
-        double relaxationOptimal = Double.MAX_VALUE;
-        while (!newPaths.isEmpty()) {
-            rmp.addPaths(newPaths);
-            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation();
-            relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
-            PricingProblem.Solution pricingSolution = pricing.solve(rmpSolution);
-            newPaths = pricingSolution.getNegativeReducedCostPaths();
-        }
-//        System.out.println("Relaxation optimal:" + relaxationOptimal);
-        Instant finish = Instant.now();
-        return new Solution(Solution.Status.FINISHED, relaxationOptimal, new ArrayList<>(), Duration.between(start, finish));
+    public Solution solve(Duration timeout) {
+        return generateColumns(true, timeout);
+    }
+
+    public Solution solve() {
+        return solve(Utils.DEFAULT_TIMEOUT);
+    }
+
+    public Solution solveRelaxation(Duration timeout) {
+        return generateColumns(false, timeout);
+    }
+
+    public Solution solveRelaxation() {
+        return solveRelaxation(Utils.DEFAULT_TIMEOUT);
     }
 
 }

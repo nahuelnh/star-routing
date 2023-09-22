@@ -12,6 +12,7 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
 import ilog.cplex.IloCplex;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -136,17 +137,18 @@ public class ILPPricingProblem implements PricingProblem {
     }
 
     @Override
-    public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
+    public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
         try {
             cplex = new IloCplex();
             cplex.setOut(null);
+            cplex.setParam(IloCplex.Param.TimeLimit, remainingTime.getSeconds() + 1);
             createVariables();
             createConstraints();
             createObjective(rmpSolution);
             cplex.solve();
-            Solution solution = new Solution(cplex.getStatus(), cplex.getObjValue(), this);
+            PricingSolution pricingSolution = new PricingSolution(cplex.getStatus(), cplex.getObjValue(), this);
             cplex.end();
-            return solution;
+            return pricingSolution;
         } catch (IloException e) {
             throw new RuntimeException(e);
         }

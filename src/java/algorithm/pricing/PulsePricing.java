@@ -5,6 +5,7 @@ import commons.FeasiblePath;
 import commons.Instance;
 import ilog.cplex.IloCplex;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +20,11 @@ public class PulsePricing implements PricingProblem {
     }
 
     @Override
-    public Solution solve(RestrictedMasterProblem.RMPSolution rmpSolution) {
+    public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
         PulseAlgorithm pulseAlgorithm = new PulseAlgorithm(instance, rmpSolution);
-        paths = pulseAlgorithm.run();
+        paths = pulseAlgorithm.run(remainingTime);
         double objectiveValue = paths.stream().mapToDouble(FeasiblePath::getCost).min().orElse(0);
-        return new Solution(IloCplex.Status.Optimal, objectiveValue, this);
+        return new PricingSolution(IloCplex.Status.Optimal, objectiveValue, this);
     }
 
     @Override

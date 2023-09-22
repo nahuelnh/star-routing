@@ -10,6 +10,7 @@ import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,9 +71,10 @@ public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
         cplex.addMinimize(objective, "cost");
     }
 
-    private void buildModel(boolean integral) throws IloException {
+    private void buildModel(boolean integral, Duration remainingTime) throws IloException {
         cplex = new IloCplex();
         cplex.setOut(null);
+        cplex.setParam(IloCplex.Param.TimeLimit, remainingTime.getSeconds() + 1);
         createVariables(integral);
         createCustomerServedConstraints();
         createNumberOfVehiclesConstraint();
@@ -80,9 +82,9 @@ public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
     }
 
     @Override
-    public RMPSolution solveRelaxation() {
+    public RMPSolution solveRelaxation(Duration remainingTime) {
         try {
-            buildModel(false);
+            buildModel(false, remainingTime);
             cplex.solve();
             RMPSolution solution = new RMPSolution(cplex, customerConstraints, vehiclesConstraint);
             cplex.end();
@@ -93,9 +95,9 @@ public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
     }
 
     @Override
-    public RMPIntegerSolution solveInteger() {
+    public RMPIntegerSolution solveInteger(Duration remainingTime) {
         try {
-            buildModel(true);
+            buildModel(true, remainingTime);
             cplex.solve();
             RMPIntegerSolution solution = new RMPIntegerSolution(cplex, this);
             cplex.end();
