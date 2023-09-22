@@ -88,11 +88,14 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
         try {
             buildModel(false, remainingTime);
             cplex.solve();
-            RMPSolution solution = new RMPSolution(cplex, customerConstraints, vehiclesConstraint);
+            boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
+            RMPSolution solution = new RMPSolution(cplex.getObjValue(), cplex.getDuals(customerConstraints),
+                    cplex.getDual(vehiclesConstraint), feasible);
             cplex.end();
             return solution;
         } catch (IloException e) {
-            throw new RuntimeException(e);
+            cplex.end();
+            return new RMPSolution();
         }
     }
 
@@ -101,11 +104,14 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
         try {
             buildModel(true, remainingTime);
             cplex.solve();
-            RMPIntegerSolution solution = new RMPIntegerSolution(cplex, this);
+            boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
+            List<FeasiblePath> pathsFromSolution = feasible ? computePathsFromSolution() : new ArrayList<>();
+            RMPIntegerSolution solution = new RMPIntegerSolution(cplex.getObjValue(), pathsFromSolution, feasible);
             cplex.end();
             return solution;
         } catch (IloException e) {
-            throw new RuntimeException(e);
+            cplex.end();
+            return new RMPIntegerSolution();
         }
     }
 

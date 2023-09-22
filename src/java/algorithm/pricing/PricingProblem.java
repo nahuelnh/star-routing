@@ -2,9 +2,9 @@ package algorithm.pricing;
 
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
-import ilog.cplex.IloCplex;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 public interface PricingProblem {
@@ -14,22 +14,28 @@ public interface PricingProblem {
     List<FeasiblePath> computePathsFromSolution();
 
     class PricingSolution {
-        private final IloCplex.Status status;
+        private final boolean feasible;
         private final double objectiveValue;
         private final List<FeasiblePath> negativeReducedCostPaths;
 
-        PricingSolution(IloCplex.Status status, double objectiveValue, PricingProblem pricingProblem) {
-            this.status = status;
+        public PricingSolution(double objectiveValue, List<FeasiblePath> negativeReducedCostPaths, boolean feasible) {
+            this.feasible = feasible;
             this.objectiveValue = objectiveValue;
-            this.negativeReducedCostPaths = pricingProblem.computePathsFromSolution();
+            this.negativeReducedCostPaths = negativeReducedCostPaths;
+        }
+
+        public PricingSolution() {
+            this.feasible = false;
+            this.objectiveValue = 0.0;
+            this.negativeReducedCostPaths = new ArrayList<>();
         }
 
         public List<FeasiblePath> getNegativeReducedCostPaths() {
             return negativeReducedCostPaths;
         }
 
-        public IloCplex.Status getStatus() {
-            return status;
+        public boolean isFeasible() {
+            return feasible;
         }
 
         public double getObjectiveValue() {

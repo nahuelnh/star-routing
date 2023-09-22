@@ -3,7 +3,6 @@ package algorithm.pricing;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
-import ilog.cplex.IloCplex;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -35,7 +34,8 @@ public class LabelSettingPricing implements PricingProblem {
     public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
         paths = new LabelSettingAlgorithm(instance, rmpSolution, applyRelaxedDominance, applyFakeCostHeuristic).run(
                 remainingTime);
-        return new PricingSolution(IloCplex.Status.Optimal, 0.0, this);
+        double objValue = paths.stream().mapToDouble(FeasiblePath::getCost).min().orElse(0.0);
+        return new PricingSolution(objValue, paths, true);
     }
 
     @Override

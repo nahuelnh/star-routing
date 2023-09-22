@@ -6,7 +6,6 @@ import algorithm.EqRestrictedMasterProblem;
 import algorithm.InitialSolutionHeuristic;
 import algorithm.pricing.LabelSettingPricing;
 import commons.Instance;
-import ilog.concert.IloException;
 
 public class Main {
     public static void main(String[] args) {
@@ -26,12 +25,8 @@ public class Main {
     private static void runInstance(String instanceName) {
         System.out.println("Running instance: " + instanceName);
         Instance instance = new Instance(instanceName, true);
-        try {
-            CompactModel compactModel = new CompactModel(instance);
-            System.out.println("MTZ: " + compactModel.solve());
-        } catch (IloException e) {
-            System.err.println("Concert exception '" + e + "' caught");
-        }
+        CompactModel compactModel = new CompactModel(instance);
+        System.out.println("MTZ: " + compactModel.solve());
         ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
                 new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
         System.out.println("ColGen: " + columnGeneration.solve());

@@ -31,44 +31,45 @@ public class CompactModel {
     }
 
     public static void main(String[] args) {
-        try {
-            Instance instance = new Instance("instance_rptd_path", true);
-            CompactModel starRoutingModel = new CompactModel(instance);
-            starRoutingModel.solve();
-        } catch (IloException e) {
-            System.err.println("Concert exception '" + e + "' caught");
-        }
+        Instance instance = new Instance("instance_rptd_path", true);
+        CompactModel starRoutingModel = new CompactModel(instance);
+        starRoutingModel.solve();
     }
 
-    private Solution solve(boolean integral, Duration timeout) throws IloException {
+    private Solution solve(boolean integral, Duration timeout) {
         Instant start = Instant.now();
-        buildModel(integral, timeout);
-        cplex.solve();
-        Instant finish = Instant.now();
-        cplex.writeSolution("src/resources/star_routing_model.sol");
+        try {
+            buildModel(integral, timeout);
+            cplex.solve();
+            Duration elapsedTime = Utils.getElapsedTime(start);
+            cplex.writeSolution("src/resources/star_routing_model.sol");
+            Solution.Status status = IloCplex.Status.Optimal.equals(cplex.getStatus()) ? Solution.Status.FINISHED :
+                    Solution.Status.TIMEOUT;
+            List<FeasiblePath> paths =
+                    integral && Solution.Status.FINISHED.equals(status) ? getPathsFromSolution() : new ArrayList<>();
+            Solution solution = new Solution(status, cplex.getObjValue(), paths, elapsedTime);
+            cplex.end();
+            return solution;
+        } catch (IloException e) {
+            cplex.end();
+            return new Solution(Solution.Status.TIMEOUT, 0.0, new ArrayList<>(), Utils.getElapsedTime(start));
+        }
 
-        Solution.Status status =
-                cplex.getStatus() == IloCplex.Status.Optimal ? Solution.Status.FINISHED : Solution.Status.TIMEOUT;
-        List<FeasiblePath> paths =
-                integral && Solution.Status.FINISHED.equals(status) ? getPathsFromSolution() : new ArrayList<>();
-        Solution solution = new Solution(status, cplex.getObjValue(), paths, Duration.between(start, finish));
-        cplex.end();
-        return solution;
     }
 
-    public Solution solve() throws IloException {
+    public Solution solve() {
         return solve(true, Utils.DEFAULT_TIMEOUT);
     }
 
-    public Solution solve(Duration timeout) throws IloException {
+    public Solution solve(Duration timeout) {
         return solve(true, timeout);
     }
 
-    public Solution solveRelaxation() throws IloException {
+    public Solution solveRelaxation() {
         return solve(false, Utils.DEFAULT_TIMEOUT);
     }
 
-    public Solution solveRelaxation(Duration timeout) throws IloException {
+    public Solution solveRelaxation(Duration timeout) {
         return solve(false, timeout);
     }
 

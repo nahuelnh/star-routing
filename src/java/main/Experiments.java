@@ -9,7 +9,6 @@ import algorithm.pricing.LabelSettingPricing;
 import algorithm.pricing.PulsePricing;
 import commons.Instance;
 import commons.Solution;
-import ilog.concert.IloException;
 
 import java.time.Duration;
 
@@ -55,14 +54,10 @@ public class Experiments {
 
     private static void experiment1_compactModelPerformance() {
         for (InstanceEnum instanceEnum : InstanceEnum.values()) {
-            try {
-                Instance instance = instanceEnum.getInstance();
-                CompactModel compactModel = new CompactModel(instance);
-                Solution solution = compactModel.solve(TIMEOUT);
-                System.out.println(getLine(instance, solution));
-            } catch (IloException e) {
-                throw new RuntimeException(e);
-            }
+            Instance instance = instanceEnum.getInstance();
+            CompactModel compactModel = new CompactModel(instance);
+            Solution solution = compactModel.solve(TIMEOUT);
+            System.out.println(getLine(instance, solution));
         }
     }
 

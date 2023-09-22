@@ -35,26 +35,41 @@ public class ColumnGeneration {
         System.out.println(solution);
     }
 
-
-
     private Solution generateColumns(boolean integral, Duration timeout) {
         Instant start = Instant.now();
         List<FeasiblePath> newPaths = heuristic.run();
         double relaxationOptimal = Double.MAX_VALUE;
         while (!newPaths.isEmpty()) {
             rmp.addPaths(newPaths);
-            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation(Utils.getRemainingTime(start, timeout));
+            RestrictedMasterProblem.RMPSolution rmpSolution =
+                    rmp.solveRelaxation(Utils.getRemainingTime(start, timeout));
+            if (!rmpSolution.isFeasible() || Utils.getRemainingTime(start, timeout).isNegative()) {
+                break;
+            }
             relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
             PricingProblem.PricingSolution pricingSolution =
                     pricing.solve(rmpSolution, Utils.getRemainingTime(start, timeout));
+            if (!pricingSolution.isFeasible() || Utils.getRemainingTime(start, timeout).isNegative()) {
+                break;
+            }
             newPaths = pricingSolution.getNegativeReducedCostPaths();
         }
+        if (Utils.getRemainingTime(start, timeout).isNegative()) {
+            return new Solution(Solution.Status.TIMEOUT, relaxationOptimal, new ArrayList<>(),
+                    Utils.getElapsedTime(start));
+        }
         if (integral) {
-            RestrictedMasterProblem.RMPIntegerSolution solution = rmp.solveInteger(Utils.getRemainingTime(start, timeout));
+            RestrictedMasterProblem.RMPIntegerSolution solution =
+                    rmp.solveInteger(Utils.getRemainingTime(start, timeout));
+            if (!solution.isFeasible() || Utils.getRemainingTime(start, timeout).isNegative()) {
+                return new Solution(Solution.Status.TIMEOUT, relaxationOptimal, new ArrayList<>(),
+                        Utils.getElapsedTime(start));
+            }
             return new Solution(Solution.Status.FINISHED, solution.getObjectiveValue(), solution.getUsedPaths(),
                     Utils.getElapsedTime(start));
         } else {
-            return new Solution(Solution.Status.FINISHED, relaxationOptimal, new ArrayList<>(), Utils.getElapsedTime(start));
+            return new Solution(Solution.Status.FINISHED, relaxationOptimal, new ArrayList<>(),
+                    Utils.getElapsedTime(start));
         }
     }
 
