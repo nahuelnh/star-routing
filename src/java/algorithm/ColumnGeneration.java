@@ -1,9 +1,7 @@
 package algorithm;
 
-import algorithm.pricing.LabelSettingPricing;
 import algorithm.pricing.PricingProblem;
 import commons.FeasiblePath;
-import commons.Instance;
 import commons.Solution;
 import commons.Utils;
 
@@ -14,30 +12,24 @@ import java.util.List;
 
 public class ColumnGeneration {
 
-    private final Instance instance;
     private final RestrictedMasterProblem rmp;
     private final PricingProblem pricing;
-    private final InitialSolutionHeuristic heuristic;
+    private final InitialSolutionHeuristic initialSolutionHeuristic;
+    private boolean applyCustomerHeuristic;
+    private boolean applyFinishEarly;
 
-    public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
-                            InitialSolutionHeuristic heuristic) {
-        this.instance = instance;
+    public ColumnGeneration(RestrictedMasterProblem rmp, PricingProblem pricingProblem,
+                            InitialSolutionHeuristic initialSolutionHeuristic) {
         this.rmp = rmp;
         this.pricing = pricingProblem;
-        this.heuristic = heuristic;
-    }
-
-    public static void main(String[] args) {
-        Instance instance = new Instance("instance_neighbors_40", true);
-        ColumnGeneration columnGeneration = new ColumnGeneration(instance, new EqRestrictedMasterProblem(instance),
-                new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-        Solution solution = columnGeneration.solve();
-        System.out.println(solution);
+        this.initialSolutionHeuristic = initialSolutionHeuristic;
+        this.applyCustomerHeuristic = true;
+        this.applyFinishEarly = false;
     }
 
     private Solution generateColumns(boolean integral, Duration timeout) {
         Instant start = Instant.now();
-        List<FeasiblePath> newPaths = heuristic.run();
+        List<FeasiblePath> newPaths = initialSolutionHeuristic.run();
         double relaxationOptimal = Double.MAX_VALUE;
         while (!newPaths.isEmpty()) {
             rmp.addPaths(newPaths);
@@ -89,5 +81,12 @@ public class ColumnGeneration {
         return solveRelaxation(Utils.DEFAULT_TIMEOUT);
     }
 
+    public void setApplyCustomerHeuristic(boolean applyCustomerHeuristic) {
+        this.applyCustomerHeuristic = applyCustomerHeuristic;
+    }
+
+    public void setApplyFinishEarly(boolean applyFinishEarly) {
+        this.applyFinishEarly = applyFinishEarly;
+    }
 }
 

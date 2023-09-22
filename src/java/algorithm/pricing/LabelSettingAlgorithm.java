@@ -23,12 +23,12 @@ public class LabelSettingAlgorithm {
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final Map<Integer, Double> dualValues;
-    private final boolean applyFakeCostHeuristic;
+    private final boolean applyHeuristics;
     private final double alpha;
     private final LabelDump labelDump;
 
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
-                                 boolean applyRelaxedDominance, boolean applyFakeCostHeuristic) {
+                                boolean applyHeuristics) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
         this.dualValues = new HashMap<>();
@@ -41,9 +41,9 @@ public class LabelSettingAlgorithm {
         this.graph.sortReverseNeighborhoods(
                 Comparator.comparing(s -> dualValues.containsKey(s) ? -dualValues.get(s) / instance.getDemand(s) : 0));
 
-        this.applyFakeCostHeuristic = applyFakeCostHeuristic;
+        this.applyHeuristics = applyHeuristics;
         this.alpha = computeCostFactor();
-        if (applyRelaxedDominance) {
+        if (applyHeuristics) {
             this.labelDump = new RelaxedLabelDump(graph.getSize(), instance.getCapacity() + 1);
         } else {
             this.labelDump = new StrictLabelDump(graph.getSize());
@@ -51,7 +51,7 @@ public class LabelSettingAlgorithm {
     }
 
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
-        this(instance, rmpSolution, false, false);
+        this(instance, rmpSolution, false);
     }
 
     private double computeCostFactor() {
@@ -89,7 +89,7 @@ public class LabelSettingAlgorithm {
     private Label extendCustomer(Label label, int customer) {
         int updatedDemand = label.demand() + instance.getDemand(customer);
         double updatedCost = label.cost() - dualValues.get(customer);
-        if (applyFakeCostHeuristic) {
+        if (applyHeuristics) {
             updatedCost += getLittleFakeCost(label, customer);
         }
         BitSet updatedVisited = label.copyOfVisitedCustomers();
