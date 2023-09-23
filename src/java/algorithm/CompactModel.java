@@ -43,11 +43,12 @@ public class CompactModel {
             cplex.solve();
             Duration elapsedTime = Utils.getElapsedTime(start);
             cplex.writeSolution("src/resources/star_routing_model.sol");
-            Solution.Status status = IloCplex.Status.Optimal.equals(cplex.getStatus()) ? Solution.Status.FINISHED :
+            Solution.Status status = IloCplex.Status.Optimal.equals(cplex.getStatus()) ? Solution.Status.OPTIMAL :
                     Solution.Status.TIMEOUT;
             List<FeasiblePath> paths =
-                    integral && Solution.Status.FINISHED.equals(status) ? getPathsFromSolution() : new ArrayList<>();
+                    integral && Solution.Status.OPTIMAL.equals(status) ? getPathsFromSolution() : new ArrayList<>();
             Solution solution = new Solution(status, cplex.getObjValue(), paths, elapsedTime);
+            solution.setDeterministicTime(cplex.getDetTime());
             cplex.end();
             return solution;
         } catch (IloException e) {

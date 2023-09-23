@@ -148,7 +148,7 @@ public class ILPPricingProblem implements PricingProblem {
             cplex.solve();
             boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
             List<FeasiblePath> pathsFromSolution = feasible ? computePathsFromSolution() : new ArrayList<>();
-            PricingSolution pricingSolution = new PricingSolution(cplex.getObjValue(), pathsFromSolution, feasible);
+            PricingSolution pricingSolution = new PricingSolution(cplex.getObjValue(), pathsFromSolution, cplex.getDetTime(), feasible);
             cplex.end();
             return pricingSolution;
         } catch (IloException e) {

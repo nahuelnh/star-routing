@@ -1,6 +1,7 @@
 package commons;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,7 +10,17 @@ public class Solution {
     private final double objValue;
     private final Duration elapsedTime;
     private final Status status;
-    private final Optional<Double> lowerBound;
+    private Optional<Double> lowerBound;
+    private Optional<Double> deterministicTime;
+
+    public Solution(Status status, double objValue, Duration elapsedTime) {
+        this.status = status;
+        this.paths = new ArrayList<>();
+        this.objValue = objValue;
+        this.elapsedTime = elapsedTime;
+        this.lowerBound = Optional.empty();
+        this.deterministicTime = Optional.empty();
+    }
 
     public Solution(Status status, double objValue, List<FeasiblePath> paths, Duration elapsedTime) {
         this.status = status;
@@ -17,14 +28,7 @@ public class Solution {
         this.objValue = objValue;
         this.elapsedTime = elapsedTime;
         this.lowerBound = Optional.empty();
-    }
-
-    public Solution(Status status, double objValue, List<FeasiblePath> paths, Duration elapsedTime, double lowerBound) {
-        this.status = status;
-        this.paths = paths;
-        this.objValue = objValue;
-        this.elapsedTime = elapsedTime;
-        this.lowerBound = Optional.of(lowerBound);
+        this.deterministicTime = Optional.empty();
     }
 
     public double getObjValue() {
@@ -56,12 +60,35 @@ public class Solution {
         return Status.TIMEOUT.equals(status);
     }
 
-    public Optional<Double> getLowerBound() {
-        return lowerBound;
+    public boolean hasLowerBound() {
+        return lowerBound.isPresent();
+    }
+
+    public double getLowerBound() {
+        assert lowerBound.isPresent();
+        return lowerBound.get();
+    }
+
+    public void setLowerBound(double lowerBound) {
+        this.lowerBound = Optional.of(lowerBound);
+    }
+
+    public boolean hasDeterministicTime() {
+        return deterministicTime.isPresent();
+    }
+
+    public double getDeterministicTime() {
+        assert deterministicTime.isPresent();
+        return deterministicTime.get();
+    }
+
+    public void setDeterministicTime(double deterministicTime) {
+        this.deterministicTime = Optional.of(deterministicTime);
     }
 
     public enum Status {
-        FINISHED,
-        TIMEOUT;
+        OPTIMAL,
+        TIMEOUT,
+        FEASIBLE
     }
 }

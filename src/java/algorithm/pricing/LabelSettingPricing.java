@@ -14,28 +14,34 @@ public class LabelSettingPricing implements PricingProblem {
 
     private final Instance instance;
     private List<FeasiblePath> paths;
-    private boolean applyHeuristics;
+    private boolean solveHeuristically;
 
     public LabelSettingPricing(Instance instance) {
         this.instance = instance;
         this.paths = new ArrayList<>();
-        this.applyHeuristics = false;
+        this.solveHeuristically = false;
     }
 
-    public void applyHeuristics() {
-        applyHeuristics = true;
+    public void solveHeuristically() {
+        solveHeuristically = true;
+    }
+
+    private double getObjValue() {
+        return paths.stream().mapToDouble(FeasiblePath::getCost).min().orElse(0.0);
     }
 
     @Override
     public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
         Instant start = Instant.now();
-        paths = new LabelSettingAlgorithm(instance, rmpSolution, true).run(remainingTime);
-        if (paths.isEmpty() && !applyHeuristics) {
-            paths = new LabelSettingAlgorithm(instance, rmpSolution, false).run(
-                    Utils.getRemainingTime(start, remainingTime));
+        LabelSettingAlgorithm labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, true);
+        paths = labelSettingAlgorithm.run(remainingTime);
+        int labelsProcessed = labelSettingAlgorithm.getLabelsProcessed();
+        if (paths.isEmpty() && !solveHeuristically) {
+            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, false);
+            paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
+            labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
         }
-        double objValue = paths.stream().mapToDouble(FeasiblePath::getCost).min().orElse(0.0);
-        return new PricingSolution(objValue, paths, true);
+        return new PricingSolution(getObjValue(), paths, labelsProcessed, true);
     }
 
     @Override

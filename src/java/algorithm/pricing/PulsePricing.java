@@ -18,12 +18,15 @@ public class PulsePricing implements PricingProblem {
         this.paths = new ArrayList<>();
     }
 
+    private double getObjValue() {
+        return paths.stream().mapToDouble(FeasiblePath::getCost).min().orElse(0.0);
+    }
+
     @Override
     public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
         PulseAlgorithm pulseAlgorithm = new PulseAlgorithm(instance, rmpSolution);
         paths = pulseAlgorithm.run(remainingTime);
-        double objValue = paths.stream().mapToDouble(FeasiblePath::getCost).min().orElse(0);
-        return new PricingSolution(objValue, paths, true);
+        return new PricingSolution(getObjValue(), paths, pulseAlgorithm.getPulsesPropagated(), true);
     }
 
     @Override

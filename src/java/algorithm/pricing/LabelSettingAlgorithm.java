@@ -26,12 +26,14 @@ public class LabelSettingAlgorithm {
     private final boolean applyHeuristics;
     private final double alpha;
     private final LabelDump labelDump;
+    private int labelsProcessed;
 
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
-                                boolean applyHeuristics) {
+                                 boolean applyHeuristics) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
         this.dualValues = new HashMap<>();
+        this.labelsProcessed = 0;
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
@@ -138,6 +140,7 @@ public class LabelSettingAlgorithm {
         PriorityQueue<Label> queue = new PriorityQueue<>();
         queue.add(root);
         while (!queue.isEmpty()) {
+            labelsProcessed++;
             if (Utils.getRemainingTime(start, timeLimit).isNegative()) {
                 return;
             }
@@ -157,6 +160,10 @@ public class LabelSettingAlgorithm {
                 }
             }
         }
+    }
+
+    public int getLabelsProcessed() {
+        return labelsProcessed;
     }
 
     private static class RelaxedLabelDump implements LabelDump {

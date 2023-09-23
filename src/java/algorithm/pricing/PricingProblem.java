@@ -17,17 +17,18 @@ public interface PricingProblem {
         private final boolean feasible;
         private final double objectiveValue;
         private final List<FeasiblePath> negativeReducedCostPaths;
+        private final double deterministicTime;
 
-        public PricingSolution(double objectiveValue, List<FeasiblePath> negativeReducedCostPaths, boolean feasible) {
+        public PricingSolution(double objectiveValue, List<FeasiblePath> negativeReducedCostPaths,
+                               double deterministicTime, boolean feasible) {
             this.feasible = feasible;
             this.objectiveValue = objectiveValue;
             this.negativeReducedCostPaths = negativeReducedCostPaths;
+            this.deterministicTime = deterministicTime;
         }
 
         public PricingSolution() {
-            this.feasible = false;
-            this.objectiveValue = 0.0;
-            this.negativeReducedCostPaths = new ArrayList<>();
+            this(0.0, new ArrayList<>(), 0.0, false);
         }
 
         public List<FeasiblePath> getNegativeReducedCostPaths() {
@@ -40,6 +41,10 @@ public interface PricingProblem {
 
         public double getObjectiveValue() {
             return objectiveValue;
+        }
+
+        public double getDeterministicTime() {
+            return deterministicTime;
         }
     }
 }

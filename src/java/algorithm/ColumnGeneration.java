@@ -3,11 +3,10 @@ package algorithm;
 import algorithm.pricing.PricingProblem;
 import commons.FeasiblePath;
 import commons.Solution;
+import commons.Stopwatch;
 import commons.Utils;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ColumnGeneration {
@@ -17,6 +16,7 @@ public class ColumnGeneration {
     private final InitialSolutionHeuristic initialSolutionHeuristic;
     private boolean applyCustomerHeuristic;
     private boolean applyFinishEarly;
+    private int numberOfIterations;
 
     public ColumnGeneration(RestrictedMasterProblem rmp, PricingProblem pricingProblem,
                             InitialSolutionHeuristic initialSolutionHeuristic) {
@@ -25,44 +25,51 @@ public class ColumnGeneration {
         this.initialSolutionHeuristic = initialSolutionHeuristic;
         this.applyCustomerHeuristic = true;
         this.applyFinishEarly = false;
+        this.numberOfIterations = 0;
+    }
+
+    private Solution buildSolution(Stopwatch stopwatch, double relaxationOptimal, double deterministicTime,
+                                   boolean integral) {
+        Solution solution;
+        if (stopwatch.timedOut()) {
+            solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime());
+        } else if (integral) {
+            RestrictedMasterProblem.RMPIntegerSolution rmpSolution = rmp.solveInteger(stopwatch.getRemainingTime());
+            if (!rmpSolution.isFeasible() || stopwatch.timedOut()) {
+                solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime());
+            } else {
+                solution = new Solution(Solution.Status.OPTIMAL, rmpSolution.getObjectiveValue(),
+                        rmpSolution.getUsedPaths(), stopwatch.getElapsedTime());
+                solution.setLowerBound(relaxationOptimal);
+            }
+        } else {
+            solution = new Solution(Solution.Status.FEASIBLE, relaxationOptimal, stopwatch.getElapsedTime());
+        }
+        solution.setDeterministicTime(deterministicTime);
+        return solution;
     }
 
     private Solution generateColumns(boolean integral, Duration timeout) {
-        Instant start = Instant.now();
-        List<FeasiblePath> newPaths = initialSolutionHeuristic.run();
+        Stopwatch stopwatch = new Stopwatch(timeout);
+        List<FeasiblePath> columnsToAdd = initialSolutionHeuristic.run();
         double relaxationOptimal = Double.MAX_VALUE;
-        while (!newPaths.isEmpty()) {
-            rmp.addPaths(newPaths);
-            RestrictedMasterProblem.RMPSolution rmpSolution =
-                    rmp.solveRelaxation(Utils.getRemainingTime(start, timeout));
-            if (!rmpSolution.isFeasible() || Utils.getRemainingTime(start, timeout).isNegative()) {
+        double deterministicTime = 0.0;
+        while (!columnsToAdd.isEmpty()) {
+            numberOfIterations++;
+            rmp.addPaths(columnsToAdd);
+            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation(stopwatch.getRemainingTime());
+            if (!rmpSolution.isFeasible() || stopwatch.timedOut()) {
                 break;
             }
             relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
-            PricingProblem.PricingSolution pricingSolution =
-                    pricing.solve(rmpSolution, Utils.getRemainingTime(start, timeout));
-            if (!pricingSolution.isFeasible() || Utils.getRemainingTime(start, timeout).isNegative()) {
+            PricingProblem.PricingSolution pricingSolution = pricing.solve(rmpSolution, stopwatch.getRemainingTime());
+            if (!pricingSolution.isFeasible() || stopwatch.timedOut()) {
                 break;
             }
-            newPaths = pricingSolution.getNegativeReducedCostPaths();
+            deterministicTime += pricingSolution.getDeterministicTime();
+            columnsToAdd = pricingSolution.getNegativeReducedCostPaths();
         }
-        if (Utils.getRemainingTime(start, timeout).isNegative()) {
-            return new Solution(Solution.Status.TIMEOUT, relaxationOptimal, new ArrayList<>(),
-                    Utils.getElapsedTime(start));
-        }
-        if (integral) {
-            RestrictedMasterProblem.RMPIntegerSolution solution =
-                    rmp.solveInteger(Utils.getRemainingTime(start, timeout));
-            if (!solution.isFeasible() || Utils.getRemainingTime(start, timeout).isNegative()) {
-                return new Solution(Solution.Status.TIMEOUT, relaxationOptimal, new ArrayList<>(),
-                        Utils.getElapsedTime(start));
-            }
-            return new Solution(Solution.Status.FINISHED, solution.getObjectiveValue(), solution.getUsedPaths(),
-                    Utils.getElapsedTime(start));
-        } else {
-            return new Solution(Solution.Status.FINISHED, relaxationOptimal, new ArrayList<>(),
-                    Utils.getElapsedTime(start));
-        }
+        return buildSolution(stopwatch, relaxationOptimal, deterministicTime, integral);
     }
 
     public Solution solve(Duration timeout) {
@@ -87,6 +94,10 @@ public class ColumnGeneration {
 
     public void setApplyFinishEarly(boolean applyFinishEarly) {
         this.applyFinishEarly = applyFinishEarly;
+    }
+
+    public int getNumberOfIterations() {
+        return numberOfIterations;
     }
 }
 

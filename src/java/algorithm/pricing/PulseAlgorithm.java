@@ -28,6 +28,7 @@ public class PulseAlgorithm {
     private double bestSolutionFound;
     private List<PartialPath> foundPartialPaths;
     private boolean saveSolution;
+    private int pulsesPropagated;
 
     public PulseAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
         this.instance = instance;
@@ -39,6 +40,7 @@ public class PulseAlgorithm {
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
+        this.pulsesPropagated = 0;
     }
 
     private void resetGlobalOptimum() {
@@ -112,6 +114,7 @@ public class PulseAlgorithm {
     }
 
     private void propagate(int currentNode, PartialPath visitedPath) {
+        pulsesPropagated++;
         if (Utils.getRemainingTime(startTime, timeLimit).isNegative()) {
             return;
         }
@@ -219,6 +222,10 @@ public class PulseAlgorithm {
             }
         }
         return false;
+    }
+
+    public int getPulsesPropagated() {
+        return pulsesPropagated;
     }
 
     private class PartialPath {
