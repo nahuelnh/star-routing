@@ -1,6 +1,8 @@
 import collections
 import random
 
+import math
+
 random.seed(159753)
 
 
@@ -125,7 +127,7 @@ def larger_instance():
     )
 
 
-def random_instance(size):
+def purely_random_instance(size):
     graph = collections.defaultdict(dict)
     neighbors = collections.defaultdict(set)
     for i in range(size):
@@ -141,6 +143,55 @@ def random_instance(size):
         capacity=100,
         graph=graph,
         packages={i: 20 for i in range(2, size + 1)},
+        neighbors=neighbors
+    )
+
+
+def random_points_in_plane_instance(nodes, customers, vehicles, k):
+    graph = collections.defaultdict(dict)
+    neighbors = collections.defaultdict(set)
+
+    coordinates = [(None, None)]
+    for i in range(nodes):
+        x, y = random.randint(0, nodes), random.randint(0, nodes)
+        while (x, y) in coordinates:
+            x, y = random.randint(0, nodes), random.randint(0, nodes)
+        coordinates.append((x, y))
+
+    assert customers < nodes
+    for _ in range(customers):
+        rand_int = random.randint(2, nodes + 1)
+        while rand_int in neighbors:
+            rand_int = random.randint(2, nodes + 1)
+        neighbors[rand_int] = set()
+
+    for i in range(1, nodes + 1):
+        for j in range(1, nodes + 1):
+            euclidean_distance = math.sqrt(
+                (coordinates[i][0] - coordinates[j][0]) ** 2 + (coordinates[i][1] - coordinates[j][1]) ** 2)
+            graph[i][j] = euclidean_distance
+            if i in neighbors and euclidean_distance <= k:
+                neighbors[i].add(j)
+
+    packages = {i: random.randint(1, 100) for i in neighbors}
+    capacity = 0
+    cumulative = 0
+    index = int(customers / vehicles) + 1
+    for q in packages.values():
+        index = index - 1
+        cumulative += q
+        if index == 0:
+            capacity = max(capacity, cumulative)
+            cumulative = 0
+            index = int(customers / vehicles) + 1
+
+    return Instance(
+        name="n{}_s{}_k{}".format(nodes, customers, vehicles),
+        number_of_vehicles=vehicles,
+        depot=1,
+        capacity=capacity,
+        graph=graph,
+        packages=packages,
         neighbors=neighbors
     )
 

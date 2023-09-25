@@ -5,10 +5,9 @@ from instances import (
     simple_instance,
     two_vehicle_instance,
     larger_instance,
-    random_instance,
     other_two_vehicle_instance,
-    random_instance_many_neighbors,
-    all_vehicles_do_the_same_instance
+    all_vehicles_do_the_same_instance,
+    random_points_in_plane_instance
 )
 
 INSTANCES = [
@@ -17,26 +16,41 @@ INSTANCES = [
     other_two_vehicle_instance(),
     all_vehicles_do_the_same_instance(),
     larger_instance(),
-    random_instance(10),
-    random_instance(12),
-    random_instance(20),
-    random_instance(40),
-    random_instance(50),
-    random_instance(60),
-    random_instance(70),
-    random_instance(80),
-    random_instance(90),
-    random_instance(100),
-    random_instance_many_neighbors(10),
-    random_instance_many_neighbors(12),
-    random_instance_many_neighbors(20),
-    random_instance_many_neighbors(40),
-    random_instance_many_neighbors(50),
-    random_instance_many_neighbors(60),
-    random_instance_many_neighbors(70),
-    random_instance_many_neighbors(80),
-    random_instance_many_neighbors(90),
-    random_instance_many_neighbors(100),
+    random_points_in_plane_instance(3, 1, 1, 1),
+    random_points_in_plane_instance(4, 2, 1, 1),
+    random_points_in_plane_instance(5, 2, 1, 1),
+    random_points_in_plane_instance(6, 3, 2, 1),
+    random_points_in_plane_instance(7, 3, 2, 2),
+    random_points_in_plane_instance(8, 3, 2, 2),
+    random_points_in_plane_instance(9, 4, 2, 2),
+    random_points_in_plane_instance(10, 5, 3, 2),
+    random_points_in_plane_instance(11, 6, 3, 2),
+    random_points_in_plane_instance(12, 7, 3, 2),
+    random_points_in_plane_instance(13, 8, 3, 3),
+    random_points_in_plane_instance(14, 8, 3, 3),
+    random_points_in_plane_instance(15, 10, 4, 3),
+    random_points_in_plane_instance(16, 10, 4, 3),
+    random_points_in_plane_instance(17, 10, 4, 3),
+    random_points_in_plane_instance(18, 15, 4, 4),
+    random_points_in_plane_instance(19, 15, 4, 4),
+    random_points_in_plane_instance(20, 10, 5, 4),
+    random_points_in_plane_instance(25, 10, 5, 5),
+    random_points_in_plane_instance(25, 20, 5, 5),
+    random_points_in_plane_instance(30, 10, 5, 6),
+    random_points_in_plane_instance(30, 25, 10, 6),
+    random_points_in_plane_instance(35, 1, 1, 7),
+    random_points_in_plane_instance(40, 1, 1, 8),
+    random_points_in_plane_instance(45, 10, 5, 9),
+    random_points_in_plane_instance(50, 10, 5, 10),
+    random_points_in_plane_instance(55, 10, 5, 11),
+    random_points_in_plane_instance(60, 10, 5, 12),
+    random_points_in_plane_instance(65, 10, 5, 13),
+    random_points_in_plane_instance(70, 10, 5, 14),
+    random_points_in_plane_instance(75, 10, 5, 15),
+    random_points_in_plane_instance(80, 10, 5, 16),
+    random_points_in_plane_instance(85, 10, 5, 17),
+    random_points_in_plane_instance(90, 10, 5, 18),
+    random_points_in_plane_instance(100, 10, 5, 19),
 ]
 
 
@@ -79,7 +93,7 @@ def _write_graph_file(instance: Instance, output_dir: str):
                 weight_or_large_n = (
                     instance.graph[start_node][end_node]
                     if start_node in instance.graph and end_node in instance.graph[start_node]
-                    else 10000
+                    else (number_of_vertices ** 2)
                 )
                 graph_file.write(str(start_node) + " " + str(end_node) + " " + str(weight_or_large_n) + "\n")
 
