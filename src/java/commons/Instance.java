@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class Instance {
 
-    private static final String DEFAULT_DIR = "src/resources/";
+    public static final String DEFAULT_DIR = Utils.RESOURCES_PATH;
     private static final String DEFAULT_GRAPH_FILENAME = "graph.txt";
     private static final String DEFAULT_NEIGHBORS_FILENAME = "neighbors.txt";
     private static final String DEFAULT_PACKAGES_FILENAME = "packages.txt";
@@ -85,8 +85,7 @@ public class Instance {
             int i = line.get(0) - 1;
             int j = line.get(1) - 1;
             int weight = line.get(2);
-            assert weight >= 0;
-            if (i != j) {
+            if (weight >= 0 && i != j) {
                 weightsMatrix.get(i).set(j, weight);
             }
         }

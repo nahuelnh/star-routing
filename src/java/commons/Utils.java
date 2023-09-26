@@ -24,11 +24,11 @@ import java.util.Set;
 public class Utils {
 
     public static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(60);
-
+    public static final String RESOURCES_PATH ="src/resources/";
     private static final String DELIMITER = " ";
 
     private static List<Integer> readIntegerLine(String line) {
-        return Arrays.stream(line.split(" ")).map(Integer::valueOf).toList();
+        return Arrays.stream(line.split(DELIMITER)).map(Integer::valueOf).toList();
     }
 
     public static List<List<Integer>> parseIntegerMatrix(String filename) {

@@ -42,7 +42,7 @@ def simple_instance():
 def two_vehicle_instance():
     # Optimal solution achieved using only one car
     return Instance(
-        name="2v1",
+        name="2vehicles",
         number_of_vehicles=2,
         depot=1,
         capacity=100,
@@ -63,7 +63,7 @@ def two_vehicle_instance():
 def other_two_vehicle_instance():
     # Optimal solution achieved using both cars
     return Instance(
-        name="2v2",
+        name="2vehicles2",
         number_of_vehicles=2,
         depot=1,
         capacity=20,
@@ -84,7 +84,7 @@ def other_two_vehicle_instance():
 def all_vehicles_do_the_same_instance():
     # Optimal solution achieved using both cars doing the same route
     return Instance(
-        name="rptd_path",
+        name="repeating_paths",
         number_of_vehicles=2,
         depot=1,
         capacity=30,
@@ -104,7 +104,7 @@ def all_vehicles_do_the_same_instance():
 
 def larger_instance():
     return Instance(
-        name="large",
+        name="complex",
         number_of_vehicles=3,
         depot=1,
         capacity=100,
@@ -160,30 +160,33 @@ def random_points_in_plane_instance(nodes, customers, vehicles, k):
 
     assert customers < nodes
     for _ in range(customers):
-        rand_int = random.randint(2, nodes + 1)
+        rand_int = random.randint(2, nodes)
         while rand_int in neighbors:
-            rand_int = random.randint(2, nodes + 1)
+            rand_int = random.randint(2, nodes)
         neighbors[rand_int] = set()
 
     for i in range(1, nodes + 1):
         for j in range(1, nodes + 1):
-            euclidean_distance = math.sqrt(
-                (coordinates[i][0] - coordinates[j][0]) ** 2 + (coordinates[i][1] - coordinates[j][1]) ** 2)
-            graph[i][j] = euclidean_distance
-            if i in neighbors and euclidean_distance <= k:
-                neighbors[i].add(j)
+            if i != j:
+                euclidean_distance = math.sqrt(
+                    (coordinates[i][0] - coordinates[j][0]) ** 2 + (coordinates[i][1] - coordinates[j][1]) ** 2)
+                graph[i][j] = euclidean_distance
+                if i in neighbors and euclidean_distance <= k:
+                    neighbors[i].add(j)
 
     packages = {i: random.randint(1, 100) for i in neighbors}
+
     capacity = 0
     cumulative = 0
-    index = int(customers / vehicles) + 1
+    index = math.ceil(customers / vehicles)
     for q in packages.values():
         index = index - 1
         cumulative += q
         if index == 0:
             capacity = max(capacity, cumulative)
             cumulative = 0
-            index = int(customers / vehicles) + 1
+            index = math.ceil(customers / vehicles)
+    capacity = max(capacity, cumulative)
 
     return Instance(
         name="n{}_s{}_k{}".format(nodes, customers, vehicles),

@@ -1,0 +1,3 @@
+vehicles 1
+depot 1
+capacity 210
