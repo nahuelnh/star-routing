@@ -8,8 +8,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 
-public record Label(int demand, double cost, int node, BitSet visitedNodes, BitSet visitedCustomers, Label parent)
-        implements Comparable<Label> {
+public record Label(int demand, double cost, int node, BitSet visitedNodes, BitSet visitedCustomers, Label parent) {
 
     public static Label getRootLabel(int startNode, int numberOfNodes, double cost) {
         BitSet visitedNodes = new BitSet(numberOfNodes);
@@ -38,14 +37,6 @@ public record Label(int demand, double cost, int node, BitSet visitedNodes, BitS
     public String toString() {
         return "Label{" + "demand=" + demand + ", cost=" + cost + ", node=" + node + ", parent=" +
                 (parent == null ? null : parent.node) + '}';
-    }
-
-    @Override
-    public int compareTo(Label label) {
-        if (this.node == label.node) {
-            return 0;
-        }
-        return this.node < label.node ? 1 : -1;
     }
 
     private List<Integer> getNodesInOrder() {

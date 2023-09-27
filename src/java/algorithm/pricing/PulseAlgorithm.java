@@ -3,6 +3,7 @@ package algorithm.pricing;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
+import commons.Stopwatch;
 import commons.Utils;
 
 import java.time.Duration;
@@ -10,6 +11,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +24,7 @@ public class PulseAlgorithm {
     private final ESPPRCGraph graph;
     private final int numberOfNodes;
     private final Map<Integer, Double> dualValues;
-    private Instant startTime;
-    private Duration timeLimit;
+    private Stopwatch stopwatch;
     private double[][] lowerBounds;
     private double bestSolutionFound;
     private List<PartialPath> foundPartialPaths;
@@ -33,13 +34,15 @@ public class PulseAlgorithm {
     public PulseAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
-        this.timeLimit = Utils.DEFAULT_TIMEOUT;
         this.graph = new ESPPRCGraph(instance);
         this.numberOfNodes = graph.getSize();
         this.dualValues = new HashMap<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
+        // Heuristic: sort decreasingly by benefit/cost
+        this.graph.sortReverseNeighborhoods(
+                Comparator.comparingDouble(s -> -dualValues.getOrDefault(s, 0.0) / instance.getDemand(s)));
         this.pulsesPropagated = 0;
     }
 
@@ -50,8 +53,7 @@ public class PulseAlgorithm {
     }
 
     public List<FeasiblePath> run(Duration timeLimit) {
-        this.timeLimit = timeLimit;
-        this.startTime = Instant.now();
+        this.stopwatch = new Stopwatch(timeLimit);
         resetGlobalOptimum();
         bound();
 
@@ -115,7 +117,7 @@ public class PulseAlgorithm {
 
     private void propagate(int currentNode, PartialPath visitedPath) {
         pulsesPropagated++;
-        if (Utils.getRemainingTime(startTime, timeLimit).isNegative()) {
+        if (stopwatch.timedOut()) {
             return;
         }
         if (currentNode == graph.getEnd()) {

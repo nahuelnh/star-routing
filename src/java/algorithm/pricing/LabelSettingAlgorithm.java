@@ -3,10 +3,10 @@ package algorithm.pricing;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
+import commons.Stopwatch;
 import commons.Utils;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -19,14 +19,17 @@ import java.util.PriorityQueue;
 public class LabelSettingAlgorithm {
 
     private static final double EPSILON = 1e-6;
+    private static final int STOP_AFTER_SOLUTIONS = 5;
     private final Instance instance;
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final Map<Integer, Double> dualValues;
     private final boolean applyHeuristics;
+    private final boolean stopEarly = false;
     private final double alpha;
     private final LabelDump labelDump;
     private int labelsProcessed;
+    private int solutionsFound;
 
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
                                  boolean applyHeuristics) {
@@ -34,6 +37,7 @@ public class LabelSettingAlgorithm {
         this.rmpSolution = rmpSolution;
         this.dualValues = new HashMap<>();
         this.labelsProcessed = 0;
+        this.solutionsFound = 0;
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
@@ -41,7 +45,7 @@ public class LabelSettingAlgorithm {
 
         // Heuristic: sort decreasingly by benefit/cost
         this.graph.sortReverseNeighborhoods(
-                Comparator.comparing(s -> dualValues.containsKey(s) ? -dualValues.get(s) / instance.getDemand(s) : 0));
+                Comparator.comparingDouble(s -> -dualValues.getOrDefault(s, 0.0) / instance.getDemand(s)));
 
         this.applyHeuristics = applyHeuristics;
         this.alpha = computeCostFactor();
@@ -77,7 +81,8 @@ public class LabelSettingAlgorithm {
     }
 
     public List<FeasiblePath> run(Duration timeLimit) {
-        monoDirectionalBacktracking(timeLimit);
+        Stopwatch stopwatch = new Stopwatch(timeLimit);
+        monoDirectionalBacktracking(stopwatch);
         return getNegativeReducedCostPaths();
     }
 
@@ -132,31 +137,38 @@ public class LabelSettingAlgorithm {
         return labelDump.dominates(label);
     }
 
-    private void monoDirectionalBacktracking(Duration timeLimit) {
-        Instant start = Instant.now();
+    private void monoDirectionalBacktracking(Stopwatch stopwatch) {
         Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
         labelDump.addLabel(root);
 
-        PriorityQueue<Label> queue = new PriorityQueue<>();
+        PriorityQueue<Label> queue = new PriorityQueue<>(64, Comparator.comparingDouble(Label::cost));
         queue.add(root);
         while (!queue.isEmpty()) {
             labelsProcessed++;
-            if (Utils.getRemainingTime(start, timeLimit).isNegative()) {
+            if (stopwatch.timedOut()) {
                 return;
             }
             Label currentLabel = queue.remove();
-            for (int customer : graph.getReverseNeighborhood(currentLabel.node())) {
-                Label nextLabel = extendCustomer(currentLabel, customer);
-                if (!isCustomerUnreachable(nextLabel, customer, currentLabel, labelDump)) {
-                    labelDump.addLabel(nextLabel);
-                    queue.add(nextLabel);
+            if (stopEarly && currentLabel.node() == graph.getEnd() && currentLabel.cost() < -EPSILON) {
+                solutionsFound++;
+                if (solutionsFound >= STOP_AFTER_SOLUTIONS) {
+                    return;
                 }
             }
-            for (int nextNode : graph.getAdjacentNodes(currentLabel.node())) {
-                Label nextLabel = extendNode(currentLabel, nextNode);
-                if (!isNodeUnreachable(nextLabel, currentLabel, labelDump)) {
-                    labelDump.addLabel(nextLabel);
-                    queue.add(nextLabel);
+            if (!labelDump.dominates(currentLabel)) {
+                for (int customer : graph.getReverseNeighborhood(currentLabel.node())) {
+                    Label nextLabel = extendCustomer(currentLabel, customer);
+                    if (!isCustomerUnreachable(nextLabel, customer, currentLabel, labelDump)) {
+                        labelDump.addLabel(nextLabel);
+                        queue.add(nextLabel);
+                    }
+                }
+                for (int nextNode : graph.getAdjacentNodes(currentLabel.node())) {
+                    Label nextLabel = extendNode(currentLabel, nextNode);
+                    if (!isNodeUnreachable(nextLabel, currentLabel, labelDump)) {
+                        labelDump.addLabel(nextLabel);
+                        queue.add(nextLabel);
+                    }
                 }
             }
         }

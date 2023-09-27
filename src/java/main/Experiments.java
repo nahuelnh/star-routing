@@ -27,25 +27,13 @@ public class Experiments {
     public static void main(String[] args) {
         // TODO: possible experiments: DFJ vs MTZ, Eq vs Ge RMP
 
-        experiment1_compactModelPerformance();
-        System.out.println("------------------------------");
-
-        experiment2_ilpPricingPerformance();
-        System.out.println("------------------------------");
-
-        experiment3_pulsePricingPerformance();
-        System.out.println("------------------------------");
-
-        experiment4_labelSettingPricingPerformance();
-        System.out.println("------------------------------");
-
-        experiment5_labelSettingHeuristics();
-        System.out.println("------------------------------");
-
-        experiment6_columnGenerationHeuristics();
-        System.out.println("------------------------------");
-
-        experiment7_relaxationComparison();
+        //        experiment1_compactModelPerformance();
+        //        experiment2_ilpPricingPerformance();
+//        experiment3_pulsePricingPerformance();
+                experiment4_labelSettingPricingPerformance();
+        //        experiment5_labelSettingHeuristics();
+        //        experiment6_columnGenerationHeuristics();
+        //        experiment7_relaxationComparison();
     }
 
     private static double gapAsPercent(double value, double lowerBound) {
@@ -72,9 +60,8 @@ public class Experiments {
     }
 
     private static void experiment2_ilpPricingPerformance() {
-        Table table =
-                new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo", "#Ticks", "#Iter GC", "Sol. Óptima"),
-                        true, OUTPUT_FILE);
+        Table table = new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo", "#Ticks", "#Iter GC", "Gap"), true,
+                OUTPUT_FILE);
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration =
@@ -95,9 +82,8 @@ public class Experiments {
     }
 
     private static void experiment3_pulsePricingPerformance() {
-        Table table =
-                new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo", "#Pulses", "#Iter GC", "Sol. Óptima"),
-                        true, OUTPUT_FILE);
+        Table table = new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo", "#Pulses", "#Iter GC", "Gap"), true,
+                OUTPUT_FILE);
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration =
@@ -118,9 +104,8 @@ public class Experiments {
     }
 
     private static void experiment4_labelSettingPricingPerformance() {
-        Table table =
-                new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo", "#Labels", "#Iter GC", "Sol. Óptima"),
-                        true, OUTPUT_FILE);
+        Table table = new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo", "#Labels", "#Iter GC", "Gap"), true,
+                OUTPUT_FILE);
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration =
@@ -252,7 +237,7 @@ public class Experiments {
     }
 
     private static String getElapsedTime(Solution solution) {
-        return solution.timedOut() ? TIME_LIMIT_EXCEEDED : String.valueOf(solution.getElapsedTime().toMillis());
+        return solution.timedOut() ? TIME_LIMIT_EXCEEDED : (solution.getElapsedTime().toMillis() + "ms");
     }
 
     private static String getDeterministicTime(Solution solution) {
@@ -269,6 +254,11 @@ public class Experiments {
 
     private static String getGapBetweenSolutions(Solution solution1, Solution solution2) {
         return FORMATTER.format(gapAsPercent(solution1.getObjValue(), solution2.getObjValue())) + "%";
+    }
+
+    private static String getGapToLowerBound(Solution solution) {
+        return solution.hasLowerBound() ?
+                FORMATTER.format(gapAsPercent(solution.getObjValue(), solution.getLowerBound())) + "%" : DEFAULT_FIELD;
     }
 
     private static class SimpleTableEntry implements Table.Entry {
@@ -304,7 +294,7 @@ public class Experiments {
         public List<String> getFields() {
             return List.of(getInstanceName(instance), getNumberOfNodes(instance), getNumberOfCustomers(instance),
                     getNumberOfVehicles(instance), getElapsedTime(solution), getDeterministicTime(solution),
-                    getNumberOfIterations(columnGeneration), getObjValue(solution));
+                    getNumberOfIterations(columnGeneration), getGapToLowerBound(solution));
         }
     }
 
