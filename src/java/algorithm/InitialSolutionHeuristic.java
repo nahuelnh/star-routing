@@ -38,7 +38,6 @@ public class InitialSolutionHeuristic {
     public List<FeasiblePath> run() {
         int depot = instance.getDepot();
         List<FeasiblePath> ret = new ArrayList<>();
-
         FeasiblePath currentPath = new FeasiblePath();
         int cumulativeDemand = 0;
         int lastNode = depot;

@@ -27,6 +27,8 @@ public class Instance {
     private final List<Integer> customers;
     private final Map<Integer, Set<Integer>> neighbors;
     private final Map<Integer, Integer> demand;
+    private final List<List<Integer>> reverseNeighborhoods;
+
     private final boolean allowUnusedVehicles;
 
     public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename,
@@ -49,6 +51,8 @@ public class Instance {
 
         List<List<Integer>> neighbors = Utils.parseIntegerMatrix(getFullPath(instanceName, neighborsFilename));
         this.neighbors = createNeighborsMap(neighbors, this.customers);
+
+        this.reverseNeighborhoods = computeReverseNeighborhoods(this.numberOfNodes, this.customers, this.neighbors);
 
         checkRep();
     }
@@ -130,6 +134,20 @@ public class Instance {
         return neighbors;
     }
 
+    private static List<List<Integer>> computeReverseNeighborhoods(int numberOfNodes, List<Integer> customers,
+                                                                   Map<Integer, Set<Integer>> neighbors) {
+        List<List<Integer>> ret = new ArrayList<>();
+        for (int node = 0; node < numberOfNodes; node++) {
+            ret.add(new ArrayList<>());
+            for (int customer : customers) {
+                if (neighbors.get(customer).contains(node)) {
+                    ret.get(node).add(customer);
+                }
+            }
+        }
+        return ret;
+    }
+
     private void checkRep() {
         assert customers.size() == demand.size();
         assert customers.size() == neighbors.size();
@@ -198,5 +216,9 @@ public class Instance {
 
     public String getName() {
         return name;
+    }
+
+    public List<Integer> getReverseNeighborhood(int node) {
+        return reverseNeighborhoods.get(node);
     }
 }

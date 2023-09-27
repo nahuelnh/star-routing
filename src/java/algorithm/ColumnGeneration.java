@@ -2,11 +2,13 @@ package algorithm;
 
 import algorithm.pricing.PricingProblem;
 import commons.FeasiblePath;
+import commons.Instance;
 import commons.Solution;
 import commons.Stopwatch;
 import commons.Utils;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ColumnGeneration {
@@ -14,16 +16,18 @@ public class ColumnGeneration {
     private final RestrictedMasterProblem rmp;
     private final PricingProblem pricing;
     private final InitialSolutionHeuristic initialSolutionHeuristic;
-    private boolean applyCustomerHeuristic;
+    private final RearrangeCustomersHeuristic rearrangeCustomersHeuristic;
+    private boolean applyRearrangeCustomersHeuristic;
     private boolean applyFinishEarly;
     private int numberOfIterations;
 
-    public ColumnGeneration(RestrictedMasterProblem rmp, PricingProblem pricingProblem,
+    public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
                             InitialSolutionHeuristic initialSolutionHeuristic) {
         this.rmp = rmp;
         this.pricing = pricingProblem;
         this.initialSolutionHeuristic = initialSolutionHeuristic;
-        this.applyCustomerHeuristic = true;
+        this.rearrangeCustomersHeuristic = new RearrangeCustomersHeuristic(instance);
+        this.applyRearrangeCustomersHeuristic = false;
         this.applyFinishEarly = false;
         this.numberOfIterations = 0;
     }
@@ -52,6 +56,7 @@ public class ColumnGeneration {
     private Solution generateColumns(boolean integral, Duration timeout) {
         Stopwatch stopwatch = new Stopwatch(timeout);
         List<FeasiblePath> columnsToAdd = initialSolutionHeuristic.run();
+        List<FeasiblePath> allColumns = new ArrayList<>(columnsToAdd);
         double relaxationOptimal = Double.MAX_VALUE;
         double deterministicTime = 0.0;
         while (!columnsToAdd.isEmpty()) {
@@ -68,6 +73,13 @@ public class ColumnGeneration {
             }
             deterministicTime += pricingSolution.getDeterministicTime();
             columnsToAdd = pricingSolution.getNegativeReducedCostPaths();
+            allColumns.addAll(columnsToAdd);
+            if (applyRearrangeCustomersHeuristic) {
+                List<FeasiblePath> slightlyModifiedPaths = rearrangeCustomersHeuristic.run(allColumns);
+                columnsToAdd.addAll(slightlyModifiedPaths);
+                allColumns.addAll(slightlyModifiedPaths);
+            }
+
         }
         return buildSolution(stopwatch, relaxationOptimal, deterministicTime, integral);
     }
@@ -88,12 +100,12 @@ public class ColumnGeneration {
         return solveRelaxation(Utils.DEFAULT_TIMEOUT);
     }
 
-    public void setApplyCustomerHeuristic(boolean applyCustomerHeuristic) {
-        this.applyCustomerHeuristic = applyCustomerHeuristic;
+    public void applyRearrangeCustomersHeuristic() {
+        this.applyRearrangeCustomersHeuristic = true;
     }
 
-    public void setApplyFinishEarly(boolean applyFinishEarly) {
-        this.applyFinishEarly = applyFinishEarly;
+    public void finishEarly() {
+        this.applyFinishEarly = true;
     }
 
     public int getNumberOfIterations() {

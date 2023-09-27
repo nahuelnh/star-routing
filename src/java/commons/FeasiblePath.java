@@ -1,6 +1,7 @@
 package commons;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +11,7 @@ public class FeasiblePath {
     private final List<Integer> nodes;
     private final Set<Integer> customersServed;
     private final List<Integer> weights;
+
     public FeasiblePath(List<Integer> nodes, Set<Integer> customersServed, List<Integer> weights) {
         this.nodes = nodes;
         this.customersServed = customersServed;
@@ -22,6 +24,10 @@ public class FeasiblePath {
         this.weights = new ArrayList<>();
     }
 
+    public List<Integer> getNodes() {
+        return nodes;
+    }
+
     public Set<Integer> getCustomersServed() {
         return customersServed;
     }
@@ -31,7 +37,7 @@ public class FeasiblePath {
         weights.add(weight);
     }
 
-    public void addCustomers(Set<Integer> customers) {
+    public void addCustomers(Collection<Integer> customers) {
         customersServed.addAll(customers);
     }
 
@@ -52,4 +58,9 @@ public class FeasiblePath {
     public void removeCustomer(int customer) {
         customersServed.remove(customer);
     }
+
+    public FeasiblePath getCopyWithoutCustomers() {
+        return new FeasiblePath(List.copyOf(this.nodes), new HashSet<>(), List.copyOf(this.weights));
+    }
+
 }
