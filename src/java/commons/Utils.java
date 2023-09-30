@@ -24,7 +24,7 @@ import java.util.Set;
 public class Utils {
 
     public static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(60);
-    public static final String RESOURCES_PATH ="src/resources/";
+    public static final String RESOURCES_PATH = "src/resources/";
     private static final String DELIMITER = " ";
 
     private static List<Integer> readIntegerLine(String line) {
@@ -129,8 +129,8 @@ public class Utils {
 
     public static void printNonZero(IloCplex cplex, IloNumVar[] iloNumVar) throws IloException {
         for (IloNumVar numVar : iloNumVar) {
-            if (getBoolValue(cplex, numVar)) {
-                System.out.println(numVar);
+            if (cplex.getValue(numVar) > 0) {
+                System.out.println(numVar + " " + cplex.getValue(numVar));
             }
         }
     }

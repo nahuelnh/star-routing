@@ -19,7 +19,7 @@ import java.util.PriorityQueue;
 public class LabelSettingAlgorithm {
 
     private static final double EPSILON = 1e-6;
-    private static final int STOP_AFTER_SOLUTIONS = 5;
+    private static final int STOP_AFTER_N_SOLUTIONS = 5;
     private final Instance instance;
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
@@ -151,7 +151,7 @@ public class LabelSettingAlgorithm {
             Label currentLabel = queue.remove();
             if (stopEarly && currentLabel.node() == graph.getEnd() && currentLabel.cost() < -EPSILON) {
                 solutionsFound++;
-                if (solutionsFound >= STOP_AFTER_SOLUTIONS) {
+                if (solutionsFound >= STOP_AFTER_N_SOLUTIONS) {
                     return;
                 }
             }

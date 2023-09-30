@@ -167,13 +167,10 @@ public class Experiments {
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration1 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-            columnGeneration1.finishEarly();
-            columnGeneration1.applyRearrangeCustomersHeuristic();
             Solution solution1 = columnGeneration1.solve(TIMEOUT);
 
             ColumnGeneration columnGeneration2 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-            columnGeneration2.finishEarly();
             columnGeneration2.applyRearrangeCustomersHeuristic();
             Solution solution2 = columnGeneration2.solve(TIMEOUT);
 

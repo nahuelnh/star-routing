@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class FeasiblePath {
@@ -42,7 +43,7 @@ public class FeasiblePath {
     }
 
     public Integer getCost() {
-        return weights.stream().mapToInt(Integer::intValue).sum();
+        return weights.stream().reduce(Integer::sum).orElse(0);
     }
 
     @Override
@@ -63,4 +64,21 @@ public class FeasiblePath {
         return new FeasiblePath(List.copyOf(this.nodes), new HashSet<>(), List.copyOf(this.weights));
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        FeasiblePath that = (FeasiblePath) o;
+        return Objects.equals(nodes, that.nodes) && Objects.equals(customersServed, that.customersServed) &&
+                Objects.equals(weights, that.weights);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nodes, customersServed, weights);
+    }
 }

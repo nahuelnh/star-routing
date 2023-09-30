@@ -1,3 +1,0 @@
-vehicles 3
-depot 1
-capacity 285

@@ -33,14 +33,14 @@ public class LabelSettingPricing implements PricingProblem {
     @Override
     public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
         Instant start = Instant.now();
-        LabelSettingAlgorithm labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, true);
+        LabelSettingAlgorithm labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, false);
         paths = labelSettingAlgorithm.run(remainingTime);
         int labelsProcessed = labelSettingAlgorithm.getLabelsProcessed();
-        if (paths.isEmpty() && !solveHeuristically) {
-            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, false);
-            paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
-            labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
-        }
+//        if (paths.isEmpty() && !solveHeuristically) {
+//            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, false);
+//            paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
+//            labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
+//        }
         return new PricingSolution(getObjValue(), paths, labelsProcessed, true);
     }
 

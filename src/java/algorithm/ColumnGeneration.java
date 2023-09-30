@@ -18,7 +18,6 @@ public class ColumnGeneration {
     private final InitialSolutionHeuristic initialSolutionHeuristic;
     private final RearrangeCustomersHeuristic rearrangeCustomersHeuristic;
     private boolean applyRearrangeCustomersHeuristic;
-    private boolean applyFinishEarly;
     private int numberOfIterations;
 
     public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
@@ -28,7 +27,6 @@ public class ColumnGeneration {
         this.initialSolutionHeuristic = initialSolutionHeuristic;
         this.rearrangeCustomersHeuristic = new RearrangeCustomersHeuristic(instance);
         this.applyRearrangeCustomersHeuristic = false;
-        this.applyFinishEarly = false;
         this.numberOfIterations = 0;
     }
 
@@ -56,11 +54,12 @@ public class ColumnGeneration {
     private Solution generateColumns(boolean integral, Duration timeout) {
         Stopwatch stopwatch = new Stopwatch(timeout);
         List<FeasiblePath> columnsToAdd = initialSolutionHeuristic.run();
-        List<FeasiblePath> allColumns = new ArrayList<>(columnsToAdd);
+        List<FeasiblePath> allColumns = new ArrayList<>();
         double relaxationOptimal = Double.MAX_VALUE;
         double deterministicTime = 0.0;
-        while (!columnsToAdd.isEmpty()) {
+        while (true) {
             numberOfIterations++;
+            allColumns.addAll(columnsToAdd);
             rmp.addPaths(columnsToAdd);
             RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation(stopwatch.getRemainingTime());
             if (!rmpSolution.isFeasible() || stopwatch.timedOut()) {
@@ -73,13 +72,12 @@ public class ColumnGeneration {
             }
             deterministicTime += pricingSolution.getDeterministicTime();
             columnsToAdd = pricingSolution.getNegativeReducedCostPaths();
-            allColumns.addAll(columnsToAdd);
-            if (applyRearrangeCustomersHeuristic) {
-                List<FeasiblePath> slightlyModifiedPaths = rearrangeCustomersHeuristic.run(allColumns);
-                columnsToAdd.addAll(slightlyModifiedPaths);
-                allColumns.addAll(slightlyModifiedPaths);
+            if (columnsToAdd.isEmpty()) {
+                break;
             }
-
+            if (applyRearrangeCustomersHeuristic) {
+                columnsToAdd.addAll(rearrangeCustomersHeuristic.run(allColumns, rmpSolution));
+            }
         }
         return buildSolution(stopwatch, relaxationOptimal, deterministicTime, integral);
     }
@@ -102,10 +100,6 @@ public class ColumnGeneration {
 
     public void applyRearrangeCustomersHeuristic() {
         this.applyRearrangeCustomersHeuristic = true;
-    }
-
-    public void finishEarly() {
-        this.applyFinishEarly = true;
     }
 
     public int getNumberOfIterations() {

@@ -7,7 +7,6 @@ import commons.Stopwatch;
 import commons.Utils;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -18,7 +17,7 @@ import java.util.Map;
 
 public class PulseAlgorithm {
     private static final double EPSILON = 1e-6;
-    private static final int STEP = 1;
+    private static final int STEP = 1; // ~(Q / |S|)
     private final Instance instance;
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;

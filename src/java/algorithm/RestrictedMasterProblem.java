@@ -21,17 +21,21 @@ public interface RestrictedMasterProblem {
         private final double[] customerDuals;
         private final double vehiclesDual;
         private final boolean feasible;
+        private final double[] primalValues;
 
-        public RMPSolution(double objectiveValue, double[] customerDuals, double vehiclesDual, boolean feasible) {
+        public RMPSolution(double objectiveValue, double[] customerDuals, double vehiclesDual, double[] primalValues,
+                           boolean feasible) {
             this.objectiveValue = objectiveValue;
             this.customerDuals = customerDuals;
             this.vehiclesDual = vehiclesDual;
+            this.primalValues = primalValues;
             this.feasible = feasible;
         }
 
         public RMPSolution() {
             this.objectiveValue = 0.0;
             this.customerDuals = new double[]{};
+            this.primalValues = new double[]{};
             this.vehiclesDual = 0.0;
             this.feasible = false;
         }
@@ -50,6 +54,10 @@ public interface RestrictedMasterProblem {
 
         public boolean isFeasible() {
             return feasible;
+        }
+
+        public double getPrimalValue(int route) {
+            return primalValues[route];
         }
     }
 

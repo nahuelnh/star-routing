@@ -90,7 +90,7 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
             cplex.solve();
             boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
             RMPSolution solution = new RMPSolution(cplex.getObjValue(), cplex.getDuals(customerConstraints),
-                    cplex.getDual(vehiclesConstraint), feasible);
+                    cplex.getDual(vehiclesConstraint), cplex.getValues(theta), feasible);
             cplex.end();
             return solution;
         } catch (IloException e) {
@@ -124,10 +124,8 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
                 }
             }
             customersProcessed.addAll(path.getCustomersServed());
-            //            if(path.getCustomersServed().isEmpty()){
-            //                paths.remove(path);
-            //            }
         }
+        paths.removeIf(path -> path.getCustomersServed().isEmpty());
     }
 
     @Override

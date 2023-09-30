@@ -88,7 +88,7 @@ public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
             cplex.solve();
             boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
             RMPSolution solution = new RMPSolution(cplex.getObjValue(), cplex.getDuals(customerConstraints),
-                    cplex.getDual(vehiclesConstraint), feasible);
+                    cplex.getDual(vehiclesConstraint), cplex.getValues(theta), feasible);
             cplex.end();
             return solution;
         } catch (IloException e) {

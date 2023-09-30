@@ -48,7 +48,7 @@ public class InitialSolutionHeuristic {
                 currentPath.addNode(depot, instance.getEdgeWeight(lastNode, depot));
                 ret.add(currentPath);
                 currentPath = new FeasiblePath();
-                cumulativeDemand = 0;
+                cumulativeDemand = instance.getDemand(currentNode);
                 lastNode = depot;
                 visitedCustomers.clear();
             }
