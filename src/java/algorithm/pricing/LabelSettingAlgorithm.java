@@ -139,9 +139,8 @@ public class LabelSettingAlgorithm {
 
     private void monoDirectionalBacktracking(Stopwatch stopwatch) {
         Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
-        labelDump.addLabel(root);
-
         PriorityQueue<Label> queue = new PriorityQueue<>(64, Comparator.comparingDouble(Label::cost));
+        labelDump.addLabel(root);
         queue.add(root);
         while (!queue.isEmpty()) {
             labelsProcessed++;
@@ -238,10 +237,10 @@ public class LabelSettingAlgorithm {
         public boolean dominates(Label l) {
             for (BitSet visitedNodes : dump.get(l.node()).keySet()) {
                 if (Utils.isSubset(visitedNodes, l.visitedNodes())) {
-                    Map<BitSet, Label> map = dump.get(l.node()).get(visitedNodes);
-                    for (BitSet visitedCustomers : map.keySet()) {
+                    Map<BitSet, Label> bucket = dump.get(l.node()).get(visitedNodes);
+                    for (BitSet visitedCustomers : bucket.keySet()) {
                         if (Utils.isSubset(visitedCustomers, l.visitedCustomers())) {
-                            if (map.get(visitedCustomers).cost() <= l.cost()) {
+                            if (bucket.get(visitedCustomers).cost() + EPSILON < l.cost()) {
                                 return true;
                             }
                         }
@@ -255,10 +254,11 @@ public class LabelSettingAlgorithm {
         public List<Label> getNegativeReducedCostLabels(int node) {
             List<Label> ret = new ArrayList<>();
             for (BitSet visitedNodes : dump.get(node).keySet()) {
-                Map<BitSet, Label> map = dump.get(node).get(visitedNodes);
-                for (BitSet visitedCustomers : map.keySet()) {
-                    if (map.get(visitedCustomers).cost() < -EPSILON) {
-                        ret.add(map.get(visitedCustomers));
+                Map<BitSet, Label> bucket = dump.get(node).get(visitedNodes);
+                for (BitSet visitedCustomers : bucket.keySet()) {
+                    Label currentLabel = bucket.get(visitedCustomers);
+                    if (currentLabel.cost() < -EPSILON) {
+                        ret.add(currentLabel);
                     }
                 }
             }

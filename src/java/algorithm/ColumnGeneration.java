@@ -13,20 +13,26 @@ import java.util.List;
 
 public class ColumnGeneration {
 
+    private final Instance instance;
     private final RestrictedMasterProblem rmp;
     private final PricingProblem pricing;
     private final InitialSolutionHeuristic initialSolutionHeuristic;
     private final RearrangeCustomersHeuristic rearrangeCustomersHeuristic;
     private boolean applyRearrangeCustomersHeuristic;
     private int numberOfIterations;
+    private boolean finishEarly;
+    private double gapThreshold;
 
     public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
                             InitialSolutionHeuristic initialSolutionHeuristic) {
+        this.instance = instance;
         this.rmp = rmp;
         this.pricing = pricingProblem;
         this.initialSolutionHeuristic = initialSolutionHeuristic;
         this.rearrangeCustomersHeuristic = new RearrangeCustomersHeuristic(instance);
         this.applyRearrangeCustomersHeuristic = false;
+        this.finishEarly = false;
+        this.gapThreshold = 0;
         this.numberOfIterations = 0;
     }
 
@@ -75,11 +81,18 @@ public class ColumnGeneration {
             if (columnsToAdd.isEmpty()) {
                 break;
             }
+            if (finishEarly && computeGapToLowerBound(pricingSolution, relaxationOptimal) < gapThreshold) {
+                break;
+            }
             if (applyRearrangeCustomersHeuristic) {
                 columnsToAdd.addAll(rearrangeCustomersHeuristic.run(allColumns, rmpSolution));
             }
         }
         return buildSolution(stopwatch, relaxationOptimal, deterministicTime, integral);
+    }
+
+    private double computeGapToLowerBound(PricingProblem.PricingSolution pricingSolution, double relaxationOptimal) {
+        return Math.abs(instance.getNumberOfVehicles() * pricingSolution.getObjectiveValue() / relaxationOptimal);
     }
 
     public Solution solve(Duration timeout) {
@@ -100,6 +113,11 @@ public class ColumnGeneration {
 
     public void applyRearrangeCustomersHeuristic() {
         this.applyRearrangeCustomersHeuristic = true;
+    }
+
+    public void finishEarly(double gapThreshold) {
+        this.finishEarly = true;
+        this.gapThreshold = gapThreshold;
     }
 
     public int getNumberOfIterations() {

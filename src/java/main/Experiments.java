@@ -135,8 +135,7 @@ public class Experiments {
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
             Solution solution1 = columnGeneration1.solve(TIMEOUT);
 
-            LabelSettingPricing labelSettingPricing = new LabelSettingPricing(instance);
-            labelSettingPricing.solveHeuristically();
+            LabelSettingPricing labelSettingPricing = new LabelSettingPricing(instance, true);
             ColumnGeneration columnGeneration2 =
                     new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), labelSettingPricing,
                             new InitialSolutionHeuristic(instance));
