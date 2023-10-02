@@ -13,6 +13,8 @@ public interface PricingProblem {
 
     List<FeasiblePath> computePathsFromSolution();
 
+    void forceExactSolution();
+
     class PricingSolution {
         private final boolean feasible;
         private final double objectiveValue;

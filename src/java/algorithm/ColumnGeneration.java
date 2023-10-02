@@ -118,6 +118,7 @@ public class ColumnGeneration {
     public void finishEarly(double gapThreshold) {
         this.finishEarly = true;
         this.gapThreshold = gapThreshold;
+        this.pricing.forceExactSolution();
     }
 
     public int getNumberOfIterations() {

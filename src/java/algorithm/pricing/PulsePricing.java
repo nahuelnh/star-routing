@@ -45,4 +45,8 @@ public class PulsePricing implements PricingProblem {
     public List<FeasiblePath> computePathsFromSolution() {
         return paths;
     }
+
+    @Override
+    public void forceExactSolution() {
+    }
 }

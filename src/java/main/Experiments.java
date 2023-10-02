@@ -22,18 +22,17 @@ public class Experiments {
     private static final String DEFAULT_FIELD = "---";
     private static final String TIME_LIMIT_EXCEEDED = "TLE";
     private static final DecimalFormat FORMATTER = new DecimalFormat("0.##");
-    private static final Duration TIMEOUT = Duration.ofSeconds(60);
+    private static final Duration TIMEOUT = Duration.ofSeconds(90);
 
     public static void main(String[] args) {
-        // TODO: possible experiments: DFJ vs MTZ, Eq vs Ge RMP
-
         //        experiment1_compactModelPerformance();
         //        experiment2_ilpPricingPerformance();
         //        experiment3_pulsePricingPerformance();
-        experiment4_labelSettingPricingPerformance();
+        //        experiment4_labelSettingPricingPerformance();
         //        experiment5_labelSettingHeuristics();
-        //        experiment6_columnGenerationHeuristics();
-        //        experiment7_relaxationComparison();
+        experiment6_columnGenerationHeuristics();
+        experiment7_columnGenerationFinishEarly();
+        experiment8_relaxationComparison();
     }
 
     private static double gapAsPercent(double value, double lowerBound) {
@@ -126,7 +125,8 @@ public class Experiments {
     private static void experiment5_labelSettingHeuristics() {
         Table table = new Table(
                 List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo s/Heur.", "Sol. Óptima", "#Iter GC s/Heur.",
-                        "Tiempo c/Heur.", "Sol. Aprox.", "#Iter GC c/Heur.", "Gap"), true, OUTPUT_FILE);
+                        "Tiempo c/Heur.", "Sol. Aprox.", "#Iter GC c/Heur.", "Gap Exacto", "Cota Inferior",
+                        "Gap Aprox."), true, OUTPUT_FILE);
 
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
@@ -158,10 +158,10 @@ public class Experiments {
     }
 
     private static void experiment6_columnGenerationHeuristics() {
-
         Table table = new Table(
                 List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo s/Heur.", "Sol. Óptima", "#Iter GC s/Heur.",
-                        "Tiempo c/Heur.", "Sol. Aprox.", "#Iter GC c/Heur.", "Gap"), true, OUTPUT_FILE);
+                        "Tiempo c/Heur.", "Sol. Aprox.", "#Iter GC c/Heur.", "Gap Exacto", "Cota Inferior",
+                        "Gap Aprox."), true, OUTPUT_FILE);
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration1 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
@@ -187,7 +187,37 @@ public class Experiments {
         table.close();
     }
 
-    private static void experiment7_relaxationComparison() {
+    private static void experiment7_columnGenerationFinishEarly() {
+        Table table = new Table(
+                List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo s/Heur.", "Sol. Óptima", "#Iter GC s/Heur.",
+                        "Tiempo c/Heur.", "Sol. Aprox.", "#Iter GC c/Heur.", "Gap Exacto", "Cota Inferior",
+                        "Gap Aprox."), true, OUTPUT_FILE);
+        int unfinishedInstances = 0;
+        for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
+            ColumnGeneration columnGeneration1 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+                    new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
+            Solution solution1 = columnGeneration1.solve(TIMEOUT);
+
+            ColumnGeneration columnGeneration2 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+                    new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
+            columnGeneration2.finishEarly(0.01);
+            Solution solution2 = columnGeneration2.solve(TIMEOUT);
+
+            table.addEntry(
+                    new ComparisonTableEntry(instance, solution1, solution2, columnGeneration1, columnGeneration2));
+            if (solution1.timedOut() && solution2.timedOut()) {
+                unfinishedInstances++;
+            } else {
+                unfinishedInstances = 0;
+            }
+            if (unfinishedInstances == 3) {
+                break;
+            }
+        }
+        table.close();
+    }
+
+    private static void experiment8_relaxationComparison() {
         Table table = new Table(
                 List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo MC", "Obj. RL MC", "Tiempo GC", "Obj. RL GC", "Gap"),
                 true, OUTPUT_FILE);
@@ -244,12 +274,17 @@ public class Experiments {
     }
 
     private static String getGapBetweenSolutions(Solution solution1, Solution solution2) {
-        return FORMATTER.format(gapAsPercent(solution1.getObjValue(), solution2.getObjValue())) + "%";
+        return !solution1.timedOut() && !solution2.timedOut() ?
+                FORMATTER.format(gapAsPercent(solution1.getObjValue(), solution2.getObjValue())) + "%" : DEFAULT_FIELD;
     }
 
     private static String getGapToLowerBound(Solution solution) {
         return solution.hasLowerBound() ?
                 FORMATTER.format(gapAsPercent(solution.getObjValue(), solution.getLowerBound())) + "%" : DEFAULT_FIELD;
+    }
+
+    private static String getLowerBound(Solution solution) {
+        return solution.hasLowerBound() ? FORMATTER.format(solution.getLowerBound()) : DEFAULT_FIELD;
     }
 
     private static class SimpleTableEntry implements Table.Entry {
@@ -311,7 +346,8 @@ public class Experiments {
             return List.of(getInstanceName(instance), getNumberOfNodes(instance), getNumberOfCustomers(instance),
                     getNumberOfVehicles(instance), getElapsedTime(solution1), getObjValue(solution1),
                     getNumberOfIterations(columnGeneration1), getElapsedTime(solution2), getObjValue(solution2),
-                    getNumberOfIterations(columnGeneration2), getGapBetweenSolutions(solution1, solution2));
+                    getNumberOfIterations(columnGeneration2), getGapBetweenSolutions(solution2, solution1),
+                    getLowerBound(solution2), getGapToLowerBound(solution2));
 
         }
     }

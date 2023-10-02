@@ -16,6 +16,7 @@ public class LabelSettingPricing implements PricingProblem {
 
     private final Instance instance;
     private final boolean solveHeuristically;
+    private boolean forceExactSolution;
     private List<FeasiblePath> paths;
 
     public LabelSettingPricing(Instance instance) {
@@ -26,6 +27,7 @@ public class LabelSettingPricing implements PricingProblem {
         this.instance = instance;
         this.paths = new ArrayList<>();
         this.solveHeuristically = solveHeuristically;
+        this.forceExactSolution = false;
     }
 
     private double getObjValue(FeasiblePath path, Map<Integer, Double> dualValues, double vehiclesDual) {
@@ -45,7 +47,8 @@ public class LabelSettingPricing implements PricingProblem {
     @Override
     public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
         Instant start = Instant.now();
-        LabelSettingAlgorithm labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, true);
+        LabelSettingAlgorithm labelSettingAlgorithm =
+                new LabelSettingAlgorithm(instance, rmpSolution, !forceExactSolution);
         paths = labelSettingAlgorithm.run(remainingTime);
         int labelsProcessed = labelSettingAlgorithm.getLabelsProcessed();
         if (paths.isEmpty() && !solveHeuristically) {
@@ -53,12 +56,16 @@ public class LabelSettingPricing implements PricingProblem {
             paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
             labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
         }
-
         return new PricingSolution(getMinObjValue(rmpSolution), paths, labelsProcessed, true);
     }
 
     @Override
     public List<FeasiblePath> computePathsFromSolution() {
         return paths;
+    }
+
+    @Override
+    public void forceExactSolution() {
+        this.forceExactSolution = true;
     }
 }
