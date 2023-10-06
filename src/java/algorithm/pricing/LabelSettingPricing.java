@@ -56,6 +56,7 @@ public class LabelSettingPricing implements PricingProblem {
             paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
             labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
         }
+        forceExactSolution = false;
         return new PricingSolution(getMinObjValue(rmpSolution), paths, labelsProcessed, true);
     }
 

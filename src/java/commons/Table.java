@@ -74,7 +74,6 @@ public class Table {
 
     public void close() {
         try {
-            bufferedWriter.write("----------------------------");
             bufferedWriter.newLine();
             bufferedWriter.flush();
             bufferedWriter.close();

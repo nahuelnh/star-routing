@@ -13,6 +13,7 @@ import java.util.List;
 
 public class ColumnGeneration {
 
+    private static final int NUMBER_OF_ITERATIONS_TO_CHECK_BOUND = 5;
     private final Instance instance;
     private final RestrictedMasterProblem rmp;
     private final PricingProblem pricing;
@@ -72,6 +73,9 @@ public class ColumnGeneration {
                 break;
             }
             relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
+            if (finishEarly && numberOfIterations % NUMBER_OF_ITERATIONS_TO_CHECK_BOUND == 0) {
+                pricing.forceExactSolution();
+            }
             PricingProblem.PricingSolution pricingSolution = pricing.solve(rmpSolution, stopwatch.getRemainingTime());
             if (!pricingSolution.isFeasible() || stopwatch.timedOut()) {
                 break;
@@ -118,7 +122,6 @@ public class ColumnGeneration {
     public void finishEarly(double gapThreshold) {
         this.finishEarly = true;
         this.gapThreshold = gapThreshold;
-        this.pricing.forceExactSolution();
     }
 
     public int getNumberOfIterations() {
