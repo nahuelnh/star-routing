@@ -1,19 +1,8 @@
-Instancia;|N|;|S|;|K|;Tiempo;#Ticks
-instance_n3_s1_k1;3;1;1;141ms;0.08
-instance_n4_s2_k1;4;2;1;25ms;0.22
-instance_n5_s2_k1;5;2;1;10ms;0.29
-instance_n6_s3_k2;6;3;2;27ms;1.97
-instance_n7_s3_k2;7;3;2;43ms;5.95
-instance_n8_s3_k2;8;3;2;251ms;14.76
-instance_n9_s4_k2;9;4;2;258ms;29.49
-instance_n10_s7_k3;10;7;3;168984ms;71649.45
-instance_n10_s2_k2;10;2;2;93ms;28.31
-instance_n11_s9_k3;11;9;3;244626ms;108100.69
-instance_n11_s2_k2;11;2;2;103ms;24.47
-instance_n12_s10_k3;12;10;3;31532ms;15827.05
-instance_n12_s3_k2;12;3;2;4139ms;2064.41
-instance_n13_s3_k2;13;3;2;136ms;63.36
-instance_n13_s11_k3;13;11;3;TLE;312010.58
-instance_n14_s12_k3;14;12;3;TLE;294242.76
-instance_n14_s4_k2;14;4;2;TLE;324518.16
-
+Instancia;|N|;|S|;|K|;Tiempo (ms);#Ticks
+instance_n3_s1_k1;3;1;1;113;0.08
+instance_n4_s2_k1;4;2;1;17;0.22
+instance_n5_s2_k1;5;2;1;7;0.29
+instance_n6_s3_k2;6;3;2;60;1.97
+instance_n7_s3_k2;7;3;2;92;5.95
+instance_n8_s3_k2;8;3;2;209;14.76
+instance_n9_s4_k2;9;4;2;474;29.49

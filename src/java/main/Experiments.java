@@ -24,14 +24,14 @@ public class Experiments {
     private static final Duration TIMEOUT = Duration.ofMinutes(10);
 
     public static void main(String[] args) {
-        experiment1_compactModelPerformance();
-        experiment2_ilpPricingPerformance();
-        experiment3_pulsePricingPerformance();
-        experiment4_labelSettingPricingPerformance();
+        //        experiment1_compactModelPerformance();
+        //        experiment2_ilpPricingPerformance();
+        //        experiment3_pulsePricingPerformance();
+        //        experiment4_labelSettingPricingPerformance();
         experiment5_labelSettingHeuristics();
-        experiment6_columnGenerationHeuristics();
+        //        experiment6_columnGenerationHeuristics();
         experiment7_columnGenerationFinishEarly();
-        experiment8_relaxationComparison();
+        //        experiment8_relaxationComparison();
     }
 
     private static double gapAsPercent(double value, double lowerBound) {
@@ -43,16 +43,18 @@ public class Experiments {
                 new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo (ms)", "#Ticks"), true, "experiment1.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            CompactModel compactModel = new CompactModel(instance);
-            Solution solution = compactModel.solve(TIMEOUT);
-            table.addEntry(new SimpleTableEntry(instance, solution));
-            if (solution.timedOut()) {
-                unfinishedInstances++;
-            } else {
-                unfinishedInstances = 0;
-            }
-            if (unfinishedInstances == 3) {
-                break;
+            if (instance.getNumberOfNodes() <= 20) {
+                CompactModel compactModel = new CompactModel(instance);
+                Solution solution = compactModel.solve(TIMEOUT);
+                table.addEntry(new SimpleTableEntry(instance, solution));
+                //            if (solution.timedOut()) {
+                //                unfinishedInstances++;
+                //            } else {
+                //                unfinishedInstances = 0;
+                //            }
+                //            if (unfinishedInstances == 3) {
+                //                break;
+                //            }
             }
         }
         table.close();
@@ -133,6 +135,7 @@ public class Experiments {
 
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
+
             ColumnGeneration columnGeneration1 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
             Solution solution1 = columnGeneration1.solve(TIMEOUT);
@@ -141,9 +144,7 @@ public class Experiments {
             ColumnGeneration columnGeneration2 =
                     new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), labelSettingPricing,
                             new InitialSolutionHeuristic(instance));
-            Solution solution2 =
-                    new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), labelSettingPricing,
-                            new InitialSolutionHeuristic(instance)).solve(TIMEOUT);
+            Solution solution2 = columnGeneration2.solve(TIMEOUT);
 
             table.addEntry(
                     new ComparisonTableEntry(instance, solution1, solution2, columnGeneration1, columnGeneration2));
@@ -197,13 +198,15 @@ public class Experiments {
                         "Gap Aprox."), true, "experiment7.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            ColumnGeneration columnGeneration1 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
-                    new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
+            ColumnGeneration columnGeneration1 =
+                    new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
+                            new InitialSolutionHeuristic(instance));
             Solution solution1 = columnGeneration1.solve(TIMEOUT);
 
-            ColumnGeneration columnGeneration2 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
-                    new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-            columnGeneration2.finishEarly(0.02);
+            ColumnGeneration columnGeneration2 =
+                    new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
+                            new InitialSolutionHeuristic(instance));
+            columnGeneration2.finishEarly(0.05);
             Solution solution2 = columnGeneration2.solve(TIMEOUT);
 
             table.addEntry(

@@ -13,7 +13,7 @@ import java.util.List;
 
 public class ColumnGeneration {
 
-    private static final int NUMBER_OF_ITERATIONS_TO_CHECK_BOUND = 5;
+    private static final int NUMBER_OF_ITERATIONS_TO_CHECK_BOUND = 1;
     private final Instance instance;
     private final RestrictedMasterProblem rmp;
     private final PricingProblem pricing;

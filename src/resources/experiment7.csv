@@ -1,10 +1,7 @@
 Instancia;|N|;|S|;|K|;Tiempo (ms) s/Heur.;Sol. Óptima;#Iter GC s/Heur.;Tiempo (ms) c/Heur.;Sol. Aprox.;#Iter GC c/Heur.;Gap Exacto;Cota Inferior;Gap Aprox.
-instance_n20_s15_k5;20;15;5;5853;70;17;58841;70;14;0%;67.2;4.17%
-instance_n20_s10_k2;20;10;2;TLE;83.17;17;TLE;85;10;---;---;---
-instance_n20_s5_k2;20;5;2;229;31;7;889;31;6;0%;31;0%
-instance_n25_s15_k3;25;15;3;TLE;124.75;20;TLE;151.55;10;---;---;---
-instance_n25_s10_k2;25;10;2;60177;65;28;TLE;74;10;---;---;---
-instance_n25_s20_k5;25;20;5;TLE;127.5;24;TLE;346;5;---;---;---
-instance_n30_s20_k3;30;20;3;TLE;131;34;TLE;340;10;---;---;---
-instance_n30_s15_k2;30;15;2;TLE;93.5;27;TLE;183;10;---;---;---
+instance_n25_s15_k3;25;15;3;TLE;222;5;TLE;222;5;---;---;---
+instance_n25_s10_k2;25;10;2;200226;65;34;178031;66;19;1.54%;66;0%
+instance_n25_s20_k5;25;20;5;TLE;339.5;6;TLE;339.5;6;---;---;---
+instance_n30_s20_k3;30;20;3;TLE;358;6;TLE;358;6;---;---;---
+instance_n30_s15_k2;30;15;2;TLE;261;8;TLE;261;8;---;---;---
 
