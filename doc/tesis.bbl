@@ -1,0 +1,124 @@
+\begin{thebibliography}{10}
+
+\bibitem{christo-et-al}
+Nicos Christofides, Aristide Mingozzi, and Paolo Toth.
+\newblock Exact algorithms for the vehicle routing problem, based on spanning
+  tree and shortest path relaxations.
+\newblock {\em Mathematical programming}, 20:255--282, 1981.
+
+\bibitem{christo-mingozzi-toth}
+Nicos Christofides, Aristide Mingozzi, and Paolo Toth.
+\newblock State-space relaxation procedures for the computation of bounds to
+  routing problems.
+\newblock {\em Networks}, 11(2):145--164, 1981.
+
+\bibitem{clarke-wright}
+Geoff Clarke and John~W Wright.
+\newblock Scheduling of vehicles from a central depot to a number of delivery
+  points.
+\newblock {\em Operations research}, 12(4):568--581, 1964.
+
+\bibitem{cormen}
+Thomas~H Cormen, Charles~E Leiserson, Ronald~L Rivest, and Clifford Stein.
+\newblock {\em Introduction to algorithms}.
+\newblock MIT press, 2022.
+
+\bibitem{dantzig-ramser}
+George~B Dantzig and John~H Ramser.
+\newblock The truck dispatching problem.
+\newblock {\em Management science}, 6(1):80--91, 1959.
+
+\bibitem{dantzig-wolfe}
+George~B Dantzig and Philip Wolfe.
+\newblock Decomposition principle for linear programs.
+\newblock {\em Operations research}, 8(1):101--111, 1960.
+
+\bibitem{desrochers1992}
+Martin Desrochers, Jacques Desrosiers, and Marius Solomon.
+\newblock A new optimization algorithm for the vehicle routing problem with
+  time windows.
+\newblock {\em Operations research}, 40(2):342--354, 1992.
+
+\bibitem{desrosiers2005primer}
+Jacques Desrosiers and Marco~E L{\"u}bbecke.
+\newblock A primer in column generation.
+\newblock In {\em Column generation}, pages 1--32. Springer, 2005.
+
+\bibitem{desrosiers-soumis-desrochers}
+Jacques Desrosiers, Fran{\c{c}}ois Soumis, and Martin Desrochers.
+\newblock Routing with time windows by column generation.
+\newblock {\em Networks}, 14(4):545--565, 1984.
+
+\bibitem{feillet-et-al}
+Dominique Feillet, Pierre Dejax, Michel Gendreau, and Cyrille Gueguen.
+\newblock An exact algorithm for the elementary shortest path problem with
+  resource constraints: Application to some vehicle routing problems.
+\newblock {\em Networks: An International Journal}, 44(3):216--229, 2004.
+
+\bibitem{ford-fulkerson}
+Lester~Randolph Ford~Jr and Delbert~R Fulkerson.
+\newblock A suggested computation for maximal multi-commodity network flows.
+\newblock {\em Management Science}, 5(1):97--101, 1958.
+
+\bibitem{gilmore-gomory1}
+Paul~C Gilmore and Ralph~E Gomory.
+\newblock A linear programming approach to the cutting-stock problem.
+\newblock {\em Operations research}, 9(6):849--859, 1961.
+
+\bibitem{gilmore-gomory2}
+Paul~C Gilmore and Ralph~E Gomory.
+\newblock A linear programming approach to the cutting stock problem—part ii.
+\newblock {\em Operations research}, 11(6):863--888, 1963.
+
+\bibitem{lancia-serafini}
+Giuseppe Lancia and Paolo Serafini.
+\newblock {\em Compact extended linear programming models}.
+\newblock Springer, 2018.
+
+\bibitem{laporte}
+Gilbert Laporte, Paolo Toth, and Daniele Vigo.
+\newblock Vehicle routing: historical perspective and recent contributions.
+\newblock {\em EURO Journal on Transportation and Logistics}, 2:1--4, 2013.
+
+\bibitem{lozano-duque-medaglia}
+Leonardo Lozano, Daniel Duque, and Andr{\'e}s~L Medaglia.
+\newblock An exact algorithm for the elementary shortest path problem with
+  resource constraints.
+\newblock {\em Transportation Science}, 50(1):348--357, 2016.
+
+\bibitem{co-at-work-luebbecke}
+Marco~E L{\"u}bbecke.
+\newblock Column generation, dantzig-wolfe, branch-price-and-cut.
+\newblock In {\em CO@Work}, page 156, Berlin, Germany, 2020. Zuse Institute
+  Berlin.
+
+\bibitem{mongi-badia}
+Martín Mongi~Badía.
+\newblock Algoritmos basados en programación lineal entera para el problema de
+  ruteo de buses escolares.
+\newblock Master's thesis, Universidad de Buenos Aires, 2019.
+
+\bibitem{poggi-uchoa}
+Marcus Poggi and Eduardo Uchoa.
+\newblock Chapter 3: New exact algorithms for the capacitated vehicle routing
+  problem.
+\newblock In {\em Vehicle Routing: Problems, Methods, and Applications, Second
+  Edition}, pages 59--86. SIAM, 2014.
+
+\bibitem{righini-salani}
+Giovanni Righini and Matteo Salani.
+\newblock Symmetry helps: Bounded bi-directional dynamic programming for the
+  elementary shortest path problem with resource constraints.
+\newblock {\em Discrete Optimization}, 3(3):255--273, 2006.
+
+\bibitem{tagliavini}
+Guido Tagliavini~Ponce.
+\newblock Star routing: Entre ruteo de vehículos y vertex cover.
+\newblock Master's thesis, Universidad de Buenos Aires, 2017.
+
+\bibitem{toth-vigo}
+Paolo Toth and Daniele Vigo.
+\newblock {\em The vehicle routing problem}.
+\newblock SIAM, 2002.
+
+\end{thebibliography}

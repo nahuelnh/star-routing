@@ -1,0 +1,15 @@
+%\begin{center}
+%\large \bf \runtitulo
+%\end{center}
+%\vspace{1cm}
+\chapter*{\runtitulo}
+
+\noindent Consideremos el problema de \problem{Star Routing}, cuyo origen está en \cite{tagliavini} como un problema de caminos mínimos sobre grafos. Aquí se propone una generalización de este problema que a su vez se puede interpretar como una versión del problema de ruteo de vehículos. Dados un grafo $G = (N, E)$ y una flota de vehículos capacitados inicialmente ubicada sobre el vértice depósito $d \in N$, se quiere minimizar el costo de cubrir a un conjunto de clientes $S \subset N$ realizando únicamente circuitos cerrados sobre $G$. Lo novedoso en \problem{Star Routing} es que para cubrir a un cliente ubicado sobre un nodo $v$, no se exige que el recorrido del vehículo incluya a $v$, sino que tiene permitido pasar suficientemente cerca. En un escenario donde se modela una empresa logística que envía paquetes a domicilio utilizando una escuadrilla de vehículos, esto resulta como si cada chofer tuviera la posibilidad de estacionar en una esquina cercana a la dirección del destinatario y acercarse a entregar el envío caminando.
+
+\problem{Star Routing} es una formulación particularmente difícil de tratar del problema de ruteo de vehículos. En esta tesis damos una definición más general de este problema y exhibimos algoritmos eficientes que lo resuelven de manera exacta. En un análisis posterior se proponen heurísticas que permiten acelerar la ejecución de estos algoritmos y por lo tanto procesar instancias más grandes, pagando el costo de prescindir de soluciones óptimas y obtener a cambio soluciones que son, al menos, suficientemente buenas. El análisis de la calidad de la solución aproximada implica la definición de cotas para limitar el error y merece ser profundizado ya que dista de la trivialidad.
+
+El espacio de búsqueda de los algoritmos que resuelven Star Routing es categóricamente más grande que el de las formulaciones tradicionales de VRP y este hecho lo vuelve particularmente interesante a fines teóricos. Dado que en la literatura hasta la fecha está ampliamente aceptado que los algoritmos de generación de columnas representan una técnica eficiente para tratar problemas de ruteo de vehículos, suena razonable utilizar una formulación de estas características para Star Routing. Es usual que la dificultad del problema y por lo tanto la mayor parte de la carga computacional se concentren en el subproblema de Pricing. Es por esto que hacemos una comparación entre varias ideas de la literatura que se mostraron eficientes para resolverlo, ahora adaptadas a nuestro caso particular. Muchas de las ideas desarrolladas en esta tesis se pueden adaptar a otras formulaciones complejas de problemas de optimización combinatoria sin dificultad excesiva. 
+
+\bigskip
+
+\noindent\textbf{Palabras clave:} Programación Lineal Entera, Vehicle Routing Problem, Star Routing, Generación de Columnas, Pricing, Heurísticas, ESPPRC, Grafos.

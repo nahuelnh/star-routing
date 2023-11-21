@@ -1,0 +1,162 @@
+\documentclass[12pt,a4paper,twoside]{book}
+
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,activeacute,es-tabla]{babel}
+\usepackage[left=3cm,right=3cm,bottom=3.5cm,top=3.5cm]{geometry}
+\usepackage{kpfonts}
+\usepackage{xcolor}		
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{lipsum}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{wrapfig}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{algpseudocode}
+\usepackage{titlesec}
+\usepackage{longtable}
+\usepackage{tabularray}
+\usepackage{pdflscape}
+
+\allowdisplaybreaks
+\raggedbottom
+
+
+\let\oldReturn\Return
+\renewcommand{\Return}{\State\oldReturn}
+\usepackage{algorithm}
+\floatname{algorithm}{Algoritmo}
+\renewcommand{\algorithmicrequire}{\textbf{Entrada:}}
+\renewcommand{\algorithmicensure}{\textbf{Salida:}}
+
+\algdef{SE}[FUNCTION]{Function}{EndFunction}%
+   [2]{\textproc{ #1}(#2)}%\ifthenelse{\equal{#2}{}}{}{(#2)}}%
+   {\algorithmicend\ \algorithmicfunction}%
+\algtext*{EndFunction}
+\algtext*{EndIf}
+\algtext*{EndFor}
+\algtext*{EndWhile}
+
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+   \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+       {\raggedright\textbf{\fname@algorithm~\thealgorithm} ##2\par}%
+       \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+       \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+       \fi
+       \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+   \end{center}
+  }
+\makeatother
+
+\graphicspath{{img/}}
+\setcounter{secnumdepth}{3}
+
+\DefTblrTemplate{contfoot-text}{normal}{Continúa en la próxima página}
+\SetTblrTemplate{contfoot-text}{normal}
+\DefTblrTemplate{conthead-text}{normal}{(Continuación)}
+\SetTblrTemplate{conthead-text}{normal}
+
+
+\renewcommand{\And}{\textbf{and} }
+\newcommand{\Or}{\textbf{or} }
+\newcommand{\True}{\textbf{true} }
+\newcommand{\False}{\textbf{false} }
+\newcommand{\Break}{\textbf{break} }
+
+\newcommand{\todo}[1]{{\noindent \Large \color{red}TO-DO: \textbf{#1}}}
+\newcommand{\problem}[1]{\textbf{\textsc{#1}}}
+\newcommand{\dist}{\textnormal{dist}}
+
+
+\newtheorem{theorem}{Teorema}[chapter]
+\newtheorem{lemma}{Lema}[chapter]
+\newtheorem{corollary}{Corolario}[chapter]
+\newtheorem{claim}{Afirmaci\'on}[chapter]
+\newtheorem{proposition}{Proposici\'on}[chapter]
+\newtheorem{observation}{Observaci\'on}[chapter]
+\theoremstyle{definition}
+\newtheorem{definition}{Definici\'on}[chapter]
+\newtheorem{remark}{Observaci\'on}[chapter]
+\newtheorem{problemdef}{Problema}[chapter]
+
+%\newcommand{\theoremautorefname}{Teorema}
+\newcommand{\lemmaautorefname}{Lema}
+\newcommand{\corollaryautorefname}{Corolario}
+\newcommand{\claimautorefname}{Afirmaci\'on}
+\newcommand{\propositionautorefname}{Proposici\'on}
+\newcommand{\definitionautorefname}{Definici\'on}
+\newcommand{\remarkautorefname}{Observaci\'on}
+\newcommand{\algorithmautorefname}{Algoritmo}
+
+\newcommand{\optpr}[3]{
+%     \optpr{NAME}{INSTANCE}{QUESTION}
+\problemdef{(\problem{#1})
+
+\textbf{Input:} #2
+
+\textbf{Output:} #3
+
+}
+\vspace{4mm}
+}
+
+% Fuente estilo Concrete Mathematics.
+%\renewcommand{\rmdefault}{pplx}
+
+% Configuracion de hyperref
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue}
+
+\begin{document}
+
+%%%% CARATULA
+\def\titulo{Licenciado}
+
+\def\autor{Nahuel Nostrala Hatz}
+\def\tituloTesis{Un algoritmo basado en generación de columnas para Star Routing}
+\def\runtitulo{Un algoritmo basado en generación de columnas para Star Routing}
+\def\director{Javier Marenco}
+\def\codirector{Juan José Miranda Bront}
+\def\lugar{Buenos Aires, 2023}
+\input{caratula}
+
+%%%% ABSTRACTS, AGRADECIMIENTOS Y DEDICATORIA
+\frontmatter
+\pagestyle{empty}
+\input{abs_esp}
+
+\cleardoublepage
+\tableofcontents
+
+\mainmatter
+\pagestyle{headings}
+
+\input{introduccion}
+\cleardoublepage
+\input{algoritmos}
+\cleardoublepage
+\input{experimentacion}
+\cleardoublepage
+\input{conclusiones}
+
+%%%% BIBLIOGRAFIA
+\backmatter
+\bibliographystyle{plain}
+\bibliography{tesis}
+
+\end{document}

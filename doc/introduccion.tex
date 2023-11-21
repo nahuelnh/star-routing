@@ -1,0 +1,125 @@
+\chapter{Introducción}
+
+\problem{Star Routing Problem} es un problema de optimización combinatoria que fue introducido por Tagliavini en \cite{tagliavini}. En este trabajo vamos a generalizar esta definición, y vamos a proveer algoritmos eficientes para resolverlo en el caso general utilizando técnicas basadas en generación de columnas. Se discutirán en profundidad los algoritmos y heurísticas desarrollados, en un orden en el que tiene sentido lógico e intuitivo para el lector. La última sección es computacional y contiene un análisis sobre el rendimiento de todos los modelos. 
+
+
+\section{Motivación}
+
+Si en algún momento utilizamos alguna plataforma de e-commerce para recibir productos directamente a la puerta de nuestro hogar, es altamente probable que esta utilice un software dedicado a optimizar las rutas para realizar los envíos. Alrededor de este tema se ha escrito mucho y con el tiempo aparecieron en la industria una gran cantidad de variantes del problema. En la literatura académica se lo conoce como problema de ruteo de vehículos, de ahora en más \problem{VRP}, y no solamente se investigan algoritmos eficientes para resolverlo, sino variaciones que resuelvan casos particulares pero que puedan potencialmente simplificar significativamente el cómputo. 
+
+El problema que vamos a resolver en esta tesis surge como una variante de la versión clásica de \problem{VRP}. Fue presentado por primera vez en \cite{tagliavini} bajo el siguiente concepto: un camión de reparto sale de un depósito y realiza envíos a un conjunto de clientes ubicados en distintos puntos de la ciudad, cuando termina de atender a todos los clientes regresa al depósito. Hasta aquí no hay nada novedoso, sin embargo, también cuenta con la característica de que el camión tiene permitido no solamente parar en la dirección exacta en la que se encuentra el destino, sino también parar en alguna de las esquinas de esta cuadra, bajar del camión y realizar a pié el recorrido desde la esquina hasta la puerta.
+
+En una tesis anterior de la misma universidad \cite{mongi-badia} se resuelve un problema muy similar. Un conjunto de colectivos escolares parte de un garage y tiene que recoger alumnos que van a una escuela. Éstos pasan por paradas que están distribuidas por el mapa y los alumnos se tienen que acercar a alguna de las paradas. Además, existe una restricción de capacidad en los colectivos. El objetivo del problema es, como siempre, minimizar la distancia recorrida por los vehículos, en un grafo que es dirigido y pesado.
+
+Como última idea para motivar el problema, pensemos en la siguiente situación: una plataforma de comercio electrónico entrega productos a sus clientes en puntos de entrega fijos que están distribuidos por la ciudad. Cada uno de estos puntos de entrega tiene lockers que solamente pueden ser desbloqueados por quien realizó la compra. Los clientes tienen habilitado un conjunto de puntos de entrega a los que pueden acercarse a buscar su envío, y los repartidores ahora tienen que pasar por una cantidad de puntos en el mapa mucho menor. Hay dos motivos principales por los que esperaríamos que promover esta modalidad de envío podría ser beneficioso. Desde el punto de vista teórico, al resolver el problema de enrutamiento de vehículos en un grafo con menos vértices, se esperaría una complejidad computacional mejor. Desde el punto de vista práctico, si un repartidor tiene que atender varios domicilios situados muy cerca unos de otros pero en una ciudad en la que la movilidad no es eficiente, podría resultar conveniente atender a todos en una única visita. 
+
+Lo que tienen en común estos y más problemas es que todos van a ser abordados por los modelos y algoritmos que presentaremos en este trabajo.  
+
+
+\section{El problema de ruteo de vehículos}
+
+El problema de enrutamiento de vehículos o problema de ruteo de vehículos (\problem{VRP} por sus siglas en inglés y como suele encontrarse en la bibliografía) consiste en encontrar una ruta óptima para un vehículo o flota de vehículos que debe atender clientes distribuidos a lo largo y ancho de un mapa, sujeto a ciertas condiciones adicionales. Existe un gran número de variantes de este problema dependiendo estas restricciones suplementarias, por lo que resulta difícil dar una definición que las cubra a todas. En el caso más simple de todos, este problema es indistinguible del problema del viajante de comercio (\problem{TSP}), para el cual se han podido resolver hasta la fecha instancias de decenas de miles de nodos. Sin embargo, en las variantes más desafiantes, \problem{VRP} solo puede resolverse para grafos de 100 o 200 vértices \cite{laporte}. Por esto resulta mucho más atractivo estudiar estas variantes.
+
+Se dice que \problem{VRP} es \emph{monovehículo} si hay un único vehículo para atender a todos los clientes y caso contrario, cuando existe una flota de vehículos, lo llamamos \emph{multivehículo}. Normalmente todos los coches tienen el mismo punto de partida, que es un nodo distinguido del grafo que llamamos \emph{depósito} y también es común que cada unidad deba finalizar el recorrido en este mismo nodo. Una de las variaciones más estudiadas del problema con múltiples vehículos es el llamado problema \emph{capacitado}, de ahora en más \problem{CVRP}, en la que todos los clientes del mapa tienen una \emph{demanda} y cada uno de los móviles tiene una \emph{capacidad}, que no debe superar la suma de las demandas de los clientes que atiende. Otra formulación que es igualmente popular es el problema con \emph{ventanas de tiempo}, usualmente denotado \problem{VRPTW}, donde cada cliente solamente puede ser atendido en un rango temporal determinado, y además de determinar la ruta más corta es preciso calcular el tiempo de partida de cada unidad de la flota. También es usual agregar restricciones del siguiente estilo: el grafo podría contener múltiples depósitos, cada coche podría realizar múltiples viajes, se podría evitar atender algunos clientes para asegurar la factibilidad del problema, se podría relajar la condición de regresar al depósito una vez finalizada la ruta, y así siguiendo podemos mencionar casi una infinidad de casos.
+
+
+\section{Definición del problema}
+
+Existen múltiples maneras de representar este problema. En este trabajo presentaremos varias en un orden en el que resulta intuitivo, de la menos general a la más general. 
+
+Una forma que resulta inmediata para modelar este problema es representarlo sobre un grafo que tiene un vértice por cada esquina y una arista por cada calle que une dos esquinas. Digamos que $G = (N, E)$ es ese grafo. Algunas de las aristas de este grafo contienen clientes, a priori es irrelevante si hay uno o varios sobre la misma cuadra, llamemos a este conjunto de aristas $X$. Buscamos ahora un conjunto de vértices que sea un camino y que además pase por todas las aristas de $X$. Cuando se habla de que un camino (o según el caso, circuito) \emph{cubre} a una arista, quiere decir que el camino contiene a uno de los vértices que son extremos de esta arista. Naturalmente, un camino cubre a un conjunto de aristas si cubre a cada arista del conjunto. La primera definición del \problem{Star Routing Problem} que se conoce está en \cite{tagliavini} y es la siguiente:
+
+\optpr{Road Network Star Routing}{Sea $G = (N, E)$ un grafo y $X \subseteq E$ un subconjunto de las aristas del grafo.}{El camino de $G$ de longitud mínima que cubra a $X$.}
+
+Le asignamos el nombre \emph{road network} porque este grafo representa el mapa de una ciudad, y es de forma literal una red de carreteras, a diferencia de otras formulaciones que se exploran más adelante, donde se utilizan vértices para representar clientes.
+
+Una idea que sigue intuitivamente es la siguiente: ¿Qué pasa si en vez de tocar estrictamente una arista, pasamos suficientemente cerca de ella, digamos a distancia no mayor a $k$? Aquí se utiliza la notación $dist(x, r)$ para la distancia de un vértice $x$ a un camino $r$, que es igual a la distancia desde $x$ hasta el nodo de $r$ más cercano a $x$. Siguiendo esto, se puede extender el concepto de que un camino \emph{cubre} una arista o conjunto de aristas de la siguiente manera:
+
+\begin{definition}
+($k-$cubrimiento de vértices).
+Dados $G = (N, E)$ un grafo y $X \subseteq E$ un conjunto de aristas, se dice un camino $r$ es un $k-$cubrimiento de $X$ si para todo vértice $x \in X$ se cumple $dist(x, r) \leq k$. 
+\end{definition}
+
+Esto motiva la siguiente generalización del problema:
+
+\optpr{$k-$Star Routing}{Sea $G = (N, E)$ un grafo dirigido y completo, $X \subseteq V$ un conjunto de aristas}{El camino mínimo que sea un $k-$cubrimiento de $X$}
+
+Observamos que el problema original (\problem{Road Network Star Routing}) se da cuando $k=0$, ya que si $r$ cubre a cada arista $x \in X$, entonces siempre vale $dist(x, r) = 0$. 
+
+\begin{observation}
+\problem{Road Network Star Routing} es un caso particular de \problem{$k$-Star Routing} cuando $k=0$.
+\end{observation}
+
+En la bibliografía de \problem{VRP} realmente es inusual que el grafo sobre el que se resuelve el problema sea \emph{road network}. Esto tiene sentido por una cuestión cuantitativa: los algoritmos más eficientes de los que consta hasta la fecha resuelven, en un tiempo de ejecución razonable, instancias de \problem{VRP} en grafos de apenas por encima de 100 vértices \cite{laporte}. En la práctica, este número resultaría razonable si uno utiliza los vértices del grafo para representar clientes, no obstante, si uno intentara representar una ciudad moderna con nodos y ejes, incluso una pequeña localidad necesitaría un grafo varios órdenes de magnitud por encima de este número, lo cual vuelve a nuestros algoritmos, como mínimo, imprácticos.
+ 
+Lo que debemos hacer es a partir del grafo $G$ generar un nuevo grafo $G'$ que tiene un nodo por cada cliente y cada arista representa el camino mínimo entre los respectivos clientes. El costo de cada arista de este grafo se tiene que calcular de antemano. Una forma eficiente de calcular todos los caminos mínimos de un grafo es utilizando el algoritmo de Floyd-Warshall \cite{cormen}. Notemos que $G'$ es completo, porque contiene todos los caminos mínimos entre pares de nodos, y también es dirigido, porque el camino de $u$ a $v$ no necesariamente tiene el mismo costo que de $v$ a $u$.
+
+Este es un cambio importante en la semántica del grafo pero el problema en sí no sufre una alteración significativa:
+
+\optpr{Clique Star Routing}{Sea $G = (N, E)$ un grafo dirigido y completo, $X \subseteq N$ un conjunto de vértices}{El camino mínimo que cubra a $X$}
+
+La única diferencia mayor es que ahora pierde sentido que los nodos se ubiquen sobre aristas. Nótese que la definición de cobertura en este caso es ambigua, y puede interpretarse como un $k-$cubrimiento o como la definición original de \problem{Vertex Cover}.
+
+Dado que en el desarrollo de esta tesis vamos a profundizar en la literatura de \problem{VRP}, sería conveniente adaptar la definición de nuestro problema de estudio de manera que sus variables puedan ser expresadas como es usual en este tipo de problemas. Para esto se introduce el concepto de \emph{depósito}, que es simplemente el nodo donde comienza y finaliza el camino que se busca minimizar, que ahora se vuelve un circuito. 
+
+Para terminar de explicar el problema, vamos a agregar dos condiciones más, que son clásicas en los problemas de esta índole. En primer lugar, se dispone de un conjunto $K$ de vehículos, entonces ya no tenemos que hallar un único circuito, sino uno para cada vehículo. No es necesario utilizar la totalidad de las $|K|$ unidades, puede quedar alguno ocioso. Por otro lado, se consideran restricciones de capacidad: cada uno de estos coches de servicio tiene capacidad $Q$ fija, todos tienen la misma capacidad, y cada cliente $s$ tiene una demanda asociada $q_s$, de manera que la suma de las demandas de los clientes atendidos por un mismo vehículo bajo ningún concepto puede superar $Q$. En esencia, estamos resolviendo una instancia de \problem{CVRP} \emph{multivehículo}.
+
+Falta una última definición antes de dar la versión del problema que vamos a resolver en este trabajo. 
+
+\begin{definition}
+    ($k$-Vecindario).
+    Se denomina \emph{$k$-vecindario} de $s$, y lo notamos $\varrho_k(s)$, al conjunto de nodos de $v \in N$ tales que $\text{dist}(v, s) \leq k$.
+\end{definition}
+
+El valor de $k$ se define cuando se genera una instancia del problema, y queda fijo durante todas las etapas siguientes. Además, el lector puede advertir que la variable $k$ solamente se utiliza para definir los $k-$vecindarios de cada cliente $s \in N$, y luego es resignado al olvido. Con la finalidad de evitar confusiones de notación, en lo que sigue a este párrafo podemos definitivamente borrarlo de su lugar. Sabiendo que los $k$-vecindarios van a estar pre-computados, podemos bautizarlos con un nombre más descriptivo para quien resuelve el problema. 
+
+\begin{definition}
+    (Parada y conjunto de paradas asociadas a $s$).
+    Dado un valor de $k$ fijo, todos los vértices $p \in N$ que pertenecen al $k$-vecindario de $s \in N$ se denominan \emph{paradas} asociadas a $s$, y se define $\varrho(s)$ como el conjunto de todas las paradas asociadas a $s$. 
+\end{definition}
+
+Con esto damos la definición final del problema que se resuelve en esta tesis.
+
+\optpr{Star VRP}{Sea $G = (N, E)$ un grafo dirigido completo y cuyas aristas $(i, j) \in E$ tienen peso $w_{ij}$. Sea $d \in N$ un nodo distinguido  llamado depósito, $K$ un conjunto de vehículos y  $S \subseteq N \setminus \{d\}$ un conjunto de clientes. Cada cliente $s \in S$ tiene asociados un  conjunto de paradas $\varrho(s)$ y una demanda $q_s$. Todos los vehículos tienen capacidad $Q$.}{
+Una asignación de rutas para la flota de vehículos, de suma mínima, que cubre a todos los clientes y que cumple la restricción de capacidad.}
+\label{star-vrp}
+
+Una asignación de rutas hace referencia a un conjunto que tiene a lo sumo una ruta para cada vehículo (puede haber algunos sin utilizar). El concepto de cubrir a un cliente significa exactamente que pasa por alguno de los vértices que se encuentran en su conjunto de paradas. La restricción de capacidad se entiende en el sentido clásico de \problem{CVRP}: la suma de las demandas de los clientes atendidos por un vehículo no puede superar la capacidad del mismo. 
+
+\section{Dificultad del problema}
+\label{section:complexity}
+
+Las instancias de \problem{VRP} en sus versiones tradicionales (entre las cuales se destacan, por ejemplo, las que son con capacidades y con ventanas de tiempo) se componen de un grafo cuyos vértices son a su vez clientes distintos. Profundicemos un poco en cuanto a las diferencias con nuestra definición.
+
+Si se cumple la desigualdad triangular y el grafo es completo, vale que todos los vehículos tienen recorridos disjuntos (no repiten nodos a excepción del depósito), pero en el caso de \problem{Star VRP}, esto no es verdad porque un coche tiene permitido pasar por una parada y atender a algunos de los nodos asociados, pero no necesariamente a todos. 
+
+En un VRP tradicional, cada solución factible del problema es una lista ordenada de nodos que comienza en el depósito y termina en este mismo punto, aunque naturalmente no todos los circuitos simples son factibles porque pueden no satisfacer alguna de las restricciones adicionales. En \problem{Star VRP} una solución factible implica indicar la ruta que recorre el vehículo pero además el conjunto de clientes que fueron atendidos, ya que no queda unívocamente determinado. 
+
+Una manera posible de medir la dificultad de un problema de optimización corresponde a contar la cantidad de soluciones factibles que existen. Esto provee una cota superior de la complejidad computacional del mismo, ya que un algoritmo que las enumere puede encontrar el (algún) óptimo simplemente recorriéndolas todas. Esta medida puede resultar un tanto grosera pues generalmente uno puede encontrar propiedades particulares del problema que permitan no explorar la totalidad del espacio de búsqueda. Sin embargo, solamente por el bien del argumento, vamos a emplear este criterio para comparar estos dos problemas, porque los algoritmos que los resuelven son similares entre sí.
+
+Sea $\Omega$ el conjunto de caminos elementales del grafo que pasan por el depósito, $N$ el conjunto de nodos y $S$ el conjunto de clientes. Notemos que por definición $|S| < |N|$, aunque en algunas instancias vale $|S| \approx |N|$, mientras que $|\mathscr{P}(S)| = 2^{|S|} = \mathcal{O}(|\mathscr{P}(N)|$ y por otro lado $|\Omega| = \mathcal{O}(|N|!)$. La notación $\mathscr{P}(S)$ hace referencia al conjunto de todos los subconjuntos de $S$. En el caso tradicional el cardinal del espacio de búsqueda está acotado por el tamaño de $|\Omega|$, pero en nuestro caso está acotado por $|\Omega \times \mathscr{P}(S)|$. Esta cota es de una magnitud superior y por lo tanto lo que uno espera que corriendo algoritmos similares en ambos, se pueda procesar una cantidad mucho menor de clientes.  
+
+
+\section{Revisión de la Literatura y Estado del Arte}
+
+El problema de enrutamiento de vehículos aparece formalmente por primera vez en 1959 en un trabajo de Dantzig \& Ramser \cite{dantzig-ramser}. Estos autores formularon un \problem{VRP} con capacidades y lo resolvieron usando una heurística basada en matchings. Hasta esta época los algoritmos estudiados eran aproximados y basados en heurísticas, una mejora de este tipo muy citada en la academia para este problema fue la de Clarke \& Wright unos 5 años posterior \cite{clarke-wright}, donde además por primera vez se incluyen múltiples vehículos. Los primeros experimentos para resolverlo de manera exacta entre los que fueron ampliamente difundidos en la comunidad científica llegarían recién una década y media después con los trabajos de Christofides, Mingozzi \& Toth en \cite{christo-mingozzi-toth} y de Christofides et al. en \cite{christo-et-al}. El primero estaba basado en algoritmos de programación dinámica y el segundo ya empleaba modelos de programación lineal. A partir de esta fecha emergieron un sinnúmero de publicaciones utilizando modelos de programación matemática para resolver variaciones de \problem{VRP}, principalmente modelos de programación lineal entera, quedando claro que éste sería el principal enfoque que se daría en los años venideros. Siguiendo estas lineas, una de las aplicaciones particularmente relevante fue la de Desrosiers, Soumis \& Desrochers en 1984 \cite{desrosiers-soumis-desrochers}, donde por primera vez se incluyó un algoritmo de \emph{generación de columnas} en un modelo de programación lineal basado en Branch \& Bound para resolver explícitamente el problema de ruteo de vehículos.
+  
+Si se quiere una recopilación exhaustiva sobre los enfoques que sobrevivieron el paso del tiempo en el estudio formal de este problema, se puede ver en \cite{toth-vigo}. En este libro se hizo un trabajo muy completo para enumerar formulaciones eficientes del problema, las variantes clásicas que ganaron interés teórico, las técnicas y algoritmos que más éxito tuvieron y fundamentalmente un repaso sobre las publicaciones que marcaron algún hito en la historia del problema.
+
+El concepto de \emph{Generación de Columnas} refiere a una técnica computacional aplicada a modelos de programación lineal donde hay una cantidad muy grande de variables en comparación a la cantidad de restricciones. Bajo esta suposición, el algoritmo Simplex debería evitar enumerar todas las variables cuando en cada iteración debe decidir cuál es la próxima variable que entra en la base (o bien determinar que la solución es óptima) y por lo tanto este paso se realiza resolviendo otro problema de optimización. Consta que esta idea fue propuesta por primera vez por Ford \& Fulkerson en \cite{ford-fulkerson} para resolver el \problem{Multicommodity Flow Problem}. También Dantzig \& Wolfe desarrollan una idea para extender un programa lineal por columnas en \cite{dantzig-wolfe} utilizando un problema de optimización para la fase de pricing. Sin embargo, la primera implementación eficiente que se conoce, se utilizó para resolver el \problem{Cutting Stock Problem} por Gilmore \& Gomory, publicado en 1961 \cite{gilmore-gomory1} y continuado en 1963 \cite{gilmore-gomory2}, y dado que este algoritmo resultó mucho mejor que el existente hasta la fecha, se podría considerar éste como el punto inicial de la gran trayectoria de publicaciones sobre este tópico. 
+
+La definición de generación de columnas implica que en cada iteración del algoritmo Simplex se resuelve un subproblema de optimización para elegir una variable para entrar en la base. En el caso particular de la mayoría de los problemas que derivan de \problem{VRP}, se modela con el \emph{Problema del Camino Mínimo Elemental con Restricciones de Recursos} (\problem{ESPPRC} en inglés), que es NP-hard en su definición general aunque han sido publicados algoritmos pseudo-polinomiales para resolver su relajación \cite{christo-et-al}. Es un problema sobre un grafo donde los clientes tienen una cantidad de recursos que se consumen en cada visita. Las restricciones de recursos indican que ninguna solución factible puede superar el límite de disponibilidad de cada recurso. Además, cada solución debe ser un camino elemental (sin nodos repetidos) entre dos vértices fijos. Diferentes enfoques se han propuesto para abordar este problema eficientemente. En este trabajo nos centraremos en dos en particular. En 2006, Righini \& Salani propusieron un algoritmo de \emph{búsqueda bidireccional} de tipo meet-in-the-middle para aprovechar condiciones de simetría que se encuentran en la mayoría de los grafos de \problem{VRP} \cite{righini-salani}. En 2016 Lozano, Duque \& Medaglia desarrollaron un algoritmo \emph{basado en pulsos}, que es en esencia un backtracking clásico de búsqueda por profundidad, pero lo novedoso es que proponen reglas de pruning que son eficientes \cite{lozano-duque-medaglia}. Revisitaremos estos algoritmos más adelante.
+
+\section{Contenidos de la Tesis}
+
+Una vez presentado y bien definido el problema, se dan varios algoritmos y modelos eficientes que lo resuelven, y más adelante se discuten algunas heurísticas que pueden mejorar el rendimiento. 
+
+El primer algoritmo que se introduce es el \emph{Modelo Compacto}, un modelo de programación lineal entera que surge naturalmente cuando se decide emplear esta técnica para representar el problema, y si bien su performance no es muy buena, como se detalla en el Capítulo \ref{ch:experiments}, tiene sentido comparar este modelo con los demás para justificar el uso de generación de columnas.
+
+En contraste a este, presentamos el modelo extendido sobre el cual se aplicará un algoritmo de generación de columnas. En este caso queda determinado el subproblema de pricing que se puede modelar como un caso particular del \problem{ESPPRC}, y para eso proveemos tres algoritmos diferentes que resuelven este problema, todos inspirados en formulaciones que fueron exitosas en la literatura. 
+
+En lo que viene profundizamos sobre estos tres enfoques que resuelven el pricing. El primero consiste en un modelo de programación lineal entera al cual no le aplicamos ninguna optimización. Luego tenemos un algoritmo basado en la publicación de Lozano, Duque \& Medaglia \cite{lozano-duque-medaglia} que bautizamos como algoritmos \emph{por pulsos}, para el cual adaptamos las heurísticas de poda que se proponen y posteriormente extendemos y refinamos algunas de estas ideas. El tercer modelo corresponde a un algoritmo de labeling basado en el estudio de Righini \& Salani en \cite{righini-salani}, y en este caso se investigan estructuras de datos eficientes para la implementación como así también varias heurísticas propias. 
+
+A modo de complemento, se presentan dos heurísticas sobre el algoritmo maestro de generación de columnas que son compatibles con cualquier formulación del pricing. Por un lado introducimos el concepto de generación de columnas en dos pasos, que en cada iteración, luego de correr el pricing, intenta ''reacomodar'' las columnas ya generadas con el objetivo de reducir el número total de iteraciones. Además, revisitamos una idea utilizada en la literatura para detener la ejecución de manera temprana, provista una buena cota para el error de la función objetivo.
+
+En el último capítulo ponemos a prueba nuestros algoritmos en instancias reales, y evaluamos el rendimiento de cada uno a través de varias métricas, y también la calidad de las soluciones obtenidas, lo cual cobra sentido especialmente para algoritmos que no son exactos. Al finalizar se da una discusión sobre los resultados obtenidos.
