@@ -186,7 +186,7 @@ n35\_s15\_k2 & 35                    & 15                    & 2                
 \end{longtblr}
 
 
-Resulta alentador que este enfoque que utiliza generación de columnas resulte más eficiente que el modelo tradicional, ya que sustenta la idea de que esta técnica es razonable para lidiar con el problema. En particular una gran cantidad de instancias tienen un gap de $0.00\%$ y eso garantiza que la solución encontrada es exacta. Sin embargo debemos prestar atención a las instancias que tienen un error alto ya que en esta muestra aparecen varias. Existen técnicas que intentan mejorar este valor pero están fuera del alcance de este trabajo. 
+Resulta alentador que este enfoque que utiliza generación de columnas resulte más eficiente que el modelo tradicional, ya que sustenta la idea de que esta técnica es razonable para lidiar con el problema. En particular, una gran cantidad de instancias tiene un gap de $0.00\%$ y eso garantiza que la solución encontrada es exacta. Sin embargo debemos prestar atención a las instancias que tienen un error alto ya que en esta muestra aparecen varias. Existen técnicas que intentan mejorar este valor pero están fuera del alcance de este trabajo. 
 
 
 \subsection{Algoritmo de propagación de pulsos}
@@ -287,7 +287,7 @@ n30\_s15\_k2 & 30                    & 15                    & 2                
 \hline
 \end{longtblr}
 
-Con respecto al algoritmo anterior, se observan en esta tabla valores similares aunque discutiblemente menores en la columna que indica milisegundos. Lo mismo se puede contar sobre la calidad de la solución con respecto a la cota inferior. Sin embargo registra una performance mucho más eficiente que el modelo compacto.
+Con respecto al algoritmo anterior, se observan en esta tabla valores similares aunque sensiblemente menores en la columna que indica milisegundos. Lo mismo se puede contar sobre la calidad de la solución con respecto a la cota inferior. Sin embargo registra una performance mucho más eficiente que el modelo compacto.
 
 Una de las grandes debilidades de este algoritmo es que en la etapa en la que calcula las cotas inferiores tiene que correr un backtracking por cada entrada de la matriz, según se explicó en \ref{subsubsection:pulse-lower-bound}. De esta manera resultaría particularmente conveniente estudiar una manera de reutilizar la información de los pulsos ya propagados ya que gran parte del poder computacional se destina a calcular repetidas veces los mismos caminos, pero hasta donde sabemos no ha sido publicado un algoritmo que resuelva este inconveniente. Además, el hecho de que la propagación se haga en forma de DFS dificulta poder combinarlo con otras heurísticas ampliamente estudiadas para este problema, como ser la búsqueda bidireccional. Aún así, el hecho de utilizar cotas de compleción lo vuelve una alternativa robusta y vale la pena ser incluído en consideración.
 
@@ -399,7 +399,7 @@ Una de las fortalezas de este algoritmo es que puede ser combinado con otras heu
 
 Resulta intuitivo pensar que una instancia con mayor cantidad de nodos va a ser más dura y por lo tanto arroja tiempos más altos. En lo que respecta a esta sección vamos a explicar de manera gráfica cuáles son las tendencias que se cumplen y así entender mejor las limitaciones de los algoritmos. 
 
-En primer lugar tenemos un gráfico de puntos esparcidos (un punto representa una instancia exitosamente procesada) que exhibe la relación que existe entre el tiempo transcurrido y la cantidad de nodos. Si bien esta relación era positiva, como era de esperar, algo que se percibe mejor en un gráfico que en una tabla es que hay una buena cantidad de outliers. No podemos hablar de una línea de tendencia ya que no hicimos un análisis sobre la complejidad computacional de estos algoritmos, y por lo tanto el concepto de outliers es meramente intuitivo. Si bien sabemos que son NP-hard, sería incorrecto ajustarlos, por ejemplo, con una función exponencial o con una serie de potencias. El hecho de que existan instancias de muchos nodos pero que se procesan rápido indicaría que hay otras variables que tienen un impacto, a pesar de que una breve inspección visual muestra que la tendencia creciente es importante.    
+En primer lugar tenemos un gráfico de puntos esparcidos (un punto representa una instancia exitosamente procesada) que exhibe la relación que existe entre el tiempo transcurrido y la cantidad de nodos. Si bien esta relación era positiva, como era de esperar, algo que se percibe mejor en un gráfico que en una tabla es que hay una buena cantidad de outliers. No podemos hablar de una línea de tendencia ya que no hicimos un análisis sobre la complejidad computacional de estos algoritmos, y por lo tanto el concepto de outliers es meramente intuitivo. Sería incorrecto ajustarlos, por ejemplo, con una función exponencial o con una serie de potencias. El hecho de que existan instancias de muchos nodos pero que se procesan rápido indicaría que hay otras variables que tienen un impacto, a pesar de que una breve inspección visual muestra que la tendencia creciente es importante.    
 
 \begin{figure}[H]
      \centering
@@ -468,7 +468,7 @@ El próximo gráfico es muy similar pero ahora muestra la relación del tiempo c
 
 Un algoritmo de generación de columnas sin estar acompañado de Branch \& Price es una heurística en sí misma. Sin embargo, en esta sección nos referimos exclusivamente a heurísticas para resolver la relajación lineal, en particular que nos proveen una solución aproximada. 
 
-El mecanismo que vamos a utilizar va a ser en todos los casos el mismo: es conveniente correr ambos algoritmos a comparar, en cada caso hay uno exacto y uno aproximado, y así poder establecer una métrica de qué tan lejos están las soluciones reportadas. Sin embargo, es de esperar que algunas instancias grandes solamente puedan ser optimizadas con el algoritmo más veloz, y por lo tanto para establecer una métrica de calidad de solución nos vamos a tener que conformar con la que veníamos utilizando hasta el momento, es decir, el gap contra el óptimo de la relajación lineal. Sin embargo, vale aclarar que esta cota tiene el defecto de que este último valor se resolvió de manera aproximada. Es por eso que existen dos columnas, una que mide el gap contra la solución exacta y otra para cuando no se puede establecer lo primero. Para no incurrir en redundancias, el resto de las columnas son análogas a los experimentos anteriores.
+El mecanismo que vamos a utilizar va a ser en todos los casos el mismo: es conveniente correr ambos algoritmos a comparar, en cada caso hay uno exacto y uno aproximado, y así poder establecer una métrica de qué tan lejos están las soluciones reportadas. Sin embargo, es de esperar que algunas instancias grandes solamente puedan ser optimizadas con el algoritmo más veloz, y por lo tanto para establecer una métrica de calidad de solución nos vamos a tener que conformar con la que veníamos utilizando hasta el momento, es decir, el gap contra el óptimo de la relajación lineal. Sin embargo, vale aclarar que esta cota tiene el defecto de que este último valor se resolvió de manera aproximada. Es por eso que existen dos columnas, una que mide el gap contra la solución exacta y otra para cuando no se puede establecer lo primero. Para no incurrir en redundancias, las columnas restantes son análogas a los experimentos anteriores.
 
 \subsection{Heurísticas de Label Setting}
 \label{section:experiments-label-setting-heur}
@@ -564,7 +564,7 @@ n80\_s40\_k5 & 80                    & 40                    & 5                
 \end{longtblr}
 \end{landscape}
 
-Es alentador ver que hay muchas columnas con $\Delta = 0\%$, y eso significa que la solución aproximada coincide con la exacta, por lo tanto, la heurística se dice que ``adivinó'' el verdadero valor del óptimo de la función objetivo. Lamentablemente no podemos extrapolar este resultado a instancias relativamente grandes porque el algoritmo exacto no termina la ejecución y entonces tampoco podemos calcular la diferencia. 
+Es alentador ver que hay muchas columnas con $\Delta Fobj = 0.00\%$; eso significa que la solución aproximada coincide con la exacta, por lo tanto, la heurística se dice que ``adivinó'' el verdadero valor del óptimo de la función objetivo. Lamentablemente no podemos extrapolar este resultado a instancias relativamente grandes porque el algoritmo exacto no termina la ejecución y por consiguiente tampoco podemos calcular la diferencia. 
 
 Es claro que este es el algoritmo más rápido de los analizados, dado que permite procesar instancias mucho más grandes que los de secciones anteriores. Es digno de discusión si vale la pena sacrificar la garantía de exactitud (al menos para resolver la relajación lineal) para tener un gran incremento en rendimiento, incluso viendo que la pérdida de calidad de la solución no es muy grande en los casos que se pudo computar. Naturalmente no hay una respuesta universal y dependerá del caso de uso.
 
@@ -576,7 +576,7 @@ Las técnicas que se describen en \ref{section:2-step-cg} sirven para reducir ma
 
 Con esto en mente, tiene sentido que la comparación de este experimento sea en base a un algoritmo aproximado, porque el efecto se aprecia mejor cuando hay muchas iteraciones. Utilizamos el pricing aproximado de Label Setting ya que permite correr instancias grandes y por lo tanto ver si esta nueva heurística es eficiente cuando se amortiza el costo. Es de esperar que en instancias chicas el overhead de aplicar este procedimiento sea suficiente para dar números más elevados, por lo tanto vale la pena solamente considerarlo a partir de cierto número de clientes. 
 
-Cuando se mide el gap exacto, es decir, la diferencia porcentual entre la solución con y sin heurística respectivamente, el valor puede ser positivo o negativo, ya que se mide el incremento porcentual del valor con heurística con respecto al que no la aplica. Es decir, si el valor con heurística es menor al que no tiene heurística, este número será negativo. Como ambos entregan soluciones factibles, el que de el menor valor estará más cerca del óptimo, y por lo tanto, en caso de que este algoritmo sea útil y 2-Step Column Generation mejore la solución, esperaríamos ver muchas columnas con valores negativos.
+Cuando se mide el gap exacto, es decir, la diferencia porcentual entre la solución con y sin heurística respectivamente, el valor puede ser positivo o negativo, ya que se mide el incremento porcentual del valor con heurística con respecto al que no la aplica. Es decir, si el valor con heurística es menor al que no tiene heurística, este número será negativo. Como ambos entregan soluciones factibles, el que dé el menor valor estará más cerca del óptimo, y por lo tanto, en caso de que este algoritmo sea útil y 2-Step Column Generation mejore la solución, esperaríamos ver muchas columnas con valores negativos.
 
 En la tabla que sigue medimos el tiempo en milisegundos tomado por los algoritmos con y sin esta mejora (en la columna ``T''), así como también la cantidad de iteraciones. Al igual que en el experimento anterior, se indican la diferencia entre los valores de la función objetivo entre dichas alternativas y el gap con respecto a la relajación lineal. 
 
@@ -674,6 +674,9 @@ Un último experimento nos permite verificar el impacto de la heurística de ter
 
 En este caso, el valor que se eligió de para limitar el error es de $5\%$, a partir del cual se habilita la terminación temprana. Es discutible si este número es alto o no para instancias prácticas, pero a fines puramente teóricos queríamos tener un valor que evidencie sus propiedades.
 
+Realmente solo tiene sentido comparar las entradas donde la cantidad de iteraciones se ve reducida, ya que en los otros casos la diferencia de tiempo se explica meramente en base a pequeñas diferencias usuales del entorno, y no por cuestiones inherentes al algoritmo. 
+
+La fortaleza de esta heurística es que la degradación de la solución ya está acotada de antemano, pero la ganancia de tiempo no lo está. Idealmente, en instancias más grandes donde haya muchas iteraciones, se podría ver el verdadero efecto.
 
 \begin{landscape}
 \begin{longtblr}[
@@ -732,6 +735,4 @@ n30\_s15\_k2 & 30                    & 15                    & 2                
 \end{longtblr}
 \end{landscape}
  
-Realmente solo tiene sentido comparar las entradas donde la cantidad de iteraciones se ve reducida, ya que en los otros casos la diferencia de tiempo se explica meramente en base a pequeñas diferencias usuales del entorno, y no por cuestiones inherentes al algoritmo. 
 
-La fortaleza de esta heurística es que la degradación de la solución ya está acotada de antemano, pero la ganancia de tiempo no lo está. Necesitamos instancias más grandes donde haya muchas iteraciones para que podamos ver el verdadero efecto. 

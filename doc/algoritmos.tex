@@ -14,7 +14,7 @@ Si bien fue explicado en detalle en \ref{star-vrp}, por motivos de practicidad a
     \item Un nodo distinguido llamado \emph{depósito} y notado $d$, tal que $d \in N$ pero $d \notin S$.
     \item Un valor de \emph{capacidad}, denominada $Q \in \mathbb{Z}^{+}$, que es igual para todos los vehículos.
     \item  $q_s \in \mathbb{Z}^{+}$ la \emph{demanda} asociada al cliente $s$.
-    \item Un \emph{conjunto de paradas} $\varrho(s) \subset N$ para cada cliente $s$, que es el conjunto de vértices desde las cuales se lo puede atender. Vamos a utilizar como convención que $s \in \varrho(s)$.
+    \item Un \emph{conjunto de paradas} $\varrho(s) \subseteq N$ para cada cliente $s$, que es el conjunto de vértices desde las cuales se lo puede atender. Vamos a utilizar como convención que $s \in \varrho(s)$.
     \item El peso de cada arco $(i, j) \in E$ se nota $w_{ij}$.
 \end{itemize}
 
@@ -25,7 +25,7 @@ El objetivo del problema es obtener un conjunto de rutas de suma mínima que cum
     \item Las rutas son circuitos en el grafo que pasan por el depósito $d$.
     \item Hay a lo sumo tantas rutas como vehículos. Se asigna una ruta a un vehículo (puede haber vehículos sin asignar).
     \item Todos los clientes son atendidos por exactamente un vehículo. Para atender a un cliente $s$, un vehículo debe pasar por alguno de los nodos de $\varrho(s)$.
-    \item La suma de las demandas de los clientes atendidos por un vehículo no exceden su capacidad.
+    \item La suma de las demandas de los clientes atendidos por un vehículo no excede su capacidad.
 \end{itemize}
 
 Notemos que se prohíbe que el depósito contenga un cliente, la razón fundamental de esto no es más que practicidad, más adelante queremos evitar que una ruta vacía sea válida, y porque realmente, en términos del lenguaje del problema, no restringe casos interesantes. Esto prueba que $|S| \leq |N|-1$. También utilizamos la convención de que todos los clientes son a su vez paradas (esto es, $s \in \varrho(s)$). 
@@ -36,11 +36,9 @@ Ya estamos en condiciones de pasar a la parte más interesante de la tesis, dond
 \section{Modelo Compacto}
 \label{section:compacto}
 
-El siguiente modelo tiene una cantidad polinomial de variables y restricciones. A los modelos que cumplen esta condición a menudo se los conoce como \emph{modelos compactos} \cite[p.3]{lancia-serafini}. 
+El siguiente modelo presenta una cantidad polinomial de variables y restricciones. A los modelos que cumplen esta condición a menudo se los conoce como \emph{modelos compactos} \cite[p.3]{lancia-serafini}.
 
 El modelo intenta encontrar un conjunto de circuitos dirigidos que sean subgrafos de $G$ y que pasen por el depósito. Cada uno de ellos tiene asociado un conjunto de clientes que debe atender y la demanda total de este conjunto no puede superar la capacidad $Q$. Para entender la formulación hay que notar el siguiente hecho: en cualquier grafo dirigido, un circuito elemental es un subgrafo fuertemente conexo cuyos vértices tienen todos grado de entrada $d_{in}=1$ y grado de salida $d_{out}=1$. Que el grafo sea fuertemente conexo es equivalente a que no contenga \emph{subtours}, que son circuitos del subgrafo que no pasan por $d$. Si $G$ es un grafo completo, podemos utilizar una serie de restricciones lineales para romper estos subtours, que se conocen como \emph{condiciones de Miller-Tucker-Zemlin (MTZ)}.  
-
-Función Objetivo:
 
 \begin{equation}
     \min \sum_{i \in N} \sum_{j \in N} \sum_{k \in K} w_{ij} x_{ijk}
@@ -69,17 +67,16 @@ En esta sección definimos el modelo extendido sobre el cual aplicaremos un algo
 
 \begin{definition}
     (Ruta factible de $G$).
-    Llamamos \emph{ruta} de $G$ a un par $r = (C_r, \tilde{S}_r)$ donde $C_r$ es un camino conexo elemental (no repite vértices) de $G$ y $\tilde{S}_r \subseteq S$ un conjunto de clientes. La ruta $r$ se llama \emph{factible} si $C_r$ es un circuito cerrado que pasa por del depósito $d$ y tanto $C_r$ como $\tilde{S}_r$ cumplen las restricciones del problema listadas en [\ref{list:restrictions}].
+    Llamamos \emph{ruta} de $G$ a un par $r = (C_r, \tilde{S}_r)$ donde $C_r$ es un camino conexo elemental (no repite vértices) de $G$ y $\tilde{S}_r \subseteq S$ un conjunto de clientes. La ruta $r$ se llama \emph{factible} si $C_r$ es un circuito cerrado que pasa por del depósito $d$ y tanto $C_r$ como $\tilde{S}_r$ cumplen las restricciones del problema.
 \end{definition}
 
 Tenemos que introducir algunos parámetros que se usarán a continuación. $\Omega$ es el conjunto que contiene a todas las rutas factibles. Si $r = (C_r, \tilde{S}_r) \in \Omega$, el parámetro $a_{sr} \in \{0, 1\}$ indica si $s \in \tilde{S}_r$, y el parámetro $c_r$ es el costo del circuito $C_r$. 
 
-El siguiente modelo de programación lineal entera es exacto:
+En la siguiente subsección damos un modelo de programación lineal entera que representa el problema que queremos resolver.
 
 \subsection{Modelo de Set Partitioning}
 \label{section:set-partitioning}
 
-Función objetivo:
 \begin{equation}
     \min \sum_{r \in \Omega} c_r  \theta_r
 \end{equation}
@@ -91,7 +88,7 @@ Sujeto a:
 \theta_r \in \{0, 1\} \qquad & \forall{r \in \Omega}
 \end{align}
 
-Las variables binarias $\theta_r$ representan que la ruta $r \in \Omega$ es parte de la solución óptima. Por cómo definimos $\Omega$, solamente es necesario tomar a lo sumo $|K|$ rutas de este conjunto y asignar una a cada vehículo (pueden quedar vehículos sin utilizar). 
+Las variables binarias $\theta_r$ representan que la ruta $r \in \Omega$ es parte de la solución óptima. Por como definimos $\Omega$, solamente es necesario tomar a lo sumo $|K|$ rutas de este conjunto y asignar una a cada vehículo (pueden quedar vehículos sin utilizar). 
 
 Cada cliente $s$ tiene que ser atendido por un único vehículo, o sea que las rutas deben ser disjuntas en cuanto a los clientes que atienden (no necesariamente en cuanto a los nodos que visitan), y eso se garantiza en \ref{eq:master1}. Finalmente \ref{eq:master2} fuerza que no se elijan más rutas que vehículos disponibles.
 
@@ -130,19 +127,22 @@ El problema aún persiste porque calcular \emph{todos} los costos reducidos expl
             \Return Problema infactible
         \EndIf
         \State $\tilde{\Omega} \gets \Theta$
-        \While{$\bar{c}^{*}_r < 0$}
+        \While{ \textbf{true} }
             \State Resolver RMP con $\tilde{\Omega}$
             \State Sea $\Theta^{*}$ el óptimo del RMP.
             \State Obtener $\lambda$ el vector de variables duales.
             \State Resolver subproblema de pricing.
             \State Sean $\bar{c}^{*}_r$ y $\theta_r$ el menor costo reducido y la variable primal asociada. 
+            \If{$\bar{c}^{*}_r \geq 0$}
+            	\Break
+            \EndIf
             \State $\tilde{\Omega} \gets \tilde{\Omega} \cup \{\theta_r\}$
         \EndWhile
         \Return $\Theta^{*}$
     \end{algorithmic}
 \end{algorithm}
 
-El Algoritmo \ref{al:column-generation} requiere que comencemos resolviendo el \problem{RMP} con un $\tilde{\Omega}$ válido, para luego calcular las variables duales que necesita el problema de pricing. No existe hasta donde sabemos una manera mecánica de elegir este conjunto. Para que el problema restringido resulte al menos factible, se precisa una heurística que provea una solución factible inicial. No es crítico en este paso que la solución esté demasiado cerca del óptimo, por lo que se priorizarán heurísticas rápidas. Proveemos una heurística en la Sección \ref{section:initial-solution-heuristic}, sin embargo, esta podría reportar que no existen soluciones factibles cuando sí las hay, y en ese caso en \ref{feasibility-problem} damos un algoritmo infalible aunque mucho más lento.
+El Algoritmo \ref{al:column-generation} requiere que comencemos resolviendo el \problem{RMP} con un $\tilde{\Omega}$ válido, para luego calcular las variables duales que necesita el problema de pricing. No existe hasta donde sabemos una manera mecánica de elegir este conjunto. Para que el problema restringido resulte al menos factible, se precisa una heurística que provea una solución factible inicial. No es crítico en este paso que la solución esté demasiado cerca del óptimo, por lo que se priorizarán heurísticas rápidas. Proveemos una heurística en la Sección \ref{section:initial-solution-heuristic}, sin embargo, ésta podría reportar que no existen soluciones factibles cuando sí las hay, y en ese caso en \ref{feasibility-problem} damos un algoritmo infalible aunque mucho más lento.
 
 Desrochers et al. discuten en \cite{desrochers1992} si conviene modificar levemente el \problem{RMP} para aliviar la fase de pricing. La igualdad en \ref{eq:rmp1} se reemplaza por una desigualdad que no descarta soluciones factibles pero que resulta computacionalmente menos costosa:
 
@@ -160,14 +160,15 @@ En el ejemplo de \cite{desrochers1992} la ganancia es clave: el problema de pric
 \subsection{Problema dual}
 
 Será útil calcular el problema dual de la relajación lineal del Restricted Master Problem. Esto nos servirá más adelante para calcular los costos reducidos de las variables del RMP. 
-Dado que este tiene $|S| + 1$ desigualdades, en el dual hay $|S| + 1$ variables, que las llamaremos $\lambda_s$ para $s \in \{0, \dots, |S|\}$. Utilizamos la siguiente convención: $\lambda_0$ es la variable dual asociada a \ref{eq:master2} y $\lambda_{s}$ es la variable asociada al $s-$ésimo cliente de $S$ de \ref{eq:master1}.
+Dado que éste tiene $|S| + 1$ desigualdades, en el dual hay $|S| + 1$ variables, que las llamaremos $\lambda_s$ para $s \in \{0, \dots, |S|\}$. Utilizamos la siguiente convención: $\lambda_0$ es la variable dual asociada a \ref{eq:master2} y $\lambda_{s}$ es la variable asociada al $s-$ésimo cliente de $S$ de \ref{eq:master1}.
 \\
 
-Función objetivo:
 \begin{equation}
     \max \sum_{s \in S} \lambda_s + |K| \lambda_0 
 \end{equation}
+
 Sujeto a:
+
 \begin{align}
     \lambda_0 + \sum_{s \in S} {a_{sr} \lambda_s} \leq c_r \qquad & \forall {r \in \Omega} \\
 \lambda_s \in \mathbb{R} \quad \text{libre}
@@ -269,7 +270,7 @@ La variable $\omega_{sk}$ vale $1$ si el $k-$ésimo subconjunto contiene al clie
 
 La restricción en \ref{eq:feasibility1} indica que la demanda de los clientes atendidos por un vehículo no pueden superar la capacidad del mismo y la ecuación \ref{eq:feasibility2} prohíbe que un cliente sea atendido por más de un vehículo. 
 
-El problema de asignar $|S|$ objetos con pesos variables en $|K|$ cajas aparece en muchos ámbitos de la investigación operativa. Por ejemplo, se puede pensar en términos del \problem{Cutting Stock Problem}: si tenemos $|K|$ rollos para cortar $|S|$ piezas, cada una de ellas de tamaño $q_s$, entonces ambos problemas son equivalentes. Esto nos hace sospechar que no existen algoritmos eficientes que resuelvan el problema de factibilidad, dado que \problem{Cutting Stock Problem} es NP-Hard.
+El problema de asignar $|S|$ elementos distintos en $|K|$ conjuntos de suma acotada aparece en muchos ámbitos de la investigación operativa. Por ejemplo, se puede pensar en términos del \problem{Bin Packing Problem} en su versión de decisión: si tenemos $|K|$ cajas de capacidad fija $Q$ en las cuales deben ordenarse $|S|$ elementos, cada uno de ellos de tamaño $q_s$, entonces ambos problemas son equivalentes. Esto nos hace sospechar que no existen algoritmos eficientes que resuelvan de manera exacta el problema de factibilidad, dado que el \problem{Bin Packing Problem} de decisión es NP-Completo. 
 
 El Algoritmo \ref{al:column-generation} requiere que siempre exista una solución factible inicial, entonces si la heurística de la Sección \ref{section:initial-solution-heuristic} falla (no encuentra ninguna solución factible), nos vemos obligados a encontrarla corriendo el modelo que acabamos de describir, lo cual no sería deseable por razones relacionadas a su eficiencia computacional.
 
@@ -295,7 +296,7 @@ Ahora estamos intentando encontrar una ruta $r \notin \tilde{\Omega}$, cuyo cost
     \end{equation}
 \end{definition}
 
-La semántica del problema de pricing ahora se transforma en querer encontrar una ruta factible sobre $G$ cuyo precio sea menor a $0$. 
+La semántica del problema de pricing ahora se transforma en querer encontrar una ruta factible sobre $G$ cuyo precio sea menor a $0$. Estamos en condiciones de dar una definición formal del problema que vamos a resolver. 
 
 \optpr{Star ESPPRC}{
 Un grafo $G=(N, E)$, el depósito $d$ y las variables duales $\{\lambda^*_0, \dots, \lambda^*_{|S|}\}$
@@ -304,26 +305,38 @@ La ruta factible de $G$ de menor precio.
 }
 \label{star-pricing}
 
-Resolver el problema de pricing a optimalidad podría resultar demasiado costoso y en la práctica a menudo es innecesario. En rigor, tampoco sería estrictamente necesario hallar \emph{el menor} costo reducido en cada iteración del loop de generación de columnas, sino que basta con encontrar \emph{alguno(s)} que sean negativos, y agregar esas columnas a la base. Cuando se resuelve el \problem{RMP} a optimalidad, recién en la última iteración precisamos demostrar que ya no existen costos reducidos negativos. Por esto es que en esta tesis presentaremos algunos algoritmos que resuelven \problem{Star ESPPRC} de manera exacta y otros que lo resuelven de manera aproximada pero mucho más eficientemente.
+Esto indica que puede ser razonable pensar \problem{Star ESPPRC} como un problema de caminos mínimos sobre grafos. La sigla en cuestión hace referencia al problema del camino mínimo elemental con restricciones de recursos (en inglés: Elementary Shortest Path Problem with Resource Constraints). Se discute en profundidad este problema y su relación con \problem{Star Routing} en \ref{section:espprc}.
+
+
+\section{Algoritmos de Pricing}
+\label{section:pricing-algorithms}
+
+En esta sección presentamos algunos algoritmos que resuelven \problem{Star ESPPRC} de manera exacta y otros que lo resuelven de manera aproximada pero mucho más eficientemente. Como el subproblema de pricing se transformó en un problema de caminos mínimos, antes de proceder a explicar cómo resolverlo es necesario entender cómo se modela el grafo y definir algunos parámetros.
 
 
 \subsection{ESPPRC}
+\label{section:espprc}
 
-El subproblema de pricing en una gran cantidad de variantes de \problem{VRP} fue modelado por muchos autores como el problema del camino mínimo elemental con restricciones de recursos (\problem{ESPPRC} de ahora en más). Vamos a tomar la definición que dan Poggi \& Uchoa en \cite{poggi-uchoa}. 
+El subproblema de pricing en una gran cantidad de variantes de \problem{VRP} es modelado por muchos autores como el problema del camino mínimo elemental con restricciones de recursos (\problem{ESPPRC} de ahora en más). Vamos a tomar la definición que dan Poggi \& Uchoa en \cite{poggi-uchoa}. 
 
 El problema se define sobre un grafo dirigido $G = (N \cup \{n+1\}, E)$, donde el vértice $n+1$ es una copia del depósito y $E$ es el conjunto completo de arcos quitando las aristas salientes del vértice $n+1$ y las aristas entrantes al depósito. En otras palabras, el depósito actúa como nodo fuente, que llamaremos $v_s$, y el nuevo nodo $n+1$ es un sumidero, a partir de ahora $v_e$. Por cada arista $(i, j) \in E$, existe un costo $w_{ij}$, no necesariamente positivo. Se define un conjunto $H$ de \emph{recursos}. Cada recurso $h \in H$ tiene una disponibilidad $C_h \in \mathbb{Z}^{+}$ y por cada arco $(i, j) \in E$ existe una cantidad entera $d_{ij}^{h}$ llamada \emph{consumo} del recurso $h$. El problema \problem{ESPPRC} tiene el objetivo de hallar el camino mínimo elemental que comience en $v_s$ y termine en $v_e$ tal que por cada recurso $h \in H$ el consumo total $T_h$ no supere la capacidad $C_h$. 
 
-Para problemas de camino mínimo es usual que para los nodos fuente y sumidero se empleen $v_s$ y $v_e$, que en el caso del depósito difiere de la notación de las secciones anteriores (antes lo llamábamos $d$), por lo tanto, en esta subsección y en las que vemos cómo resolver \problem{ESPPRC} utilizando algoritmos sobre grafos (Secciones \ref{section:pricing-pulses} y \ref{section:pricing-labeling}), el lector puede esperar que utilicemos estos nuevos nombres.
+Una aclaración importante es que para problemas de camino mínimo es usual que para los nodos fuente y sumidero se empleen los nombres $v_s$ y $v_e$, que en el caso del depósito difiere de la notación de las secciones anteriores (antes lo llamábamos $d$), por lo tanto, en esta subsección y en las que vemos cómo resolver \problem{ESPPRC} utilizando algoritmos sobre grafos (Secciones \ref{section:pricing-pulses} y \ref{section:pricing-labeling}), el lector puede esperar que utilicemos estos nuevos nombres.
 
-Veamos que podemos expresar el problema de pricing de \problem{Star VRP} detallado en \ref{star-pricing} en términos de un \problem{ESPPRC} levemente modificado. La principal diferencia es que en nuestro modelo, el consumo de recursos no se efectúa al recorrer una arista sino o bien al atravesar un vértice, o bien al atender a un cliente. Existe un único recurso, $1$, tal que $C_1 = Q$ y $d_{s}^{1} = q_s$. Además, cada vez que se decide atender un cliente $s$ el precio acumulado disminuye en una cantidad igual a $\lambda^{*}_s$.
+Ahora, veamos que podemos expresar el problema de pricing de \problem{Star VRP} detallado en \ref{star-pricing} en términos de un \problem{ESPPRC} levemente modificado. La principal diferencia es que en nuestro modelo, el consumo de recursos no se efectúa al recorrer una arista sino o bien al atravesar un vértice, o bien al atender a un cliente. Existe un único recurso, $1$, tal que $C_1 = Q$ y $d_{s}^{1} = q_s$. Además, cada vez que se decide atender un cliente $s$ el precio acumulado disminuye en una cantidad igual a $\lambda^{*}_s$.
 
+Siguiendo la idea de que cada cliente $s$ tiene asociado un conjunto de paradas $\varrho(s) \subseteq N$, ahora sería útil definir el concepto inverso, o sea, el conjunto de clientes asociados a una parada en un vértice $v$.
+
+\begin{definition}
+    (Conjunto de clientes asociados a una parada).
+    Se dice que el cliente $s \in S$ está asociado a la parada $v \in N$ si $v$ es una parada que puede atender a $s$, esto es, si $v \in \varrho(s)$. El conjunto de todos los clientes asociados a $v$ se denota $\varrho^{-1}(v) \subseteq S$.
+\end{definition}
 
 \subsection{Modelo de Pricing usando PLE}
 \label{section:pricing-ple}
 
 El enfoque estándar para resolver este problema es crear un modelo de programación lineal entera que resulta ser muy similar al modelo compacto de la Sección \ref{section:compacto}. Se pueden pensar las restricciones de este modelo como el equivalente \emph{monovehículo} del modelo compacto, aunque la función objetivo difiere. 
 
-Función Objetivo:
 \begin{equation}
 \min \sum_{(i, j) \in E} {x_{ij} w_{ij}} - \sum_{s \in S} {y_{s} \lambda^*_s - \lambda^*_0}
 \end{equation}
@@ -354,13 +367,6 @@ Discutimos en la Sección \ref{section:rmp} que la fortaleza de los algoritmos d
 Vamos a utilizar la analogía de un \emph{pulso} se propaga a través de un grafo. La \emph{propagación} comienza en el nodo inicial a todos sus vecinos, que a su vez pueden o bien extenderlo recursivamente, hasta llegar al nodo final, o bien descartarlo si alguna de las restricciones de recursos es violada. El pulso de menor precio que llega hasta el nodo destino sería la solución al problema. Notemos que es un algoritmo exacto y que siempre termina si no se permite que el pulso revisite vértices, ya que la cantidad de caminos elementales del inicio al final es finita y se los recorre todos. 
 
 \subsubsection{Representación y variables del problema}
-
-Siguiendo la idea de que cada cliente $s$ tiene asociado un conjunto de paradas $\varrho(s) \subseteq N$, ahora sería útil definir el concepto inverso, o sea, el conjunto de clientes asociados a una parada en un vértice $v$.
-
-\begin{definition}
-    (Conjunto de clientes asociados a una parada).
-    Se dice que el cliente $s \in S$ está asociado a la parada $v \in N$ si $v$ es una parada que puede atender a $s$, esto es, si $v \in \varrho(s)$. El conjunto de todos los clientes asociados a $v$ se denota $\varrho^{-1}(v) \subseteq S$.
-\end{definition}
 
 El \emph{pulso} se define como una señal que comienza en el vértice $v_s$ y debe recorrer todas las combinaciones posibles de caminos que llegan hasta el destino $v_e$ y de clientes que potencialmente puede atender. Llamamos \emph{camino parcial} a la trayectoria que realizó el pulso hasta llegar a la posición actual. Un camino parcial $C$ tiene las siguientes propiedades:
 
@@ -456,19 +462,17 @@ Por otro lado existe la regla de poda de \emph{cotas inferiores}. Para eso vamos
     Dado un camino parcial $C$, se define la cota de finalización $CB(C)$ como una cota inferior en el precio restante sobre todas las extensiones posibles de $C$  que son factibles y llegan a $v_e$. El precio restante de una extensión $C'$ de $C$ hace referencia a $r(C') - r(C)$. Vale que
     \begin{equation}
     \label{eq:completion-bound}
-        r(C) + CB(C) \leq r(C') \quad \forall C' \text{ es extensión de } C
+        r(C) + CB(C) \leq r(C') \quad \forall C' \text{ extensión de } C
     \end{equation}
 \end{definition}
 
 Esto nos permite inferir una regla de poda: el camino parcial $C$ puede ser podado si ya existe otro camino factible $\tilde{C}$ que llega a $v_e$ tal que $r(\tilde{C}) \leq r(C) + CB(C)$, porque combinando esta regla con la ecuación \ref{eq:completion-bound} surge que entre todas las potenciales extensiones de $C$, ninguna podría mejorar el precio ya encontrado de $\tilde{C}$.
 
 Utilizamos un algoritmo de programación dinámica para implementar este chequeo. La matriz $\mathscr{L}$ tiene una columna por cada valor posible de $q$ y una fila por cada nodo $v$. Se define $\mathscr{L}_{vq}$ como la menor cota de finalización $CB(C)$ para cualquier camino parcial $C$ que termina en $v$ con una cantidad de demanda consumida exactamente igual a $q$. En términos coloquiales, lo que nos provee $\mathscr{L}_{vq}$ es una cota inferior del precio de la ruta que une $v$ con $v_e$, es decir, de lo que \emph{le falta} al pulso para llegar a destino. Por lo tanto, si 
-
 \begin{equation}
 \label{eq:completion-bound-check}
     r(C) + \mathscr{L}_{v, q(C)} \geq r(\mathscr{R}^{*})
 \end{equation}
-
 entonces no existe ninguna extensión posible del pulso que pueda mejorar el óptimo actual y se detiene la propagación.
 
 El algoritmo se detalla con el siguiente pseudocódigo:
@@ -533,12 +537,10 @@ Supongamos que tenemos un camino parcial $C$ de longitud al menos 2 que termina 
 \end{figure}
 
 El chequeo entonces se puede implementar en tiempo constante. Cada vez que agregamos un nodo $v_j$ a un camino parcial $C$ (con la regla de propagación de nodos), es fácil generar el correspondiente $C'$. Si para cada nodo $v_{\ell}$ de $C$ guardamos el precio acumulado, digamos $r_C(v_{\ell})$, entonces la condición
-
 \begin{equation}
 \label{eq:rollback-pruning-rule}
     r_C(v_i) + w_{v_i v_j} \leq r_C(v_k) + w_{v_k v_j}
 \end{equation}
-
 es suficiente para descartar a $C$. 
 
 \subsubsection{Multirollback}
@@ -551,7 +553,7 @@ El único truco aquí es que se modificaron las estructuras que se guardan en me
 \subsection{Modelo de Pricing con un algoritmo de Label Setting}
 \label{section:pricing-labeling}
 
-La formulación que proponemos en esta sección está basada en el algoritmo mono-direccional de programación dinámica propuesto por Righini \& Salani en \cite{righini-salani}. Esta publicación logró una gran repercusión en la comunidad científica que investiga el \problem{VRP} y merece la pena profundizarla.  Aquí los autores proponen una búsqueda bi-direccional acotada utilizando programación dinámica que bajo ciertas condiciones de simetría en el grafo puede resultar un enfoque eficiente para resolver \problem{ESPPRC}. En este trabajo nos limitamos a implementar la búsqueda mono-direccional del paper, la cual a su vez está basada en un trabajo de Feillet et al. \cite{feillet-et-al},y adaptarla a \problem{Star VRP} definido en \ref{star-pricing}
+La formulación que proponemos en esta sección está basada en el algoritmo mono-direccional de programación dinámica propuesto por Righini \& Salani en \cite{righini-salani}. Esta publicación logró una gran repercusión en la comunidad científica que investiga el \problem{VRP} y merece la pena profundizarla.  Aquí los autores proponen una búsqueda bi-direccional acotada utilizando programación dinámica que bajo ciertas condiciones de simetría en el grafo puede resultar un enfoque eficiente para resolver \problem{ESPPRC}. En este trabajo nos limitamos a implementar la búsqueda mono-direccional del paper, la cual a su vez está basada en un trabajo de Feillet et al. \cite{feillet-et-al},y adaptarla a \problem{Star VRP} definido en \ref{star-pricing}.
 
 Nos basamos en el algoritmo de Bellman-Ford para hallar caminos mínimos en un grafo pero con el agregado de las restricciones de recursos. Se asignan estados a cada vértice, donde cada estado representa un camino factible de $v_s$ hasta un vértice $i$. Cada estado contiene un vector de consumo de recursos y un costo. El objetivo del algoritmo es encontrar el estado asociado al vértice destino $v_e$ con menor costo.      
 Una \emph{etiqueta} o \emph{label} es una tupla $L = (h_1, \dots, h_n, c, i)$ asociada al vértice $v_i$ que contiene la cantidad consumida $h_j$ de cada uno de los $n$ recursos y el costo reducido acumulado $c$ de un camino parcial factible que llega a $v_i$. El algoritmo \emph{extiende} recursivamente las etiquetas a medida que visita nuevos vértices, generando así nuevas etiquetas en las cuales el consumo de cada recurso y el precio deben ser actualizados, y en caso de superar alguna restricción de capacidad, la etiqueta descartada. Un algoritmo de estas características se conoce normalmente como \emph{algoritmo de label setting}, o en forma abreviada \emph{labeling}. Como regla general, estos se basan en un backtracking que extiende las etiquetas recursivamente de acuerdo a un conjunto de reglas de actualización hasta llegar a cubrir potencialmente la totalidad del espacio de búsqueda, y su eficiencia depende fuertemente de las reglas de poda que se definan.
@@ -609,7 +611,7 @@ Al evitar extender una etiqueta no solamente estamos recortando un estado inalca
 
 En el Algoritmo \ref{al:label-setting} utilizamos la siguiente notación: $\Gamma$ es el conjunto de etiquetas que ya fueron visitadas, que tiene la capacidad de decidir si una nueva etiqueta es dominada por aquellas que ya están presentes, o si domina a alguna de ellas. Una cola de prioridad guarda las etiquetas que se han extendido recientemente para ser visitadas. $\Delta(v)$ es el conjunto de aristas salientes del vértice $v$. La función \texttt{isFeasible} simplemente chequea que una etiqueta corresponda a un camino válido en cuanto a las restricciones de recursos. Por otro lado, los procedimientos \texttt{extendWithNodeRule} y \texttt{extendWithCustomerRule} respectivamente crean una nueva etiqueta en base a las reglas ya explicadas.
 
-\begin{breakablealgorithm}
+\begin{algorithm}[H]
   \caption{Algoritmo de Label Setting}
   \label{al:label-setting}
   \begin{algorithmic}[1]
@@ -643,7 +645,7 @@ En el Algoritmo \ref{al:label-setting} utilizamos la siguiente notación: $\Gamm
         \EndFor
         \Return $\mathscr{R}^{*}$
   \end{algorithmic}
-\end{breakablealgorithm}
+\end{algorithm}
 
 
 \subsubsection{Estructura de datos para almacenar etiquetas}
@@ -659,6 +661,8 @@ Bajo estos supuestos, la cantidad de etiquetas no puede ser infinita, aunque la 
 
 \subsubsection{Heurística de Dominancia Relajada}
 \label{subsubsection:segment-tree-heuristic}
+
+Resolver el problema de pricing a optimalidad podría resultar demasiado costoso y en la práctica a menudo es innecesario. En rigor, tampoco es imprescindible hallar \emph{el menor} costo reducido en cada iteración del loop de generación de columnas, sino que basta con encontrar \emph{alguno(s)} que sean negativos, y agregar esas columnas a la base. Cuando se resuelve el \problem{RMP} a optimalidad, recién en la última iteración precisamos demostrar que ya no existen costos reducidos negativos. 
 
 Una relación de dominación más débil que la definida en \ref{def:domination} resultaría en que el algoritmo \emph{domine de más} y por lo tanto descarte más etiquetas que lo necesario, lo cual es beneficioso para recortar el espacio de búsqueda pero se corre el riesgo de descartar un camino válido (el algoritmo dejaría de ser exacto). Es importante que se siga cumpliendo que todos los caminos generados sean válidos. A una relación que cumple estas características la llamamos dominación \emph{relajada}.
 
@@ -677,19 +681,19 @@ Un problema recurrente en el mundo de los problemas de optimización es el que r
 
 En el caso de \problem{Star ESPPRC}, si dos caminos parciales factibles tienen exactamente la misma demanda acumulada y el mismo costo reducido acumulado, nos resulta indistinto saber cuáles fueron los clientes atendidos para llegar a esos valores. Distinguir estas soluciones puede ser una buena idea para agregar casos de dominancia y por lo tanto recortar parte del espacio de búsqueda. Por ejemplo, supongamos que dos rutas tienen la misma trayectoria y atendieron al mismo conjunto de clientes pero en distinto orden. Realmente no tiene sentido que el algoritmo sacrifique tiempo valioso en considerar ambas posibilidades cuando a efectos prácticos son indistinguibles. 
 
-Una idea clásica es la modificación de la función objetivo de manera que dos soluciones anteriormente equivalentes ahora tengan un impacto levemente distinto, lo suficiente para recortar alguna de ellas pero no tan grande para que otra solución no equivalente y subóptima pueda tener un mejor valor. Siguiendo estas líneas, proponemos agregar un pequeño costo $\tilde{w}_s$ asociado a atender a un cliente $s$, de manera que la función objetivo quede alterada. El precio modificado de una ruta factible $r$ se define como:
+Una idea clásica es la modificación de la función objetivo de manera que dos soluciones anteriormente equivalentes ahora tengan un impacto levemente distinto, lo suficiente para recortar alguna de ellas pero no tan grande para que otra solución no equivalente y subóptima pueda tener un mejor valor. Siguiendo estas líneas, proponemos agregar un pequeño costo $\tilde{w}_s$ asociado a atender a un cliente $s$, de manera que la función objetivo quede alterada. El \emph{precio modificado} de una ruta factible $r$ se define como:
 
 \begin{equation}
     \tilde{c}_r = \sum_{(i, j) \in E}{w_{ij}} - \lambda^*_0 - \sum_{s \in \tilde{S}_r}{\lambda^*_s} + \sum_{s \in \tilde{S}_r}{\tilde{w}_s}
 \end{equation}
 
-Nos gustaría que si $r_1$ tiene menor costo reducido que $r_2$, el precio modificado preserve esta relación, aunque el recíproco no es cierto. Esto es, $\bar{c}_{r_1} < \bar{c}_{r_2} \Rightarrow \tilde{c}_{r_1} < \tilde{c}_{r_2}$. Para eso se tiene que cumplir:
+Nos gustaría que si $r_1$ tiene menor costo reducido que $r_2$, entonces el precio modificado preserve esta relación, aunque el recíproco no es cierto. Esto es, $\bar{c}_{r_1} < \bar{c}_{r_2} \Rightarrow \tilde{c}_{r_1} < \tilde{c}_{r_2}$. Para eso se tiene que cumplir:
 
 \begin{equation}
     \sum_{s \in \tilde{S}_r}{\tilde{w}_s} < \varepsilon \quad \forall \tilde{S}_r \subseteq S
 \end{equation}
 
-Donde $\varepsilon$ debe ser tal que $\bar{c}_{r_1} - \bar{c}_{r_2} > \varepsilon \quad \forall r_1, r_2 \in \Omega : \bar{c}_{r_1} - \bar{c}_{r_2} > 0$. En la práctica es suficiente tomar $\varepsilon = 1$.
+Donde $\varepsilon$ debe ser tal que $\bar{c}_{r_1} - \bar{c}_{r_2} > \varepsilon$ para todos $r_1, r_2 \in \Omega$ tales que $\bar{c}_{r_1} - \bar{c}_{r_2} > 0$. En la práctica es suficiente tomar $\varepsilon = 1$.
 
 En el algoritmo se implementó de la siguiente manera: supongamos que un cliente $s$ es atendido desde un nodo $v$ (por supuesto, $v \in \varrho(s)$), luego basta $\tilde{w}_s = \alpha w_{vs}$, donde
 \begin{equation}
@@ -705,12 +709,12 @@ y de esta manera se cumple
 
 Coloquialmente, podemos pensar que el problema de elegir el camino en sí y el problema de elegir los clientes con un camino dado son problemas independientes, pero que al tener que investigar todas las combinaciones de ambos se produce una explosión de casos que sin dudas agrega una dificultad adicional. No en todas las variantes del problema de ruteo de vehículos se ve este fenómeno, y por lo tanto, \problem{Star VRP} pareciera ser una particularmente dura. 
 
-\subsection{2-Step Column Generation}
+\section{2-Step Column Generation}
 \label{section:2-step-cg}
 
 Si uno decidiera listar las rutas que hay en la base y las que se van agregando en cada iteración, una breve inspección visual advierte un fenómeno reiterado. El algoritmo de generación de columnas es bastante rápido para encontrar buenas trayectorias (circuitos que pasan por el depósito) pero demora muchas iteraciones en encontrar la combinación exacta de clientes que minimiza la función objetivo.  
 
-En instancias grandes, una sola iteración de generar columnas puede ser com\-putacionalmente exhaustiva. Si encontrásemos un mecanismo para asignar los clientes restringido al listado histórico de rutas halladas, es probable que podamos ahorrar varias corridas del algoritmo de pricing. Además podemos combinar esta idea con un algoritmo aproximado más eficiente para calcular los caminos de costo reducido negativo, aún así es necesario disponer de un mecanismo para terminar la ejecución, ya que actualmente el algoritmo termina cuando no hay más columnas por agregar.
+En instancias grandes, una sola iteración de generar columnas puede ser com\-putacionalmente exhaustiva. Si encontrásemos un mecanismo para asignar los clientes restringido al listado histórico de rutas halladas, es probable que podamos ahorrar varias corridas del algoritmo de pricing. Además, podemos combinar esta idea con una heurística para calcular los caminos de costo reducido negativo, aún así es necesario disponer de un mecanismo para terminar la ejecución, ya que actualmente el algoritmo termina cuando no hay más columnas por agregar.
 
 Por este motivo proponemos un algoritmo de generación de columnas en dos pasos: el primer paso es el problema de pricing que aporta una lista de trayectorias válidas a la base y en una segunda fase se corre otro algoritmo que reordena los clientes, mejorando la solución del pricing.
 
@@ -766,7 +770,7 @@ Un algoritmo ``burbuja'' chequea todos los pares de rutas hasta encontrar uno qu
 
 En la Sección \ref{section:2-step-cg-testing} nos encargamos de probar cuánto mejora el rendimiento general del algoritmo de generación de columnas con esta heurística.
 
-\subsection{Terminación temprana}
+\section{Terminación temprana}
 \label{section:finish-early}
 
 A menudo sucede que no interesa resolver la relajación lineal del \problem{RMP} a optimalidad y para eso vimos algoritmos aproximados. Uno de los problemas existenciales que aparecen en un modelo de generación de columnas es la definición de la condición de terminación, que por lo general suele implicar agotar el problema de pricing hasta que no haya nuevas columnas por agregar. Sería ideal encontrar una condición para terminar el loop de manera adelantada mientras nos asegure que la solución no esté demasiado lejos del óptimo.
@@ -776,7 +780,7 @@ Cuando uno examina la dinámica con la cual va convergiendo la solución incumbe
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{img/Screenshot from 2023-10-11 00-03-23.png}
-\caption{Convergencia de la solución incumbente y la cota inferior, en un ejemplo de Lübbecke en \cite{co-at-work-luebbecke}}
+\caption{Convergencia de la solución incumbente y la cota inferior, en un ejemplo de Lübbecke. (Fuente: \cite{co-at-work-luebbecke})}
 \label{fig:bound-convergence}
 \centering
 \end{figure}
