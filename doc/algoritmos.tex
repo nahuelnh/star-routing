@@ -38,7 +38,7 @@ Ya estamos en condiciones de pasar a la parte más interesante de la tesis, dond
 
 El siguiente modelo presenta una cantidad polinomial de variables y restricciones. A los modelos que cumplen esta condición a menudo se los conoce como \emph{modelos compactos} \cite[p.3]{lancia-serafini}.
 
-El modelo intenta encontrar un conjunto de circuitos dirigidos que sean subgrafos de $G$ y que pasen por el depósito. Cada uno de ellos tiene asociado un conjunto de clientes que debe atender y la demanda total de este conjunto no puede superar la capacidad $Q$. Para entender la formulación hay que notar el siguiente hecho: en cualquier grafo dirigido, un circuito elemental es un subgrafo fuertemente conexo cuyos vértices tienen todos grado de entrada $d_{in}=1$ y grado de salida $d_{out}=1$. Que el grafo sea fuertemente conexo es equivalente a que no contenga \emph{subtours}, que son circuitos del subgrafo que no pasan por $d$. Si $G$ es un grafo completo, podemos utilizar una serie de restricciones lineales para romper estos subtours, que se conocen como \emph{condiciones de Miller-Tucker-Zemlin (MTZ)}.  
+El modelo intenta encontrar un conjunto de circuitos dirigidos que sean subgrafos de $G$ y que pasen por el depósito. Cada uno de ellos tiene asociado un conjunto de clientes que debe atender y la demanda total de este conjunto no puede superar la capacidad $Q$. La formulación que damos a continuación se basa en esta idea: en cualquier grafo dirigido, un circuito elemental es un subgrafo cuyos vértices tienen todos grado de entrada $d_{in} = 1$ y grado de salida $d_{out} = 1$, y además es fuertemente conexo. Por otro lado, se define \emph{subtour} como un circuito del subgrafo que no pasa por $d$. Para corroborar que este subgrafo sea fuertemente conexo es condición necesaria y suficiente que no existan subtours. En el caso en el que $G$ es un grafo completo, podemos utilizar una serie de restricciones lineales para romper estos subtours, conocidas como \emph{condiciones de Miller-Tucker-Zemlin (MTZ)}.  
 
 \begin{equation}
     \min \sum_{i \in N} \sum_{j \in N} \sum_{k \in K} w_{ij} x_{ijk}
@@ -47,11 +47,11 @@ Sujeto a:
 \begin{align}
     \sum_{j \in N, (i, j) \in E}{x_{ijk}} = \sum_{j \in N, (j, i) \in E}{x_{jik}} \qquad & \forall {i \in N, k \in K} \label{eq:compact1} \\
     \sum_{k \in K} y_{sk} = 1 \qquad & \forall {s \in S} \label{eq:compact2} \\
-    \sum_{j \in N, (j, d) \in E}{x_{djk}} = 1 \qquad & \forall {k \in K} \label{eq:compact3} \\ 
+    \sum_{j \in N, (d, j) \in E}{x_{djk}} = 1 \qquad & \forall {k \in K} \label{eq:compact3} \\ 
     y_{sk} \leq \sum_{i \in N}\sum_{v \in \varrho(s)}{x_{ivk}} \qquad & \forall {k \in K, s \in S} \label{eq:compact4} \\
     \sum_{s \in S}{y_{sk}q_s} \le Q \qquad & \forall {k \in K} \label{eq:compact5} \\
-u_{ik} - u_{jk} + (|N| - 1)x_{ijk} \leq (|N| - 2)  \qquad & \forall {i \in N, j \in N, k \in K: i,j \neq 1, j \neq i} \label{eq:compact6} \\
-1 \leq u_{ik} \leq |N| - 1  \qquad & \forall {i \in N, k \in K: i \neq 1} \label{eq:compact7} \\
+u_{ik} - u_{jk} + (|N| - 1)x_{ijk} \leq (|N| - 2)  \qquad & \forall {i \in N, j \in N, k \in K: i,j \neq d, j \neq i} \label{eq:compact6} \\
+1 \leq u_{ik} \leq |N| - 1  \qquad & \forall {i \in N, k \in K: i \neq d} \label{eq:compact7} \\
 x_{ijk} \in \{0, 1\} \qquad & \forall {i \in N, j \in N, k \in K} \label{eq:compact8} \\
 y_{sk} \in \{0, 1\} \qquad & \forall {s \in S, k \in K} \label{eq:compact9}\\
 u_{ik} \in \mathbb{Z}^{+} \qquad & \forall {i \in N, k \in K} \label{eq:compact10}
@@ -59,7 +59,7 @@ u_{ik} \in \mathbb{Z}^{+} \qquad & \forall {i \in N, k \in K} \label{eq:compact1
 
 La semántica de las variables es la siguiente: $x_{ijk} = 1$ si y sólo si el vehículo $k$ pasa por el eje $(i, j) \in E$. Por otro lado $y_{sk}$ se interpreta como que el cliente $s$ es atendido por el vehículo $k$. Estas variables \emph{de servicio} se precisan porque el camino de cierto vehículo podría pasar por el cliente pero no atenderlo, por ejemplo, por no tener suficiente capacidad. La clase de variables $u_{ik}$ se utiliza solamente para expresar las condiciones MTZ. 
 
-La ecuación \ref{eq:compact1} garantiza que la cantidad de vehículos que entra al nodo $i$ sea la misma cantidad que sale del nodo $i$. Eso es necesario para que la ruta sea un ciclo. Luego \ref{eq:compact2} asegura que cada cliente es atendido por un y sólo un vehículo. \ref{eq:compact3} sirve para obligar a cada ruta a pasar por el nodo depósito $d$. La inecuación \ref{eq:compact4} muestra que un cliente $s$ solamente puede ser atendido por $k$ si $k$ pasa por alguna parada asociada a $s$, o sea, un nodo $v \in \varrho(s)$. Es importante ver que un vehículo podría visitar a un cliente y sin embargo no atenderlo. \ref{eq:compact5} es la restricción de capacidad. Por último \ref{eq:compact6} y \ref{eq:compact7} son las condiciones MTZ para romper subtours.
+La ecuación \ref{eq:compact1} garantiza que la cantidad de vehículos que entra al nodo $i$ sea la misma cantidad que sale del nodo $i$. Como explicamos, eso es necesario para que la ruta sea un ciclo. Luego \ref{eq:compact2} asegura que cada cliente es atendido por un y sólo un vehículo. La restricción \ref{eq:compact3} sirve para obligar a cada ruta a pasar por el nodo depósito $d$. La inecuación \ref{eq:compact4} muestra que un cliente $s$ solamente puede ser atendido por el vehículo $k$ si $k$ pasa por alguna parada asociada a $s$, o sea, un nodo $v \in \varrho(s)$. Es importante ver que un vehículo podría visitar a un cliente y sin embargo no atenderlo. La restricción de capacidad se expresa en \ref{eq:compact5}. Por último, \ref{eq:compact6} y \ref{eq:compact7} son las condiciones MTZ para romper subtours.
 
 \section{Generación de Columnas}
 
@@ -70,7 +70,7 @@ En esta sección definimos el modelo extendido sobre el cual aplicaremos un algo
     Llamamos \emph{ruta} de $G$ a un par $r = (C_r, \tilde{S}_r)$ donde $C_r$ es un camino conexo elemental (no repite vértices) de $G$ y $\tilde{S}_r \subseteq S$ un conjunto de clientes. La ruta $r$ se llama \emph{factible} si $C_r$ es un circuito cerrado que pasa por del depósito $d$ y tanto $C_r$ como $\tilde{S}_r$ cumplen las restricciones del problema.
 \end{definition}
 
-Tenemos que introducir algunos parámetros que se usarán a continuación. $\Omega$ es el conjunto que contiene a todas las rutas factibles. Si $r = (C_r, \tilde{S}_r) \in \Omega$, el parámetro $a_{sr} \in \{0, 1\}$ indica si $s \in \tilde{S}_r$, y el parámetro $c_r$ es el costo del circuito $C_r$. 
+Tenemos que introducir algunos parámetros que se usarán a continuación. El conjunto $\Omega$ contiene a todas las rutas factibles. Si $r = (C_r, \tilde{S}_r) \in \Omega$, el parámetro $a_{sr} \in \{0, 1\}$ indica si $s \in \tilde{S}_r$, y el parámetro $c_r$ es el costo del circuito $C_r$. 
 
 En la siguiente subsección damos un modelo de programación lineal entera que representa el problema que queremos resolver.
 
@@ -110,11 +110,11 @@ Sujeto a:
 \theta_r \in \{0, 1\} \qquad & \forall{r \in \tilde{\Omega}}
 \end{align}
 
-Observemos que la gran mayoría de las rutas de $\Omega$ son rutas \emph{malas}, porque son factibles pero no tienen verdaderas chances de ser consideradas como parte de la base. Entonces suena razonable restringir $\tilde{\Omega}$ a un conjunto de rutas \emph{buenas} y resolver un problema más chico, a pesar de que, a priori, podríamos sacrificar la exactitud del problema. El algoritmo de generación de columnas nos permitirá resolver con exactitud la relajación lineal del Problema Maestro resolviendo solamente algunas instancias del problema restringido. Sin embargo, para encontrar el óptimo exacto (es decir, el problema maestro con restricciones de integralidad), sería necesario complementarlo con un algoritmo de Branch \& Price.
+Observemos que la gran mayoría de las rutas de $\Omega$ son rutas \emph{malas}, en el sentido de que son factibles pero no son razonables y no tienen verdaderas chances de ser consideradas como parte de la base. Entonces suena razonable restringir $\tilde{\Omega}$ a un conjunto de rutas \emph{buenas} y resolver un problema más chico, a pesar de que, a priori, podríamos sacrificar la exactitud del problema. El algoritmo de generación de columnas nos permitirá resolver con exactitud la relajación lineal del Problema Maestro resolviendo solamente algunas instancias del Problema Maestro Restringido. Usualmente se complementa esta idea con un algoritmo de Branch \& Price, si estamos interesados en encontrar el óptimo exacto (es decir, el óptimo del problema maestro con restricciones de integralidad y no de la relajación lineal), lo cual queda vacante en esta tesis.	
 
-En cada iteración del algoritmo Simplex existe una fase donde se evalúan los costos reducidos de todas las variables y se elige el menor para insertar esa variable en la base. Cada costo reducido se calcula como $\bar{c}_j = c_j - \lambda^{T}a_j$ donde $\lambda$ es el vector de variables duales. Se puede demostrar que introducir en la base la variable $\theta_j$ de costo reducido negativo garantiza que en la próxima iteración de Simplex se obtendrá una solución mejor, y más aún, que si no existen costos reducidos negativos, el problema está resuelto a optimalidad. Supongamos que resolvimos el \problem{RMP}, cuya solución trivialmente también es factible en el problema maestro. Si algún costo reducido es negativo, podemos agregar esta variable a $\tilde{\Omega}$ y lo volvemos a resolver; si no existen tales, ya habremos encontrado el óptimo del Problema Maestro. El proceso de encontrar nuevas variables para agregar a $\tilde{\Omega}$ e iterar hasta que no queden más es lo que se conoce como \emph{Generación de Columnas}.
+En cada iteración del algoritmo Simplex existe una fase donde se evalúan los costos reducidos de todas las variables y se elige el menor para insertar esa variable en la base. Cada costo reducido se calcula como $\bar{c}_r = c_r - \lambda^{T}a_r$ donde $\lambda$ es el vector de variables duales y $a_r$ es la columna de coeficientes asociados a la variable $r$. Se puede demostrar que introducir en la base la variable $\theta_r$ de costo reducido negativo garantiza que en la próxima iteración de Simplex se obtendrá una solución mejor, y más aún, que si no existen costos reducidos negativos, el problema está resuelto a optimalidad. Supongamos que resolvimos el \problem{RMP}, cuya solución trivialmente también es factible en el problema maestro. Si algún costo reducido es negativo, podemos agregar esta variable a $\tilde{\Omega}$ y lo volvemos a resolver; si no existen tales, ya habremos encontrado el óptimo del Problema Maestro. El proceso de encontrar nuevas variables para agregar a $\tilde{\Omega}$ e iterar hasta que no queden más es lo que se conoce como \emph{Generación de Columnas}.
 
-El problema aún persiste porque calcular \emph{todos} los costos reducidos explícitamente implica hacer una operación por cada variable de $\Omega$, y eso sigue siendo inaceptable. Necesitamos conseguir una manera eficiente de saber cuál es el menor $\bar{c}_j$ sin tener que calcularlos todos explícitamente. Este problema se conoce como \emph{subproblema de pricing}. La fortaleza de generación de columnas por lo general subyace en que exista una formulación eficiente para resolver el pricing.
+El problema aún persiste, porque calcular \emph{todos} los costos reducidos explícitamente implica hacer una operación por cada variable de $\Omega$, y eso es inaceptable. Necesitamos conseguir una manera eficiente de saber cuál es el menor $\bar{c}_r$ sin tener que calcularlos todos explícitamente. Este problema se conoce como \emph{subproblema de pricing}. La fortaleza de generación de columnas por lo general subyace en que exista una formulación eficiente para resolver el pricing.
 
 \begin{algorithm}[H]
     \caption{Algoritmo de generación de columnas}
@@ -128,15 +128,15 @@ El problema aún persiste porque calcular \emph{todos} los costos reducidos expl
         \EndIf
         \State $\tilde{\Omega} \gets \Theta$
         \While{ \textbf{true} }
-            \State Resolver RMP con $\tilde{\Omega}$
+            \State Resolver RMP y su dual, restringidos a $\tilde{\Omega}$
             \State Sea $\Theta^{*}$ el óptimo del RMP.
-            \State Obtener $\lambda$ el vector de variables duales.
+            \State Sea $\lambda$ el vector de variables duales.
             \State Resolver subproblema de pricing.
-            \State Sean $\bar{c}^{*}_r$ y $\theta_r$ el menor costo reducido y la variable primal asociada. 
-            \If{$\bar{c}^{*}_r \geq 0$}
+            \State $r^{*} \gets \argmin_{r \in \Omega}{\bar{c}_r}$ // $r^{*}$ es la ruta con menor costo reducido
+            \If{$\bar{c}_{r^{*}} \geq 0$}
             	\Break
             \EndIf
-            \State $\tilde{\Omega} \gets \tilde{\Omega} \cup \{\theta_r\}$
+            \State $\tilde{\Omega} \gets \tilde{\Omega} \cup \{\theta_{r^{*}}\}$
         \EndWhile
         \Return $\Theta^{*}$
     \end{algorithmic}
@@ -152,7 +152,7 @@ Desrochers et al. discuten en \cite{desrochers1992} si conviene modificar leveme
 \qquad \forall {s \in S}
 \end{equation}
 
-Esto se interpreta como que cada cliente debe ser atendido por uno o más vehículos, y no afecta al óptimo porque una solución factible de este problema modificado que no es factible en el original solamente tiene clientes repetidos (atendidos por múltiples vehículos) lo cual no mejora la función objetivo. 
+Esto se interpreta como que cada cliente debe ser atendido por uno o más vehículos. Notemos que una solución factible de este problema modificado que no es factible en el original solamente tiene clientes repetidos (atendidos por múltiples vehículos), lo cual no cambia el valor de la función objetivo.
 
 En el ejemplo de \cite{desrochers1992} la ganancia es clave: el problema de pricing ahora no requiere que los caminos sean elementales y la solución sigue siendo factible. En nuestro caso tenemos una complicación extra, porque la nueva formulación admite clientes repetidos y eso contradice una condición del problema, entonces surge la necesidad de agregar una fase de post-procesamiento de la solución, para eliminarlos.
 
@@ -160,7 +160,7 @@ En el ejemplo de \cite{desrochers1992} la ganancia es clave: el problema de pric
 \subsection{Problema dual}
 
 Será útil calcular el problema dual de la relajación lineal del Restricted Master Problem. Esto nos servirá más adelante para calcular los costos reducidos de las variables del RMP. 
-Dado que éste tiene $|S| + 1$ desigualdades, en el dual hay $|S| + 1$ variables, que las llamaremos $\lambda_s$ para $s \in \{0, \dots, |S|\}$. Utilizamos la siguiente convención: $\lambda_0$ es la variable dual asociada a \ref{eq:master2} y $\lambda_{s}$ es la variable asociada al $s-$ésimo cliente de $S$ de \ref{eq:master1}.
+Dado que éste tiene $|S| + 1$ desigualdades, en el dual hay $|S| + 1$ variables, que las llamaremos $\lambda_s$ para $s \in \{0, \dots, |S|\}$. Utilizamos la siguiente convención: $\lambda_0$ es la variable dual asociada a \ref{eq:rmp2} y $\lambda_{s}$ es la variable asociada al $s-$ésimo cliente de $S$ de \ref{eq:rmp1}.
 \\
 
 \begin{equation}
@@ -176,7 +176,7 @@ Sujeto a:
 \lambda_0 \geq 0 &
 \end{align}
 
-Cabe aclarar que si en el RMP utiliza la desigualdad (\ref{eq:ge-restriction-rmp}) en lugar de la igualdad (\ref{eq:rmp1}), el problema dual permanece igual salvo por la clase de variables $\lambda_s$ cambia su rango a $\lambda_s \leq 0$. 
+Cabe aclarar que si en el RMP se utiliza la desigualdad \ref{eq:ge-restriction-rmp} en lugar de la igualdad \ref{eq:rmp1}, el problema dual permanece igual salvo por que la clase de variables $\lambda_s$ cambia su rango a $\lambda_s \leq 0$. 
 
 
 \subsection{Heurística para una solución inicial}
@@ -198,7 +198,7 @@ Como el grafo es completo, siempre existe un circuito que parte del depósito, r
     Una partición factible de $S$ se dice \emph{minimal} si no existen dos subconjuntos $S_i, S_j$ tales que $\sum_{s \in S_i \cup S_j} q_s \leq Q$. Se dice que esta partición es \emph{mínima} si no existe una partición minimal de cardinal menor.
 \end{definition}
 
-Si tenemos una partición factible y minimal de clientes de tamaño $n$ y se cumple que $n \leq |K|$, el problema quedaría resuelto, ya que vimos cómo construir una ruta para cada uno de estos conjuntos. Primero veremos una heurística eficiente para encontrar esta partición. El caso en el que $n > |K|$ es difícil de tratar y será estudiado más adelante. Observemos además que si el problema no es factible, no existe tal partición de clientes.
+Si tenemos una partición factible de clientes de tamaño $n$ y se cumple que $n \leq |K|$, el problema quedaría resuelto, ya que vimos cómo construir una ruta para cada uno de estos conjuntos. Primero veremos una heurística eficiente para encontrar esta partición. El caso en el que $n > |K|$ es difícil de tratar y será estudiado más adelante. Observemos además que si el problema no es factible, no existe tal partición de clientes.
 
 \begin{observation}
     \label{obs:heuristic-observation}
@@ -345,11 +345,11 @@ Sujeto a:
 
 \begin{align}
     \sum_{j \in N, (i, j) \in E}{x_{ij}} = \sum_{j \in N, (j, i) \in E}{x_{ji}} \qquad & \forall {i \in N} \label{eq:pricing1} \\
-    \sum_{j \in N, (j, d) \in E}{x_{dj}} = 1 & \label{eq:pricing2} \\
+    \sum_{j \in N, (d, j) \in E}{x_{dj}} = 1 & \label{eq:pricing2} \\
     y_{s} \leq \sum_{i \in N}\sum_{v \in \varrho(s)}{x_{iv}} \qquad & \forall {s \in S} \label{eq:pricing3} \\
     \sum_{s \in S}{y_{s}q_s} \le Q & \label{eq:pricing4} \\
-    u_{i} - u_{j} + (|N| - 1)x_{ij} \leq (|N| - 2) \qquad & \forall {i \in N, j \in N : i, j \neq 1, j \neq i}  \label{eq:pricing5} \\
-    1 \leq u_{i} \leq |N| - 1 \qquad & \forall {i \in N : i \neq 1} \label{eq:pricing6} \\
+    u_{i} - u_{j} + (|N| - 1)x_{ij} \leq (|N| - 2) \qquad & \forall {i \in N, j \in N : i, j \neq d, j \neq i}  \label{eq:pricing5} \\
+    1 \leq u_{i} \leq |N| - 1 \qquad & \forall {i \in N : i \neq d} \label{eq:pricing6} \\
     x_{ij} \in \{0, 1\} \qquad & \forall {i \in N, j \in N} \label{eq:pricing7} \\
 y_{s} \in \{0, 1\} \qquad & \forall {s \in S} \label{eq:pricing8}\\
 u_{i} \in \mathbb{Z}^{+} \qquad & \forall {i \in N} \label{eq:pricing9}
@@ -357,7 +357,7 @@ u_{i} \in \mathbb{Z}^{+} \qquad & \forall {i \in N} \label{eq:pricing9}
 
 Se ve que las variables del modelo son similares a las que explicamos en \ref{section:compacto}. La clase de variables $x_{ij}$ demarcan que el circuito utiliza el arco que une el nodo $i$ con el nodo $j$. Las variables $y_s$ son positivas si y sólo si la ruta visita y atiende al cliente $s$. Por último tenemos las variables $u_i$ que son la forma clásica de escribir las condiciones MTZ.
 
-La ecuación \ref{eq:pricing1} indica que la cantidad de arcos que entra al nodo $i$ tiene que ser igual a la cantidad de arcos que salen, para cumplir con la condición de circuito. Además, \ref{eq:pricing2} especifica que el camino tiene que pasar por el depósito. La restricción \ref{eq:pricing3} se interpreta como que un cliente solamente puede ser atendido por un vehículo que pasa por una parada asociada válida. La restricción \ref{eq:pricing4} es la restricción de capacidad y finalmente las restricciones \ref{eq:pricing5} y \ref{eq:pricing6} son las condiciones para romper subtours y asegurar que el recorrido sea conexo.
+La ecuación \ref{eq:pricing1} indica que la cantidad de arcos que entra al nodo $i$ tiene que ser igual a la cantidad de arcos que salen, para cumplir con la condición de circuito. Además, \ref{eq:pricing2} especifica que el camino tiene que pasar por el depósito. La restricción \ref{eq:pricing3} se interpreta como que un cliente solamente puede ser atendido por un vehículo que pasa por una parada asociada válida. La restricción de capacidad se expresa en \ref{eq:pricing4} y finalmente las restricciones \ref{eq:pricing5} y \ref{eq:pricing6} son las condiciones MTZ para romper subtours y asegurar que el recorrido sea conexo.
 
 \subsection{Modelo de Pricing con un algoritmo de pulsos}
 \label{section:pricing-pulses}
@@ -382,7 +382,7 @@ Notemos que en este nuevo lenguaje el problema se transforma en encontrar el cam
 
 \subsubsection{Algoritmo de pulsos}
 
-El algoritmo necesita dos reglas de propagación, para visitar todas las combinaciones de nodos y clientes. En cada paso el pulso tiene dos opciones, o bien reproducirse y propagarse a todos los vecinos del vértice actual, transmitiendo a cada uno de sus descendientes la información que recolectó en su duración de vida, o bien sumar un cliente válido al acumulado. La primera regla se llama regla de \emph{propagación a nodos} y la segunda de \emph{propagación a clientes}. Ahora bien, surge la necesidad de definir una función que en cada paso valide que éste sea \emph{factible} y además tiene la capacidad de descartar pulsos subóptimos. Para el descarte se utilizarán dos heurísticas. La primera utiliza una matriz de tamaño $|N| \times (Q+1)$ que contiene cotas inferiores para el precio restante hasta que el pulso llegue a destino. La segunda heurística tiene la capacidad de deshacer las últimas elecciones de propagación en caso de que se tenga alguna certeza de que nos dirigimos a una sección del espacio de búsqueda poco prometedora.  
+El algoritmo necesita dos reglas de propagación, para visitar todas las combinaciones de nodos y clientes. En cada paso el pulso tiene dos opciones, o bien reproducirse y propagarse a todos los vecinos del vértice actual, transmitiendo a cada uno de sus descendientes la información que recolectó en su duración de vida, o bien sumar un cliente válido al acumulado. La primera regla se llama regla de \emph{propagación a nodos} y la segunda de \emph{propagación a clientes}. Ahora bien, surge la necesidad de definir una función que en cada paso valide si el pulso es \emph{factible}, y que además tenga la capacidad de descartar pulsos subóptimos. Para el descarte se utilizarán dos heurísticas. La primera utiliza una matriz de tamaño $|N| \times (Q+1)$ que contiene cotas inferiores para el precio restante hasta que el pulso llegue a destino. La segunda heurística tiene la capacidad de deshacer las últimas elecciones de propagación en caso de que se tenga alguna certeza de que nos dirigimos a una sección del espacio de búsqueda poco prometedora.
 
 El algoritmo se divide en tres partes. La primera rutina es el algoritmo maestro que solamente inicia la propagación y también llama al esquema de acotaciones que calcula la matriz de costos inferiores. La segunda parte se encarga de propagar recursivamente los pulsos hasta llegar al destino, o bien de descartarlos. Existen tres reglas de descarte que serán explicadas más adelante. Por último aparece el algoritmo que precalcula las cotas inferiores.
 
