@@ -2,7 +2,7 @@
 
 En este trabajo generalizamos la definición de \problem{Star Routing} que hace Tagliavini en \cite{tagliavini}. El problema que obtuvimos tiene una dificultad computacional categóricamente superior a la que suele existir en problemas de esta índole y por lo tanto se esperaba tratarlo para una cantidad de clientes mucho menor que en un paper donde se propone un algoritmo de estado del arte para resolver \problem{CVRP}. 
 
-Primero definimos el problema maestro y el problema maestro restringido en su forma genérica, y el algoritmo maestro de generación de columnas. Sobre esta base investigamos la literatura en cuanto a formulaciones eficientes del problema de pricing y tomamos tres de ellas, adaptándolas para el caso particular de \problem{Star VRP}.
+Primero definimos el Problema Maestro y el Problema Maestro Restringido en su forma genérica, y el algoritmo maestro de generación de columnas. Sobre esta base investigamos la literatura en cuanto a formulaciones eficientes del problema de pricing y tomamos tres de ellas, adaptándolas para el caso particular de \problem{Star VRP}.
 
 El algoritmo estándar de pricing es un modelo de programación lineal que utilizamos como benchmark para comparar con los otros. Como inspiración en \cite{lozano-duque-medaglia} propusimos un algoritmo \emph{por pulsos}, un backtracking DFS, que resultó eficiente para resolver nuestra versión del \problem{ESPPRC}. El último enfoque, otro backtracking pero esta vez BFS, fue comprendido por algoritmo de labeling basado en el algoritmo de búsqueda mono-direccional propuesto en \cite{righini-salani}. 
 
@@ -15,7 +15,7 @@ Adicionalmente examinamos dos ideas que apuntan a mejorar el rendimiento del alg
 
 La hipótesis subyacente de este trabajo es que el modelo compacto es insuficiente para tratar problemas de ruteo de vehículos y por lo tanto utilizar un enfoque de generación de columnas puede reducir el tiempo de procesamiento notoriamente. Esta hipótesis se verifica en las instancias y condiciones en las que ejecutamos los experimentos.
 
-El algoritmo más prometedor de este trabajo resultó ser el de labeling, ya que su performance en la versión exacta era competitiva con respecto a los otros, pero la versión aproximada permite calcular instancias considerablemente más grandes con una muy buena cota con respecto a la solución óptima. Además,  su implementación es bastante flexible ya que permite la adición de más reglas de dominación, y fundamentalmente su complejidad cognitiva es menor que otros algoritmos con esquemas de acotación complejos.
+El algoritmo de pricing más prometedor de este trabajo resultó ser el de labeling, ya que su performance en la versión exacta era competitiva con respecto a los otros, pero la versión aproximada permite calcular instancias considerablemente más grandes con una muy buena cota con respecto a la solución óptima. Además,  su implementación es bastante flexible ya que permite la adición de más reglas de dominación, y fundamentalmente su complejidad cognitiva es menor que otros algoritmos con esquemas de acotación complejos.
 
 El backtracking de búsqueda en profundidad, el que hasta ahora llamamos de \emph{pulsos} no presenta tiempos de ejecución significativamente mejores que el modelo estándar. Aparte de esto es difícil combinar con otras heurísticas clásicas, y tampoco hemos encontrado una manera de crear la versión aproximada.
 
@@ -26,7 +26,7 @@ La dificultad adicional de poder atender o no un cliente cuando se pasa por una 
 
 Tomando las magnitudes que analizamos en la Sección \ref{section:complexity}, es un éxito haber podido correr una instancia de 70 nodos. Sin embargo este es un análisis superficial y no sirve para hacer predicciones acerca de la efectividad computacional real de los algoritmos. 
 
-En términos coloquiales, lo que sucede que estamos resolviendo dos problemas independientes y por lo tanto la dificultad es la dificultad combinada de ambos. Primero tenemos el problema de encontrar una trayectoria viable que recorra el grafo y por otro lado el problema de asignar clientes que puedan ser atendidos desde esa trayectoria. Sin evitar un exceso de generalización, podemos relacionar esta idea con otros casos de la literatura donde se estudia la independencia de variables en modelos de programación lineal. Una cuestión que permanece abierta en este trabajo pero que sería muy interesante darle batalla es aplicar una técnica que nos permita atacar problemas que se pueden descomponer en varios ``subproblemas'' relacionados a los distintos tipos de de variables. Una idea estándar que suele funcionar en un escenario similar es la descomposición combinatoria de Benders. En \cite{desrosiers2005primer} hay un excelente compendio sobre enfoques generalmente útiles para generación de columnas, y en particular se menciona el tema de formulaciones del problema maestro con variables independientes y por lo tanto problemas de pricing independientes, haciendo énfasis en si se puede explotar la estructura de bloques diagonal de la matriz. 
+En términos coloquiales, lo que sucede que estamos resolviendo dos problemas independientes y por lo tanto la dificultad es la dificultad combinada de ambos. Primero tenemos el problema de encontrar una trayectoria viable que recorra el grafo y por otro lado el problema de asignar clientes que puedan ser atendidos desde esa trayectoria. Sin evitar un exceso de generalización, podemos relacionar esta idea con otros casos de la literatura donde se estudia la independencia de variables en modelos de programación lineal. Una cuestión que permanece abierta en este trabajo pero que sería muy interesante darle batalla es aplicar una técnica que nos permita atacar problemas que se pueden descomponer en varios ``subproblemas'' relacionados a los distintos tipos de variables. Una idea estándar que suele funcionar en un escenario similar es la descomposición combinatoria de Benders. En \cite{desrosiers2005primer} hay un excelente compendio sobre enfoques generalmente útiles para generación de columnas, y en particular se menciona el tema de formulaciones del Problema Maestro con variables independientes y por lo tanto problemas de pricing independientes, haciendo énfasis en si se puede explotar la estructura de bloques diagonal de la matriz. 
 
 
 \section{Trabajo Futuro}
@@ -44,7 +44,7 @@ Creemos que este trabajo puede ser extendido en varias direcciones y esperamos h
         
     \item Combinar con otras heurísticas, entre las más populares están Decremental State Space Relaxation (DSSR) o Completion Bounds. 
 
-    \item Proponer distintas formulaciones del problema maestro, en cuyo caso el problema de pricing será sustancialmente distinto, que nos permitan explotar mejor la independencia de variables.
+    \item Proponer distintas formulaciones del Problema Maestro, en cuyo caso el problema de pricing será sustancialmente distinto, que nos permitan explotar mejor la independencia de variables.
     
 \end{itemize}
 

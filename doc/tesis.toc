@@ -21,26 +21,26 @@
 \contentsline {subsection}{\numberline {2.3.3}Modelo de Pricing con un algoritmo de pulsos}{22}{subsection.2.3.3}%
 \contentsline {subsubsection}{\numberline {2.3.3.1}Representación y variables del problema}{23}{subsubsection.2.3.3.1}%
 \contentsline {subsubsection}{\numberline {2.3.3.2}Algoritmo de pulsos}{23}{subsubsection.2.3.3.2}%
-\contentsline {subsubsection}{\numberline {2.3.3.3}Poda por factibilidad}{25}{subsubsection.2.3.3.3}%
-\contentsline {subsubsection}{\numberline {2.3.3.4}Poda por cotas inferiores y esquema de acotación}{25}{subsubsection.2.3.3.4}%
+\contentsline {subsubsection}{\numberline {2.3.3.3}Poda por factibilidad}{26}{subsubsection.2.3.3.3}%
+\contentsline {subsubsection}{\numberline {2.3.3.4}Poda por cotas inferiores y esquema de acotación}{26}{subsubsection.2.3.3.4}%
 \contentsline {subsubsection}{\numberline {2.3.3.5}Heurística de buckets de demanda}{27}{subsubsection.2.3.3.5}%
-\contentsline {subsubsection}{\numberline {2.3.3.6}Rollback Pruning}{27}{subsubsection.2.3.3.6}%
-\contentsline {subsubsection}{\numberline {2.3.3.7}Multirollback}{28}{subsubsection.2.3.3.7}%
+\contentsline {subsubsection}{\numberline {2.3.3.6}Rollback Pruning}{28}{subsubsection.2.3.3.6}%
+\contentsline {subsubsection}{\numberline {2.3.3.7}Multirollback}{29}{subsubsection.2.3.3.7}%
 \contentsline {subsection}{\numberline {2.3.4}Modelo de Pricing con un algoritmo de Label Setting}{29}{subsection.2.3.4}%
 \contentsline {subsubsection}{\numberline {2.3.4.1}Algoritmo}{31}{subsubsection.2.3.4.1}%
-\contentsline {subsubsection}{\numberline {2.3.4.2}Estructura de datos para almacenar etiquetas}{31}{subsubsection.2.3.4.2}%
-\contentsline {subsubsection}{\numberline {2.3.4.3}Heurística de Dominancia Relajada}{32}{subsubsection.2.3.4.3}%
-\contentsline {subsubsection}{\numberline {2.3.4.4}Eliminación de Simetría}{33}{subsubsection.2.3.4.4}%
-\contentsline {section}{\numberline {2.4}2-Step Column Generation}{34}{section.2.4}%
-\contentsline {section}{\numberline {2.5}Terminación temprana}{36}{section.2.5}%
+\contentsline {subsubsection}{\numberline {2.3.4.2}Estructura de datos para almacenar etiquetas}{32}{subsubsection.2.3.4.2}%
+\contentsline {subsubsection}{\numberline {2.3.4.3}Heurística de Dominancia Relajada}{33}{subsubsection.2.3.4.3}%
+\contentsline {subsubsection}{\numberline {2.3.4.4}Eliminación de Simetría}{34}{subsubsection.2.3.4.4}%
+\contentsline {section}{\numberline {2.4}2-Step Column Generation}{35}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Terminación temprana}{37}{section.2.5}%
 \contentsline {chapter}{\numberline {3}Experimentación Computacional}{39}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Generación de Instancias}{39}{section.3.1}%
+\contentsline {section}{\numberline {3.1}Generación de Instancias}{40}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Análisis de Performance}{40}{section.3.2}%
 \contentsline {subsection}{\numberline {3.2.1}Modelo Compacto}{41}{subsection.3.2.1}%
 \contentsline {subsection}{\numberline {3.2.2}Generación de columnas con pricing de programación lineal entera}{42}{subsection.3.2.2}%
-\contentsline {subsection}{\numberline {3.2.3}Algoritmo de propagación de pulsos}{44}{subsection.3.2.3}%
-\contentsline {subsection}{\numberline {3.2.4}Algoritmo de Label Setting}{46}{subsection.3.2.4}%
-\contentsline {subsection}{\numberline {3.2.5}Análisis de tendencias}{48}{subsection.3.2.5}%
+\contentsline {subsection}{\numberline {3.2.3}Algoritmo de propagación de pulsos}{45}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}Algoritmo de Label Setting}{47}{subsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.2.5}Análisis de tendencias}{49}{subsection.3.2.5}%
 \contentsline {section}{\numberline {3.3}Heurísticas}{50}{section.3.3}%
 \contentsline {subsection}{\numberline {3.3.1}Heurísticas de Label Setting}{51}{subsection.3.3.1}%
 \contentsline {subsection}{\numberline {3.3.2}2-Step Column Generation}{56}{subsection.3.3.2}%

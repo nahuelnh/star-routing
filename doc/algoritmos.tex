@@ -97,7 +97,7 @@ Cada cliente $s$ tiene que ser atendido por un único vehículo, o sea que las r
 
 El lector puede sospechar que si bien el modelo anterior es válido y la solución es exacta, calcular el conjunto $\Omega$ está lejos de ser trivial y aún si nos fuera dado por un oráculo, la cantidad de rutas factibles en él es tal que resultaría, como mínimo, desesperanzador. Llamaremos al modelo de programación lineal de la Sección \ref{section:set-partitioning} el \emph{Problema Maestro}. A continuación se presenta una forma astuta de encararlo.
 
-Sea $\tilde{\Omega} \subset \Omega$ un subconjunto de las rutas factibles  tal que $|\tilde{\Omega}| \ll |\Omega|$. Se define el \emph{Problema Maestro Restringido}, a partir de ahora \problem{RMP}, como un modelo idéntico al problema maestro pero en el cual reemplazamos $\Omega$ por $\tilde{\Omega}$ y así acotamos fuertemente la cantidad de variables $\theta_r$. 
+Sea $\tilde{\Omega} \subset \Omega$ un subconjunto de las rutas factibles  tal que $|\tilde{\Omega}| \ll |\Omega|$. Se define el \emph{Problema Maestro Restringido}, a partir de ahora \problem{RMP}, como un modelo idéntico al Problema Maestro pero en el cual reemplazamos $\Omega$ por $\tilde{\Omega}$ y así acotamos fuertemente la cantidad de variables $\theta_r$. 
 
 \begin{equation}
     \min \sum_{r \in \tilde{\Omega}} c_r  \theta_r
@@ -110,9 +110,9 @@ Sujeto a:
 \theta_r \in \{0, 1\} \qquad & \forall{r \in \tilde{\Omega}}
 \end{align}
 
-Observemos que la gran mayoría de las rutas de $\Omega$ son rutas \emph{malas}, en el sentido de que son factibles pero no son razonables y no tienen verdaderas chances de ser consideradas como parte de la base. Entonces suena razonable restringir $\tilde{\Omega}$ a un conjunto de rutas \emph{buenas} y resolver un problema más chico, a pesar de que, a priori, podríamos sacrificar la exactitud del problema. El algoritmo de generación de columnas nos permitirá resolver con exactitud la relajación lineal del Problema Maestro resolviendo solamente algunas instancias del Problema Maestro Restringido. Usualmente se complementa esta idea con un algoritmo de Branch \& Price, si estamos interesados en encontrar el óptimo exacto (es decir, el óptimo del problema maestro con restricciones de integralidad y no de la relajación lineal), lo cual queda vacante en esta tesis.	
+Observemos que la gran mayoría de las rutas de $\Omega$ son rutas \emph{malas}, en el sentido de que son factibles pero no son razonables y no tienen verdaderas chances de ser consideradas como parte de la base. Entonces suena razonable restringir $\tilde{\Omega}$ a un conjunto de rutas \emph{buenas} y resolver un problema más chico, a pesar de que, a priori, podríamos sacrificar la exactitud del problema. El algoritmo de generación de columnas nos permitirá resolver con exactitud la relajación lineal del Problema Maestro resolviendo solamente algunas instancias del Problema Maestro Restringido. Usualmente se complementa esta idea con un algoritmo de Branch \& Price, si estamos interesados en encontrar el óptimo exacto (es decir, el óptimo del Problema Maestro con restricciones de integralidad y no de la relajación lineal), lo cual queda vacante en esta tesis.	
 
-En cada iteración del algoritmo Simplex existe una fase donde se evalúan los costos reducidos de todas las variables y se elige el menor para insertar esa variable en la base. Cada costo reducido se calcula como $\bar{c}_r = c_r - \lambda^{T}a_r$ donde $\lambda$ es el vector de variables duales y $a_r$ es la columna de coeficientes asociados a la variable $r$. Se puede demostrar que introducir en la base la variable $\theta_r$ de costo reducido negativo garantiza que en la próxima iteración de Simplex se obtendrá una solución mejor, y más aún, que si no existen costos reducidos negativos, el problema está resuelto a optimalidad. Supongamos que resolvimos el \problem{RMP}, cuya solución trivialmente también es factible en el problema maestro. Si algún costo reducido es negativo, podemos agregar esta variable a $\tilde{\Omega}$ y lo volvemos a resolver; si no existen tales, ya habremos encontrado el óptimo del Problema Maestro. El proceso de encontrar nuevas variables para agregar a $\tilde{\Omega}$ e iterar hasta que no queden más es lo que se conoce como \emph{Generación de Columnas}.
+En cada iteración del algoritmo Simplex existe una fase donde se evalúan los costos reducidos de todas las variables y se elige el menor para insertar esa variable en la base. Cada costo reducido se calcula como $\bar{c}_r = c_r - \lambda^{T}a_r$ donde $\lambda$ es el vector de variables duales y $a_r$ es la columna de coeficientes asociados a la variable $r$. Se puede demostrar que introducir en la base la variable $\theta_r$ de costo reducido negativo garantiza que en la próxima iteración de Simplex se obtendrá una solución mejor, y más aún, que si no existen costos reducidos negativos, el problema está resuelto a optimalidad. Supongamos que resolvimos el \problem{RMP}, cuya solución trivialmente también es factible en el Problema Maestro. Si algún costo reducido es negativo, podemos agregar esta variable a $\tilde{\Omega}$ y lo volvemos a resolver; si no existen tales, ya habremos encontrado el óptimo del Problema Maestro. El proceso de encontrar nuevas variables para agregar a $\tilde{\Omega}$ e iterar hasta que no queden más es lo que se conoce como \emph{Generación de Columnas}.
 
 El problema aún persiste, porque calcular \emph{todos} los costos reducidos explícitamente implica hacer una operación por cada variable de $\Omega$, y eso es inaceptable. Necesitamos conseguir una manera eficiente de saber cuál es el menor $\bar{c}_r$ sin tener que calcularlos todos explícitamente. Este problema se conoce como \emph{subproblema de pricing}. La fortaleza de generación de columnas por lo general subyace en que exista una formulación eficiente para resolver el pricing.
 
@@ -120,16 +120,16 @@ El problema aún persiste, porque calcular \emph{todos} los costos reducidos exp
     \caption{Algoritmo de generación de columnas}
     \label{al:column-generation}
     \begin{algorithmic}[1]
-        \Require El problema maestro. 
-        \Ensure El óptimo $\Theta^{*}$ de la relajación lineal del problema maestro. 
+        \Require Una instancia del Problema Maestro. 
+        \Ensure El óptimo $\Theta^{*}$ de la relajación lineal del Problema Maestro. 
         \State Sea $\Theta = \{\theta_1 = 1, \dots, \theta_k = 1\}$ una solución factible inicial
         \If{$\Theta = \emptyset$}
             \Return Problema infactible
         \EndIf
         \State $\tilde{\Omega} \gets \Theta$
         \While{ \textbf{true} }
-            \State Resolver RMP y su dual, restringidos a $\tilde{\Omega}$
-            \State Sea $\Theta^{*}$ el óptimo del RMP.
+            \State Resolver \problem{RMP} y su dual, restringidos a $\tilde{\Omega}$
+            \State Sea $\Theta^{*}$ el óptimo del \problem{RMP}.
             \State Sea $\lambda$ el vector de variables duales.
             \State Resolver subproblema de pricing.
             \State $r^{*} \gets \argmin_{r \in \Omega}{\bar{c}_r}$ // $r^{*}$ es la ruta con menor costo reducido
@@ -142,7 +142,7 @@ El problema aún persiste, porque calcular \emph{todos} los costos reducidos exp
     \end{algorithmic}
 \end{algorithm}
 
-El Algoritmo \ref{al:column-generation} requiere que comencemos resolviendo el \problem{RMP} con un $\tilde{\Omega}$ válido, para luego calcular las variables duales que necesita el problema de pricing. No existe hasta donde sabemos una manera mecánica de elegir este conjunto. Para que el problema restringido resulte al menos factible, se precisa una heurística que provea una solución factible inicial. No es crítico en este paso que la solución esté demasiado cerca del óptimo, por lo que se priorizarán heurísticas rápidas. Proveemos una heurística en la Sección \ref{section:initial-solution-heuristic}, sin embargo, ésta podría reportar que no existen soluciones factibles cuando sí las hay, y en ese caso en \ref{feasibility-problem} damos un algoritmo infalible aunque mucho más lento.
+El Algoritmo \ref{al:column-generation} requiere que comencemos resolviendo el \problem{RMP} con un $\tilde{\Omega}$ válido, para luego calcular las variables duales que necesita el problema de pricing. No existe hasta donde sabemos una manera mecánica de elegir este conjunto. Para que el \problem{RMP} resulte al menos factible, se precisa una heurística que provea una solución factible inicial. No es crítico en este paso que la solución esté demasiado cerca del óptimo, por lo que se priorizarán heurísticas rápidas. Proveemos una heurística en la Sección \ref{section:initial-solution-heuristic}, sin embargo, ésta podría reportar que no existen soluciones factibles cuando sí las hay, y en ese caso en \ref{feasibility-problem} damos un algoritmo infalible aunque mucho más lento.
 
 Desrochers et al. discuten en \cite{desrochers1992} si conviene modificar levemente el \problem{RMP} para aliviar la fase de pricing. La igualdad en \ref{eq:rmp1} se reemplaza por una desigualdad que no descarta soluciones factibles pero que resulta computacionalmente menos costosa:
 
@@ -159,7 +159,7 @@ En el ejemplo de \cite{desrochers1992} la ganancia es clave: el problema de pric
 
 \subsection{Problema dual}
 
-Será útil calcular el problema dual de la relajación lineal del Restricted Master Problem. Esto nos servirá más adelante para calcular los costos reducidos de las variables del RMP. 
+Será útil calcular el problema dual de la relajación lineal del Restricted Master Problem. Esto nos servirá más adelante para calcular los costos reducidos de las variables del \problem{RMP}. 
 Dado que éste tiene $|S| + 1$ desigualdades, en el dual hay $|S| + 1$ variables, que las llamaremos $\lambda_s$ para $s \in \{0, \dots, |S|\}$. Utilizamos la siguiente convención: $\lambda_0$ es la variable dual asociada a \ref{eq:rmp2} y $\lambda_{s}$ es la variable asociada al $s-$ésimo cliente de $S$ de \ref{eq:rmp1}.
 \\
 
@@ -176,13 +176,13 @@ Sujeto a:
 \lambda_0 \geq 0 &
 \end{align}
 
-Cabe aclarar que si en el RMP se utiliza la desigualdad \ref{eq:ge-restriction-rmp} en lugar de la igualdad \ref{eq:rmp1}, el problema dual permanece igual salvo por que la clase de variables $\lambda_s$ cambia su rango a $\lambda_s \leq 0$. 
+Cabe aclarar que si en el \problem{RMP} se utiliza la desigualdad \ref{eq:ge-restriction-rmp} en lugar de la igualdad \ref{eq:rmp1}, el problema dual permanece igual salvo por que la clase de variables $\lambda_s$ cambia su rango a $\lambda_s \leq 0$. 
 
 
 \subsection{Heurística para una solución inicial}
 \label{section:initial-solution-heuristic}
 
-El algoritmo de generación de columnas necesita que en cada iteración tengamos una solución factible del problema maestro, incluida la primera, que luego es utilizada por el subproblema de pricing. Por eso desarrollamos una heurística que encuentra una asignación de rutas factible para \problem{Star VRP}.
+El algoritmo de generación de columnas necesita que en cada iteración tengamos una solución factible del Problema Maestro, incluida la primera, que luego es utilizada por el subproblema de pricing. Por eso desarrollamos una heurística que encuentra una asignación de rutas factible para \problem{Star VRP}.
 
 Esta heurística depende fuertemente del hecho de que $G$ es completo. Vamos a empezar con una definición.
 
@@ -379,12 +379,11 @@ El \emph{pulso} se define como una señal que comienza en el vértice $v_s$ y de
 
 Notemos que en este nuevo lenguaje el problema se transforma en encontrar el camino parcial que llega a $v_e$ y tiene menor $r(C)$ satisfaciendo $q(C) \leq Q$.
 
-
 \subsubsection{Algoritmo de pulsos}
 
 El algoritmo necesita dos reglas de propagación, para visitar todas las combinaciones de nodos y clientes. En cada paso el pulso tiene dos opciones, o bien reproducirse y propagarse a todos los vecinos del vértice actual, transmitiendo a cada uno de sus descendientes la información que recolectó en su duración de vida, o bien sumar un cliente válido al acumulado. La primera regla se llama regla de \emph{propagación a nodos} y la segunda de \emph{propagación a clientes}. Ahora bien, surge la necesidad de definir una función que en cada paso valide si el pulso es \emph{factible}, y que además tenga la capacidad de descartar pulsos subóptimos. Para el descarte se utilizarán dos heurísticas. La primera utiliza una matriz de tamaño $|N| \times (Q+1)$ que contiene cotas inferiores para el precio restante hasta que el pulso llegue a destino. La segunda heurística tiene la capacidad de deshacer las últimas elecciones de propagación en caso de que se tenga alguna certeza de que nos dirigimos a una sección del espacio de búsqueda poco prometedora.
 
-El algoritmo se divide en tres partes. La primera rutina es el algoritmo maestro que solamente inicia la propagación y también llama al esquema de acotaciones que calcula la matriz de costos inferiores. La segunda parte se encarga de propagar recursivamente los pulsos hasta llegar al destino, o bien de descartarlos. Existen tres reglas de descarte que serán explicadas más adelante. Por último aparece el algoritmo que precalcula las cotas inferiores.
+Este algoritmo como un todo está compuesto por tres partes. En primer lugar, el Algoritmo \ref{al:pulse-master} se llama algoritmo maestro porque solamente se encarga de inicializar el proceso, llamando a las otras rutinas. Por otro lado, antes de iniciar la propagación, el Algoritmo \ref{al:pulse-bound} precalcula una matriz de cotas de finalización, que servirá para acelerar la búsqueda. La tercera parte se encarga de propagar recursivamente el pulso hasta llegar al destino, o bien de descartarlo. Esta última parte está compuesta por dos procesos (Algoritmo \ref{al:pulse-node-propagation} y Algoritmo \ref{al:pulse-customer-propagation}), que implementan las reglas de propagación a nodos y a clientes, respectivamente. Para descartar pulsos subóptimos existen tres reglas: una que utiliza cotas de finalización, otra que rechaza pulsos infactibles y la última que se llama estrategia de \emph{rollback}.
 
 \begin{algorithm}[H]
   \caption{Algoritmo maestro}
@@ -393,58 +392,74 @@ El algoritmo se divide en tres partes. La primera rutina es el algoritmo maestro
   	\Require Un grafo $G = (N, E)$ y las variables duales $\{\lambda^*_0, \dots, \lambda^*_{|S|}\}$.
   	\Ensure La ruta factible de menor precio $\mathscr{R}^{*}$.
         \State $\texttt{bound()}$
-        \State $\texttt{pulse(} d, \emptyset \texttt{)}$
+        \State $\texttt{propagateToNode(} \emptyset, d \texttt{)}$
 	\Return $\mathscr{R}^{*}$
   \end{algorithmic}
 \end{algorithm}
 
-El proceso \texttt{bound} se detalla en el Algoritmo \ref{al:pulse-bound}, que es donde se construye la matriz de cotas inferiores. El procedimiento \texttt{pulse} (Algoritmo \ref{al:pulse-node-propagation}) comienza a propagar el pulso, inicialmente con la regla \emph{propagación a nodos}. El valor $\mathscr{R}^{*}$ funciona como una variable global que indica la mejor ruta encontrada hasta el momento y se actualiza a medida que se van encontrando soluciones de menor precio. La variable $\mathscr{R}^{*}$ recibe el nombre de mínimo \emph{incumbente}. 
+El proceso \texttt{bound} inicializa una matriz de cotas inferiores, cuyo funcionamiento se explica en detalle en la Subsección \ref{subsubsection:pulse-lower-bound}. El procedimiento en la segunda línea comienza a propagar el pulso, inicialmente con la regla \emph{propagación a nodos}. El valor $\mathscr{R}^{*}$ funciona como una variable global que indica la mejor ruta encontrada hasta el momento y se actualiza a medida que se van encontrando soluciones de menor precio. La variable $\mathscr{R}^{*}$ recibe el nombre de mínimo \emph{incumbente}. 
 
-Detallamos el procedimiento \texttt{pulse}:
+A continuación detallamos el procedimiento de propagación, que como mencionamos anteriormente se compone de los algoritmos de propagación a nodos y a clientes. 
 
 \begin{algorithm}[H]
-  \caption{Algoritmo de propagación de pulso}
+  \caption{Algoritmo de propagación a nodos}
   \label{al:pulse-node-propagation}
   \begin{algorithmic}[1]
-  	\Require $C$ el camino parcial recorrido por el pulso, $v$ un nodo a visitar y $s$ un cliente
+  	\Require $C$ el camino parcial recorrido por el pulso y $v$ el próximo nodo a visitar 
   	\Ensure $\emptyset$.
+  	\State $\texttt{update(} C \texttt{)}$ // Agregar el nuevo nodo a $C$.
         \If{$\texttt{isFeasible(} C \texttt{)} \wedge \texttt{!checkBounds(} C \texttt{)} \wedge \texttt{!rollback(} C \texttt{)}$}
-            \State $\texttt{update(} C \texttt{)}$
             \If{$v == v_e \wedge r(C) < r(\mathscr{R}^{*})$}
                 \State $\mathscr{R}^{*} \gets C$
             \Else
                 \ForEach{$s' \in \varrho^{-1}(v)$}
-                    \State $\texttt{pulse(} s', C\texttt{)}$
+                    \State $\texttt{propagateToCustomer(} C, v, s'\texttt{)}$
                 \EndFor
                 \ForEach{$v' \in N$}
-                    \State $\texttt{pulse(}v', C \texttt{)}$
+                    \State $\texttt{propagateToNode(} C, v' \texttt{)}$
                 \EndFor
             \EndIf
         \EndIf
   \end{algorithmic}
 \end{algorithm}
 
-Ambas reglas tienen una estructura muy similar, entonces el pseudocódigo que las describe es el mismo, sin embargo, en la práctica podría resultar útil implementar dos funciones por separado.
-La primera línea aplica las tres estrategias de pruning que se detallarán más adelante, tanto para chequear factibilidad como para descartar a un pulso subóptimo.
-En la próxima línea se actualiza el camino parcial $C$ con la información del nuevo nodo o cliente visitado, formando así un nuevo camino parcial $C'$.
+\begin{algorithm}[H]
+  \caption{Algoritmo de propagación a clientes}
+  \label{al:pulse-customer-propagation}
+  \begin{algorithmic}[1]
+  	\Require $C$ el camino parcial recorrido por el pulso, $v$ el nodo actual y $s$ el próximo cliente a visitar
+  	\Ensure $\emptyset$.
+  	\State $\texttt{update(} C \texttt{)}$ // Agregar el nuevo nodo a $C$.
+        \If{$\texttt{isFeasible(} C \texttt{)} \wedge \texttt{!checkBounds(} C \texttt{)} \wedge \texttt{!rollback(} C \texttt{)}$}
+            \If{$v == v_e \wedge r(C) < r(\mathscr{R}^{*})$}
+                \State $\mathscr{R}^{*} \gets C$
+            \Else
+                \ForEach{$s' \in \varrho^{-1}(v)$}
+                    \State $\texttt{propagateToCustomer(} C, v, s'\texttt{)}$
+                \EndFor
+                \ForEach{$v' \in N$}
+                    \State $\texttt{propagateToNode(} C, v' \texttt{)}$
+                \EndFor
+            \EndIf
+        \EndIf
+  \end{algorithmic}
+\end{algorithm}
 
-En el caso de propagar a un cliente $s$ la regla es:
+Ambas reglas tienen una estructura muy similar.En la Línea 1 se actualiza el camino parcial $C$ con la información del nuevo nodo o cliente visitado, respectivamente, formando así un nuevo camino parcial $C'$. En el caso de propagar a un cliente $s$ se actualiza:
 \begin{itemize}
     \item $q(C') = q(C) + q_s$
     \item $r(C') = r(C) - \lambda^{*}_s$
     \item $s(C') = s(C) \cup \{s\}$
 \end{itemize}
 
-En el caso de propagar a un nodo $v$ se debe actualizar:
-
+Por otro lado, la regla de propagación a nodos es:
 \begin{itemize}
     \item $r(C') = r(C) + w_{uv}$, donde $u$ es el nodo anterior.
     \item $p(C') = p(C) \cup \{v\}$
 \end{itemize}
 
-La condición de la línea 3 indica que si el pulso llega hasta el destino $v_e$, se detiene la propagación, luego se actualiza el valor de $\mathscr{R}^{*}$ si es menor al mínimo incumbente.
 
-Las líneas 7 y 9 llaman recursivamente al procedimiento de propagación. Resulta conveniente primero propagar a clientes y después a nodos, porque uno esperaría que de esta manera descartáramos lo antes posible los pulsos que comenzaron por caminos malos. 
+La segunda línea aplica las tres estrategias de pruning que se detallan más adelante, para descartar a un pulso subóptimo o infactible. La condición de la línea 3 indica que si el pulso llega hasta el destino $v_e$, se detiene la propagación, luego se actualiza el valor de la variable global $\mathscr{R}^{*}$ si es menor al mínimo incumbente. Las líneas 7 y 9 llaman recursivamente al procedimiento de propagación. Resulta conveniente primero propagar a clientes y después a nodos, porque uno esperaría que de esta manera descartáramos lo antes posible los pulsos que comenzaron por caminos malos.
 
 Antes de poder mostrar el último algoritmo tenemos que explicar cómo funcionan las reglas de descarte de soluciones. Existen tres reglas de \emph{poda} o \emph{pruning} que vamos a ver en esta sección.
 
@@ -468,14 +483,14 @@ Por otro lado existe la regla de poda de \emph{cotas inferiores}. Para eso vamos
 
 Esto nos permite inferir una regla de poda: el camino parcial $C$ puede ser podado si ya existe otro camino factible $\tilde{C}$ que llega a $v_e$ tal que $r(\tilde{C}) \leq r(C) + CB(C)$, porque combinando esta regla con la ecuación \ref{eq:completion-bound} surge que entre todas las potenciales extensiones de $C$, ninguna podría mejorar el precio ya encontrado de $\tilde{C}$.
 
-Utilizamos un algoritmo de programación dinámica para implementar este chequeo. La matriz $\mathscr{L}$ tiene una columna por cada valor posible de $q$ y una fila por cada nodo $v$. Se define $\mathscr{L}_{vq}$ como la menor cota de finalización $CB(C)$ para cualquier camino parcial $C$ que termina en $v$ con una cantidad de demanda consumida exactamente igual a $q$. En términos coloquiales, lo que nos provee $\mathscr{L}_{vq}$ es una cota inferior del precio de la ruta que une $v$ con $v_e$, es decir, de lo que \emph{le falta} al pulso para llegar a destino. Por lo tanto, si 
+Utilizamos un algoritmo de programación dinámica para implementar este chequeo. La matriz $\mathscr{L}$ tiene una columna por cada valor posible de $q$ y una fila por cada nodo $v$. Se define $\mathscr{L}_{vq}$ como la menor cota de finalización $CB(C)$ para cualquier camino parcial $C$ que termina en $v$ con una cantidad de demanda consumida exactamente igual a $q$. En términos coloquiales, lo que nos provee $\mathscr{L}_{vq}$ es una cota inferior del precio de la ruta que une $v$ con $v_e$, es decir, de lo que \emph{le falta} al pulso para llegar a destino. Por lo tanto, si un camino parcial $C$ con $q(C) = q$ verifica
 \begin{equation}
 \label{eq:completion-bound-check}
-    r(C) + \mathscr{L}_{v, q(C)} \geq r(\mathscr{R}^{*})
+    r(C) + \mathscr{L}_{vq} \geq r(\mathscr{R}^{*})
 \end{equation}
 entonces no existe ninguna extensión posible del pulso que pueda mejorar el óptimo actual y se detiene la propagación.
 
-El algoritmo se detalla con el siguiente pseudocódigo:
+Para poder implementar esta regla, es necesario que tengamos precalculadas las cotas de finalización para todos los valores posibles de $v \in N$ y $0 \leq q \leq Q$. De esto se encarga el Algoritmo \ref{al:pulse-bound}. Recordemos que en el algoritmo maestro esto se computa incluso antes de iniciar la propagación.
 
 \begin{algorithm}[H]
   \caption{Esquema de acotaciones}
@@ -484,15 +499,12 @@ El algoritmo se detalla con el siguiente pseudocódigo:
   	\Require Un grafo $G=(N, E)$ y la capacidad $Q$.
   	\Ensure Una matriz $\mathscr{L} \in \mathbb{R}^{|N| \times (Q+1)}$ de cotas inferiores.
         \For{$q \in \{Q, \dots, 0\}$}
-            \ForEach{$u \in N$}
+            \ForEach{$v \in N$}
                 \State $C \gets \emptyset$ 
                 \State $q(C) \gets q$
-                \State $\texttt{pulseToNode(}u, C \texttt{)}$
-                \If{$\mathscr{R}^{*} \text{ es factible}$}
-                    \State $\mathscr{L}_{uq} \gets \infty$
-                \Else
-                    \State $\mathscr{L}_{uq} \gets r(\mathscr{R}^{*})$
-                \EndIf
+                \State $\mathscr{R}^{*} \gets \infty$
+                \State $\texttt{propagateToNode(}C, v \texttt{)}$
+                \State $\mathscr{L}_{vq} \gets \mathscr{R}^{*}$ // Si no existe una ruta factible entonces $\mathscr{R}^{*} = \infty$.
             \EndFor
         \EndFor
         \Return $\mathscr{L}$
@@ -520,18 +532,21 @@ En la implementación de este algoritmo tomamos la decisión de que los valores 
 
 \subsubsection{Rollback Pruning}
 
-La regla de rollback que se propone en \cite{lozano-duque-medaglia} para el problema con \emph{time windows} es fácilmente adaptable al problema que estamos resolviendo, solamente basta eliminar el chequeo de las variables de tiempo. Ésta surge ya que la búsqueda por profundidad suele tener como desventaja que las malas decisiones tomadas en las etapas tempranas de búsqueda pueden conducir a regiones poco esperanzadoras y se necesita un buen rato hasta que el algoritmo regrese y corrija la decisión. Para evitar esta conducta, es una buena idea buscar alguna seguridad extra antes de tomar un camino y caso contrario deshacer la última elección. Nos basamos en la siguiente observación:
+La regla de \emph{rollback} que se propone en \cite{lozano-duque-medaglia} para el problema con \emph{time windows} es fácilmente adaptable al problema que estamos resolviendo, solamente basta eliminar el chequeo de las variables de tiempo. Ésta surge ya que la búsqueda por profundidad suele tener como desventaja que las malas decisiones tomadas en las etapas tempranas de búsqueda pueden conducir a regiones poco esperanzadoras y se necesita un buen rato hasta que el algoritmo regrese y corrija la decisión. Para evitar esta conducta, es una buena idea buscar alguna seguridad extra antes de tomar un camino y caso contrario deshacer la última elección. Primero vamos a introducir un nuevo concepto.
 
-\begin{observation}
-    Si dos caminos parciales $C$ y $C'$ llegan hasta el mismo nodo $v$, y son tales que $q(C') \leq q(C)$, $r(C') \leq r(C)$, $p(C') \subseteq p(C)$, $s(C') \subseteq s(C)$ y alguna de las condiciones se cumple estrictamente, entonces podemos descartar $C$.
-\end{observation}
+\begin{definition}
+    (Relación de dominación de pulsos).
+    Si dos caminos parciales $C$ y $C'$ llegan hasta el mismo nodo $v$, y son tales que $q(C') \leq q(C)$, $r(C') \leq r(C)$, $p(C') \subseteq p(C)$, $s(C') \subseteq s(C)$ y alguna de las condiciones se cumple estrictamente, se dice que $C'$ \emph{domina a} $C$.
+\end{definition}
 
-Supongamos que tenemos un camino parcial $C$ de longitud al menos 2 que termina en $v_j$ y el nodo anterior es $v_k$, y consideremos $C'$ el camino parcial que también termina en $v_j$ y que utiliza los mismos nodos que $C$ pero se saltea $v_k$. Sea $v_i$ el penúltimo nodo de $C'$, que por definición es el antepenúltimo de $C$, anterior a $v_k$. Por construcción, sabemos que $p(C') \subset p(C)$ (que se cumple estrictamente), también valen $s(C') \subseteq s(C)$ y $q(C') \leq q(C)$. Si se verifica que $r(C') \leq r(C)$, entonces podríamos descartar a $C$.
+Bajo esta definición podemos utilizar un resultado de Feillet et al. en \cite{feillet-et-al}, donde se demuestra que solo es necesario considerar caminos parciales no dominados, en otras palabras, $C$ puede ser descartado con seguridad de que no llevará a una solución óptima.
+
+Ahora, supongamos que tenemos un camino parcial $C$ de longitud al menos 2 que termina en $v_j$ y el nodo anterior es $v_k$, y consideremos $C'$ el camino parcial que también termina en $v_j$ y que utiliza los mismos nodos que $C$ pero se saltea $v_k$. Sea $v_i$ el penúltimo nodo de $C'$, que por definición es el antepenúltimo de $C$, anterior a $v_k$. Por construcción, sabemos que $p(C') \subset p(C)$ (que se cumple estrictamente), también valen $s(C') \subseteq s(C)$ y $q(C') \leq q(C)$. Si se verifica que $r(C') \leq r(C)$, entonces podríamos descartar a $C$ ya que $C'$ lo dominaría.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{img/rollback_pruning.jpg}
-\caption{Representación gráfica de los caminos parciales}
+\caption{Representación gráfica de los caminos parciales. (Fuente: \cite{lozano-duque-medaglia}).}
 \label{fig:rollback-pruning}
 \centering
 \end{figure}
@@ -591,7 +606,7 @@ Vamos a dar una definición clave:
 
 \begin{definition}
 \label{def:domination}
-    (Relación de dominación).
+    (Relación de dominación de etiquetas).
     Una etiqueta $L$ \emph{domina a} $L'$, y se denota $L \preceq L'$, si ambas están asociadas al mismo vértice $v_i$ y se cumplen:
     \begin{enumerate}
         \item $q(L) \leq q(L')$
@@ -638,9 +653,11 @@ En el Algoritmo \ref{al:label-setting} utilizamos la siguiente notación: $\Gamm
                 \EndFor
             \EndIf
         \EndWhile
+        \State $\mathscr{R}^{*} \gets \emptyset$
         \ForEach{$\ell = (q, p, s, c, v) \in \Gamma : v = v_e$}
             \If{$c < c(\mathscr{R}^{*})$}
-                \State $\mathscr{R}^{*} \gets \ell$
+                \State {Reconstruir la ruta $r^{*}$ a partir de la etiqueta $\ell$ y sus antecesoras.}
+                \State $\mathscr{R}^{*} \gets r^{*}$
             \EndIf
         \EndFor
         \Return $\mathscr{R}^{*}$
@@ -652,9 +669,9 @@ En el Algoritmo \ref{al:label-setting} utilizamos la siguiente notación: $\Gamm
 
 En la práctica, la elección de una estructura de datos apropiada para $\Gamma$ es clave para lograr una mejor complejidad computacional.
 
-Para representar los conjuntos de clientes o nodos ($p(L)$ y $s(L)$) resulta conveniente utilizar un BitSet, cuya complejidad para verificar si un conjunto está incluido en otro es $\mathcal{O}(1)$. Esto permitiría realizar el chequeo de si una etiqueta domina a otra en $\mathcal{O}(1)$. 
+Empezamos describiendo una forma eficiente de verificar si una etiqueta domina a otra. Esto equivale a corroborar las cuatro condiciones de la Definición \ref{def:domination}. Primero observemos que si $s(L) \subseteq s(L')$ entonces $q(L) \leq q(L')$, ya que la demanda acumulada viene dada en función de los clientes atendidos. Este hecho nos ahorra chequear la primera de las cuatro condiciones, que sería redundante. Además, si $c(L) \leq c(L')$ puede ser verificado en $\mathcal{O}(1)$. Para representar los conjuntos de clientes o nodos ($p(L)$ y $s(L)$) resulta conveniente utilizar una estructura de datos de tipo \texttt{BitSet}, que para verificar si un conjunto está incluido en otro tiene una complejidad teórica de $\mathcal{O}(log(|N|))$, lo cual en la práctica es mucho más rápido que utilizando un \texttt{Set} tradicional. Estas consideraciones permitirían realizar el chequeo de si una etiqueta domina a otra en $\mathcal{O}(log(|N|))$.
 
-Para $\Gamma$ usamos un diccionario que tiene como claves los BitSets que simbolizan $p(L)$ y como valores otro diccionario, cuyas claves son los valores de $s(L)$, en forma de BitSet, y cuyos valores son las etiquetas $L$. 
+Para $\Gamma$ usamos un diccionario que tiene como clave el \texttt{BitSet} que simboliza $p(L)$ y como valor otro diccionario, cuya clave es el valor de $s(L)$, también en forma de \texttt{BitSet}, y cuyo valor es la misma etiqueta $L$.
 
 Bajo estos supuestos, la cantidad de etiquetas no puede ser infinita, aunque la cota no es muy alentadora. Se tiene que $|\Gamma| \leq 2^{|N|} \times 2^{|S|}$. La complejidad de búsqueda en esta estructura es proporcional a este valor, y eso da pie a la presentación de la próxima heurística.
 
@@ -693,7 +710,7 @@ Nos gustaría que si $r_1$ tiene menor costo reducido que $r_2$, entonces el pre
     \sum_{s \in \tilde{S}_r}{\tilde{w}_s} < \varepsilon \quad \forall \tilde{S}_r \subseteq S
 \end{equation}
 
-Donde $\varepsilon$ debe ser tal que $\bar{c}_{r_1} - \bar{c}_{r_2} > \varepsilon$ para todos $r_1, r_2 \in \Omega$ tales que $\bar{c}_{r_1} - \bar{c}_{r_2} > 0$. En la práctica es suficiente tomar $\varepsilon = 1$.
+Donde $\varepsilon$ debe ser tal que $\bar{c}_{r_1} - \bar{c}_{r_2} > \varepsilon$ para todos $r_1, r_2 \in \Omega$ tales que $\bar{c}_{r_1} - \bar{c}_{r_2} > 0$. 
 
 En el algoritmo se implementó de la siguiente manera: supongamos que un cliente $s$ es atendido desde un nodo $v$ (por supuesto, $v \in \varrho(s)$), luego basta $\tilde{w}_s = \alpha w_{vs}$, donde
 \begin{equation}
@@ -728,7 +745,7 @@ Utilizamos la siguiente notación: $\tilde{\Omega}$ es el conjunto de rutas desc
     \nu(r) = \{s \in S : \exists v \in C_r \wedge v \in \varrho(s)\} = \bigcup_{v \in C_r}{\varrho^{-1}(v)}
 \end{equation}
 
-El siguiente algoritmo tiene como objetivo encontrar algunas rutas factibles que no están en $\tilde{\Omega}$ pero que son rutas ``razonables'', para poder agregarlas a este conjunto antes de la próxima iteración. Llamamos $\Omega^{*}$ al conjunto de rutas factibles que se descubren con este algoritmo. Vale que $\Omega^{*} \subset \Omega$ y $\Omega^{*} \cap \tilde{\Omega} = \emptyset$.
+El siguiente algoritmo tiene como objetivo encontrar algunas rutas factibles que no están en $\tilde{\Omega}$ pero que son rutas ``razonables'', para poder agregarlas a este conjunto antes de la próxima iteración. Llamamos $\Omega^{*}$ al conjunto de rutas factibles que se descubren con este algoritmo.
 
 \begin{algorithm}[H]
   \caption{Heurística para mejorar asignación de clientes a rutas}
@@ -738,7 +755,7 @@ El siguiente algoritmo tiene como objetivo encontrar algunas rutas factibles que
   	\Ensure $\Omega^{*}$ una asignación de rutas a vehículos. 
         \State $\Omega^{*} \gets \emptyset$
         \ForEach {$s \in S$}
-            \If {$s$ no es atendido por $\Omega^{*}$}
+            \If {$s$ no es atendido por una ruta de $\Omega^{*}$}
                 \State Sea $r$ la ruta de menor costo de $\tilde{\Omega}$ que atiende a $s$.
                 \State Calcular $\nu(r)$.
                 \State Calcular $\mathscr{P}$, una partición factible minimal de $\nu(r)$, con el Algoritmo \ref{al:feasible_minimal_partition_algorithm}
@@ -751,7 +768,7 @@ El siguiente algoritmo tiene como objetivo encontrar algunas rutas factibles que
   \end{algorithmic}
 \end{algorithm}
 
-Para mejorar un poco esta solución se puede reforzar con otra heurística. Se dice que un par de rutas $r_1, r_2 \in \Omega^{*}$ puede ser \emph{mejorado} por una única ruta $r^{*} \in \Omega$ si esta ultima es menos costosa que la suma de $r_1$ y $r_2$ y los clientes atendidos por $r_1$ y $r_2$ pueden atenderse desde desde $r^{*}$ sin violar las restricciones de capacidad.
+Para mejorar un poco esta solución se puede reforzar con otra heurística. Se dice que un par de rutas $r_1, r_2 \in \Omega^{*}$ puede ser \emph{mejorado} por una única ruta $r^{*} \in \Omega$ si esta última es menos costosa que la suma de $r_1$ y $r_2$ y los clientes atendidos por $r_1$ y $r_2$ pueden atenderse desde desde $r^{*}$ sin violar las restricciones de capacidad.
 
 Un algoritmo ``burbuja'' chequea todos los pares de rutas hasta encontrar uno que pueda ser \emph{mejorado}. El pseudocódigo luce así:
 
