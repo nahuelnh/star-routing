@@ -37,15 +37,15 @@
 \contentsline {section}{\numberline {3.1}Generación de Instancias}{40}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Análisis de Performance}{40}{section.3.2}%
 \contentsline {subsection}{\numberline {3.2.1}Modelo Compacto}{41}{subsection.3.2.1}%
-\contentsline {subsection}{\numberline {3.2.2}Generación de columnas con pricing de programación lineal entera}{42}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.2}Generación de columnas con pricing de programación lineal entera}{43}{subsection.3.2.2}%
 \contentsline {subsection}{\numberline {3.2.3}Algoritmo de propagación de pulsos}{45}{subsection.3.2.3}%
 \contentsline {subsection}{\numberline {3.2.4}Algoritmo de Label Setting}{47}{subsection.3.2.4}%
 \contentsline {subsection}{\numberline {3.2.5}Análisis de tendencias}{49}{subsection.3.2.5}%
-\contentsline {section}{\numberline {3.3}Heurísticas}{50}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}Heurísticas de Label Setting}{51}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}2-Step Column Generation}{56}{subsection.3.3.2}%
-\contentsline {subsection}{\numberline {3.3.3}Terminación temprana}{61}{subsection.3.3.3}%
-\contentsline {chapter}{\numberline {4}Conclusiones}{65}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Análisis de Resultados}{66}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Discusión}{66}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Trabajo Futuro}{67}{section.4.3}%
+\contentsline {section}{\numberline {3.3}Heurísticas}{51}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Heurísticas de Label Setting}{52}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}2-Step Column Generation}{57}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Terminación temprana}{62}{subsection.3.3.3}%
+\contentsline {chapter}{\numberline {4}Conclusiones}{67}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Análisis de Resultados}{68}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Discusión}{68}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Trabajo Futuro}{69}{section.4.3}%
