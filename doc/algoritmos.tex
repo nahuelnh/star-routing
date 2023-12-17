@@ -10,8 +10,8 @@ Si bien fue explicado en detalle en \ref{star-vrp}, por motivos de practicidad a
 \begin{itemize}
     \item Un grafo dirigido y completo $G = (N, E)$.
     \item El conjunto de vehículos disponibles es $K$.
+    \item Un nodo distinguido $d \in N$ llamado \emph{depósito}.
     \item Un conjunto de clientes $S \subseteq N \setminus \{d\}$.
-    \item Un nodo distinguido llamado \emph{depósito} y notado $d$, tal que $d \in N$ pero $d \notin S$.
     \item Un valor de \emph{capacidad}, denominada $Q \in \mathbb{Z}^{+}$, que es igual para todos los vehículos.
     \item  $q_s \in \mathbb{Z}^{+}$ la \emph{demanda} asociada al cliente $s$.
     \item Un \emph{conjunto de paradas} $\varrho(s) \subseteq N$ para cada cliente $s$, que es el conjunto de vértices desde las cuales se lo puede atender. Vamos a utilizar como convención que $s \in \varrho(s)$.
@@ -323,7 +323,7 @@ El problema se define sobre un grafo dirigido $G = (N \cup \{n+1\}, E)$, donde e
 
 Una aclaración importante es que para problemas de camino mínimo es usual que para los nodos fuente y sumidero se empleen los nombres $v_s$ y $v_e$, que en el caso del depósito difiere de la notación de las secciones anteriores (antes lo llamábamos $d$), por lo tanto, en esta subsección y en las que vemos cómo resolver \problem{ESPPRC} utilizando algoritmos sobre grafos (Secciones \ref{section:pricing-pulses} y \ref{section:pricing-labeling}), el lector puede esperar que utilicemos estos nuevos nombres.
 
-Ahora, veamos que podemos expresar el problema de pricing de \problem{Star VRP} detallado en \ref{star-pricing} en términos de un \problem{ESPPRC} levemente modificado. La principal diferencia es que en nuestro modelo, el consumo de recursos no se efectúa al recorrer una arista sino o bien al atravesar un vértice, o bien al atender a un cliente. Existe un único recurso, $1$, tal que $C_1 = Q$ y $d_{s}^{1} = q_s$. Además, cada vez que se decide atender un cliente $s$ el precio acumulado disminuye en una cantidad igual a $\lambda^{*}_s$.
+Ahora, veamos que podemos expresar el problema de pricing de \problem{Star VRP} detallado en \ref{star-pricing} en términos de un \problem{ESPPRC} levemente modificado. La principal diferencia es que en nuestro modelo, el consumo de recursos no se efectúa al recorrer una arista sino al atravesar un vértice, o bien al atender a un cliente. Existe un único recurso $1$, tal que $C_1 = Q$ y $d_{s}^{1} = q_s$. Además, cada vez que se decide atender un cliente $s$ el precio acumulado disminuye en una cantidad igual a $\lambda^{*}_s$.
 
 Siguiendo la idea de que cada cliente $s$ tiene asociado un conjunto de paradas $\varrho(s) \subseteq N$, ahora sería útil definir el concepto inverso, o sea, el conjunto de clientes asociados a una parada en un vértice $v$.
 
@@ -364,7 +364,7 @@ La ecuación \ref{eq:pricing1} indica que la cantidad de arcos que entra al nodo
 
 Discutimos en la Sección \ref{section:rmp} que la fortaleza de los algoritmos de generación de columnas por lo general recae en encontrar una formulación eficiente para el problema de pricing. La buena noticia es que como el marco de trabajo es suficientemente flexible, entonces no estamos obligados a resolver este problema de optimización con programación lineal entera. A continuación se detalla un algoritmo sobre grafos, que es a resumidas cuentas un backtracking que utiliza búsqueda en profundidad (DFS), con varias podas eficientes. El trabajo está fuertemente basado en una publicación de Lozano, Duque \& Medaglia \cite{lozano-duque-medaglia} que fue particularmente relevante ya que proponen un algoritmo innovador para resolver \problem{ESPPRC}. Si bien la publicación originalmente se enfoca a instancias de \problem{VRPTW}, no resultará difícil encontrar un algoritmo para \problem{Star VRP}.
 
-Vamos a utilizar la analogía de un \emph{pulso} se propaga a través de un grafo. La \emph{propagación} comienza en el nodo inicial a todos sus vecinos, que a su vez pueden o bien extenderlo recursivamente, hasta llegar al nodo final, o bien descartarlo si alguna de las restricciones de recursos es violada. El pulso de menor precio que llega hasta el nodo destino sería la solución al problema. Notemos que es un algoritmo exacto y que siempre termina si no se permite que el pulso revisite vértices, ya que la cantidad de caminos elementales del inicio al final es finita y se los recorre todos. 
+Vamos a utilizar la analogía de un \emph{pulso} se propaga a través de un grafo. La \emph{propagación} comienza en el nodo inicial a todos sus vecinos, que a su vez pueden o bien extenderlo recursivamente, hasta llegar al nodo final, o bien descartarlo si alguna de las restricciones de recursos es violada. El pulso de menor precio que llega hasta el nodo destino sería la solución al problema. Notemos que es un algoritmo exacto y que siempre termina si no se permite que el pulso revisite vértices, ya que la cantidad de caminos elementales del inicio al final es finita y se los recorre a todos. 
 
 \subsubsection{Representación y variables del problema}
 
@@ -383,7 +383,7 @@ Notemos que en este nuevo lenguaje el problema se transforma en encontrar el cam
 
 El algoritmo necesita dos reglas de propagación, para visitar todas las combinaciones de nodos y clientes. En cada paso el pulso tiene dos opciones, o bien reproducirse y propagarse a todos los vecinos del vértice actual, transmitiendo a cada uno de sus descendientes la información que recolectó en su duración de vida, o bien sumar un cliente válido al acumulado. La primera regla se llama regla de \emph{propagación a nodos} y la segunda de \emph{propagación a clientes}. Ahora bien, surge la necesidad de definir una función que en cada paso valide si el pulso es \emph{factible}, y que además tenga la capacidad de descartar pulsos subóptimos. Para el descarte se utilizarán dos heurísticas. La primera utiliza una matriz de tamaño $|N| \times (Q+1)$ que contiene cotas inferiores para el precio restante hasta que el pulso llegue a destino. La segunda heurística tiene la capacidad de deshacer las últimas elecciones de propagación en caso de que se tenga alguna certeza de que nos dirigimos a una sección del espacio de búsqueda poco prometedora.
 
-Este algoritmo como un todo está compuesto por tres partes. En primer lugar, el Algoritmo \ref{al:pulse-master} se llama algoritmo maestro porque solamente se encarga de inicializar el proceso, llamando a las otras rutinas. Por otro lado, antes de iniciar la propagación, el Algoritmo \ref{al:pulse-bound} precalcula una matriz de cotas de finalización, que servirá para acelerar la búsqueda. La tercera parte se encarga de propagar recursivamente el pulso hasta llegar al destino, o bien de descartarlo. Esta última parte está compuesta por dos procesos (Algoritmo \ref{al:pulse-node-propagation} y Algoritmo \ref{al:pulse-customer-propagation}), que implementan las reglas de propagación a nodos y a clientes, respectivamente. Para descartar pulsos subóptimos existen tres reglas: una que utiliza cotas de finalización, otra que rechaza pulsos infactibles y la última que se llama estrategia de \emph{rollback}.
+El algoritmo de pulsos como un todo está compuesto por tres partes. En primer lugar, el Algoritmo \ref{al:pulse-master} se llama algoritmo maestro porque se encarga de inicializar el proceso, llamando a las otras rutinas. Por otro lado, antes de iniciar la propagación, el Algoritmo \ref{al:pulse-bound} precalcula la matriz de cotas de finalización, que servirá para acelerar la búsqueda. La tercera parte se encarga de propagar recursivamente el pulso hasta llegar al destino, o bien de descartarlo. Esta última parte está compuesta por dos procesos (Algoritmo \ref{al:pulse-node-propagation} y Algoritmo \ref{al:pulse-customer-propagation}), que implementan las reglas de propagación a nodos y a clientes, respectivamente. Para descartar pulsos subóptimos existen tres reglas: una que utiliza cotas de finalización, otra que rechaza pulsos infactibles y la última que se llama estrategia de \emph{rollback}.
 
 \begin{algorithm}[H]
   \caption{Algoritmo maestro}
@@ -397,7 +397,7 @@ Este algoritmo como un todo está compuesto por tres partes. En primer lugar, el
   \end{algorithmic}
 \end{algorithm}
 
-El proceso \texttt{bound} inicializa una matriz de cotas inferiores, cuyo funcionamiento se explica en detalle en la Subsección \ref{subsubsection:pulse-lower-bound}. El procedimiento en la segunda línea comienza a propagar el pulso, inicialmente con la regla \emph{propagación a nodos}. El valor $\mathscr{R}^{*}$ funciona como una variable global que indica la mejor ruta encontrada hasta el momento y se actualiza a medida que se van encontrando soluciones de menor precio. La variable $\mathscr{R}^{*}$ recibe el nombre de mínimo \emph{incumbente}. 
+El proceso \texttt{bound} inicializa la matriz de cotas de finalización, cuyo funcionamiento se explica en detalle en la Subsección \ref{subsubsection:pulse-lower-bound}. El procedimiento en la segunda línea comienza a propagar el pulso, inicialmente con la regla \emph{propagación a nodos}. La ruta $\mathscr{R}^{*}$ funciona como una variable global que indica la mejor ruta encontrada hasta el momento y se actualiza a medida que se van encontrando soluciones de menor precio. El valor del precio de $\mathscr{R}^{*}$ recibe el nombre de mínimo \emph{incumbente}. 
 
 A continuación detallamos el procedimiento de propagación, que como mencionamos anteriormente se compone de los algoritmos de propagación a nodos y a clientes. 
 
@@ -445,7 +445,7 @@ A continuación detallamos el procedimiento de propagación, que como mencionamo
   \end{algorithmic}
 \end{algorithm}
 
-Ambas reglas tienen una estructura muy similar.En la Línea 1 se actualiza el camino parcial $C$ con la información del nuevo nodo o cliente visitado, respectivamente, formando así un nuevo camino parcial $C'$. En el caso de propagar a un cliente $s$ se actualiza:
+Ambas reglas tienen una estructura muy similar. En la Línea 1 se actualiza el camino parcial $C$ con la información del nuevo nodo o cliente visitado, respectivamente, formando así un nuevo camino parcial $C'$. En el caso de propagar a un cliente $s$ se actualiza:
 \begin{itemize}
     \item $q(C') = q(C) + q_s$
     \item $r(C') = r(C) - \lambda^{*}_s$
@@ -459,7 +459,7 @@ Por otro lado, la regla de propagación a nodos es:
 \end{itemize}
 
 
-La segunda línea aplica las tres estrategias de pruning que se detallan más adelante, para descartar a un pulso subóptimo o infactible. La condición de la línea 3 indica que si el pulso llega hasta el destino $v_e$, se detiene la propagación, luego se actualiza el valor de la variable global $\mathscr{R}^{*}$ si es menor al mínimo incumbente. Las líneas 7 y 9 llaman recursivamente al procedimiento de propagación. Resulta conveniente primero propagar a clientes y después a nodos, porque uno esperaría que de esta manera descartáramos lo antes posible los pulsos que comenzaron por caminos malos.
+La segunda línea aplica las tres estrategias de pruning que se detallan más adelante, para descartar a un pulso subóptimo o infactible. La condición de la línea 3 indica que si el pulso llega hasta el destino $v_e$, se detiene la propagación, luego se actualiza el valor de la variable global $\mathscr{R}^{*}$ si su precio es menor al mínimo incumbente. Las líneas 7 y 9 llaman recursivamente al procedimiento de propagación. Resulta conveniente primero propagar a clientes y después a nodos, porque uno esperaría que de esta manera descartáramos lo antes posible los pulsos que comenzaron por caminos malos.
 
 Antes de poder mostrar el último algoritmo tenemos que explicar cómo funcionan las reglas de descarte de soluciones. Existen tres reglas de \emph{poda} o \emph{pruning} que vamos a ver en esta sección.
 
@@ -488,7 +488,7 @@ Utilizamos un algoritmo de programación dinámica para implementar este chequeo
 \label{eq:completion-bound-check}
     r(C) + \mathscr{L}_{vq} \geq r(\mathscr{R}^{*})
 \end{equation}
-entonces no existe ninguna extensión posible del pulso que pueda mejorar el óptimo actual y se detiene la propagación.
+entonces no existe ninguna extensión posible del pulso que pueda mejorar el óptimo actual y podemos detener la propagación.
 
 Para poder implementar esta regla, es necesario que tengamos precalculadas las cotas de finalización para todos los valores posibles de $v \in N$ y $0 \leq q \leq Q$. De esto se encarga el Algoritmo \ref{al:pulse-bound}. Recordemos que en el algoritmo maestro esto se computa incluso antes de iniciar la propagación.
 
@@ -502,9 +502,9 @@ Para poder implementar esta regla, es necesario que tengamos precalculadas las c
             \ForEach{$v \in N$}
                 \State $C \gets \emptyset$ 
                 \State $q(C) \gets q$
-                \State $\mathscr{R}^{*} \gets \infty$
+                \State $r(\mathscr{R}^{*}) \gets \infty$
                 \State $\texttt{propagateToNode(}C, v \texttt{)}$
-                \State $\mathscr{L}_{vq} \gets \mathscr{R}^{*}$ // Si no existe una ruta factible entonces $\mathscr{R}^{*} = \infty$.
+                \State $\mathscr{L}_{vq} \gets r(\mathscr{R}^{*})$ // Si no existe una ruta factible entonces $r(\mathscr{R}^{*}) = \infty$.
             \EndFor
         \EndFor
         \Return $\mathscr{L}$
@@ -535,7 +535,7 @@ En la implementación de este algoritmo tomamos la decisión de que los valores 
 La regla de \emph{rollback} que se propone en \cite{lozano-duque-medaglia} para el problema con \emph{time windows} es fácilmente adaptable al problema que estamos resolviendo, solamente basta eliminar el chequeo de las variables de tiempo. Ésta surge ya que la búsqueda por profundidad suele tener como desventaja que las malas decisiones tomadas en las etapas tempranas de búsqueda pueden conducir a regiones poco esperanzadoras y se necesita un buen rato hasta que el algoritmo regrese y corrija la decisión. Para evitar esta conducta, es una buena idea buscar alguna seguridad extra antes de tomar un camino y caso contrario deshacer la última elección. Primero vamos a introducir un nuevo concepto.
 
 \begin{definition}
-    (Relación de dominación de pulsos).
+    (Relación de dominancia de pulsos).
     Si dos caminos parciales $C$ y $C'$ llegan hasta el mismo nodo $v$, y son tales que $q(C') \leq q(C)$, $r(C') \leq r(C)$, $p(C') \subseteq p(C)$, $s(C') \subseteq s(C)$ y alguna de las condiciones se cumple estrictamente, se dice que $C'$ \emph{domina a} $C$.
 \end{definition}
 
@@ -606,7 +606,7 @@ Vamos a dar una definición clave:
 
 \begin{definition}
 \label{def:domination}
-    (Relación de dominación de etiquetas).
+    (Relación de dominancia de etiquetas).
     Una etiqueta $L$ \emph{domina a} $L'$, y se denota $L \preceq L'$, si ambas están asociadas al mismo vértice $v_i$ y se cumplen:
     \begin{enumerate}
         \item $q(L) \leq q(L')$
@@ -669,7 +669,7 @@ En el Algoritmo \ref{al:label-setting} utilizamos la siguiente notación: $\Gamm
 
 En la práctica, la elección de una estructura de datos apropiada para $\Gamma$ es clave para lograr una mejor complejidad computacional.
 
-Empezamos describiendo una forma eficiente de verificar si una etiqueta domina a otra. Esto equivale a corroborar las cuatro condiciones de la Definición \ref{def:domination}. Primero observemos que si $s(L) \subseteq s(L')$ entonces $q(L) \leq q(L')$, ya que la demanda acumulada viene dada en función de los clientes atendidos. Este hecho nos ahorra chequear la primera de las cuatro condiciones, que sería redundante. Además, si $c(L) \leq c(L')$ puede ser verificado en $\mathcal{O}(1)$. Para representar los conjuntos de clientes o nodos ($p(L)$ y $s(L)$) resulta conveniente utilizar una estructura de datos de tipo \texttt{BitSet}, que para verificar si un conjunto está incluido en otro tiene una complejidad teórica de $\mathcal{O}(log(|N|))$, lo cual en la práctica es mucho más rápido que utilizando un \texttt{Set} tradicional. Estas consideraciones permitirían realizar el chequeo de si una etiqueta domina a otra en $\mathcal{O}(log(|N|))$.
+Empezamos describiendo una forma eficiente de verificar si una etiqueta domina a otra. Esto equivale a corroborar las cuatro condiciones de la Definición \ref{def:domination}. Primero observemos que si $s(L) \subseteq s(L')$ entonces $q(L) \leq q(L')$, ya que la demanda acumulada viene dada en función de los clientes atendidos. Este hecho nos ahorra chequear la primera de las cuatro condiciones, que sería redundante. Además, $c(L) \leq c(L')$ puede ser verificado en $\mathcal{O}(1)$. Para representar los conjuntos de clientes o nodos ($p(L)$ y $s(L)$) resulta conveniente utilizar una estructura de datos de tipo \texttt{BitSet}, que para verificar si un conjunto está incluido en otro tiene una complejidad teórica de $\mathcal{O}(log(|N|))$, lo cual en la práctica es mucho más rápido que utilizando un \texttt{Set} tradicional. Estas consideraciones permitirían realizar el chequeo de si una etiqueta domina a otra en $\mathcal{O}(log(|N|))$.
 
 Para $\Gamma$ usamos un diccionario que tiene como clave el \texttt{BitSet} que simboliza $p(L)$ y como valor otro diccionario, cuya clave es el valor de $s(L)$, también en forma de \texttt{BitSet}, y cuyo valor es la misma etiqueta $L$.
 
@@ -681,11 +681,11 @@ Bajo estos supuestos, la cantidad de etiquetas no puede ser infinita, aunque la 
 
 Resolver el problema de pricing a optimalidad podría resultar demasiado costoso y en la práctica a menudo es innecesario. En rigor, tampoco es imprescindible hallar \emph{el menor} costo reducido en cada iteración del loop de generación de columnas, sino que basta con encontrar \emph{alguno(s)} que sean negativos, y agregar esas columnas a la base. Cuando se resuelve el \problem{RMP} a optimalidad, recién en la última iteración precisamos demostrar que ya no existen costos reducidos negativos. 
 
-Una relación de dominación más débil que la definida en \ref{def:domination} resultaría en que el algoritmo \emph{domine de más} y por lo tanto descarte más etiquetas que lo necesario, lo cual es beneficioso para recortar el espacio de búsqueda pero se corre el riesgo de descartar un camino válido (el algoritmo dejaría de ser exacto). Es importante que se siga cumpliendo que todos los caminos generados sean válidos. A una relación que cumple estas características la llamamos dominación \emph{relajada}.
+Una relación de dominancia más débil que la definida en \ref{def:domination} resultaría en que el algoritmo \emph{domine de más} y por lo tanto descarte más etiquetas que lo necesario, lo cual es beneficioso para recortar el espacio de búsqueda pero se corre el riesgo de descartar un camino válido (el algoritmo dejaría de ser exacto). Es importante que se siga cumpliendo que todos los caminos generados sean válidos. A una relación que cumple estas características la llamamos dominancia \emph{relajada}.
 
 Una opción sería olvidarse de las condiciones de que $p(L) \subseteq p(L')$ y $s(L) \subseteq s(L')$ en la Definición \ref{def:domination}. En ese caso, la etiqueta de menor precio que visitó el nodo $v$ con demanda acumulada $q$ durante la ejecución del Algoritmo \ref{al:label-setting} dominaría a cualquier otra que pase por este nodo con esta demanda. Notemos que por esto la cantidad de etiquetas del almacenamiento estaría acotada por $|\Gamma| \leq |N| \times (Q+1)$, que es mucho más ajustada que en el caso general.
 
-El almacenamiento de etiquetas $\Gamma$ pasa a ser una matriz de tamaño $\Gamma \in \mathbb{R}^{|N| \times (Q+1)}$ tal que $\Gamma_{iq}$ recuerda cuál es el camino factible de menor precio que visitó $v_i$ con demanda exactamente $q$. La relación de dominación se reduce a ver que existe otra entrada $\Gamma_{iq'}$ con $q' \leq q$ y precio menor. La implementación directa de este algoritmo implica recorrer todas las etiquetas con $q' \leq q$ para el mismo vértice y tiene una complejidad de inserción de $\mathcal{O}(1)$ y búsqueda de $\mathcal{O}(Q)$. Una estructura de datos apropiada nos permitiría mejorar esta complejidad.
+El almacenamiento de etiquetas $\Gamma$ pasa a ser una matriz de tamaño $\Gamma \in \mathbb{R}^{|N| \times (Q+1)}$ tal que $\Gamma_{iq}$ recuerda cuál es el camino factible de menor precio que visitó $v_i$ con demanda exactamente $q$. La relación de dominancia se reduce a ver que existe otra entrada $\Gamma_{iq'}$ con $q' \leq q$ y precio menor. La implementación directa de este algoritmo implica recorrer todas las etiquetas con $q' \leq q$ para el mismo vértice y tiene una complejidad de inserción de $\mathcal{O}(1)$ y búsqueda de $\mathcal{O}(Q)$. Una estructura de datos apropiada nos permitiría mejorar esta complejidad.
 
 En vez de emplear una matriz para representar a $\Gamma$, la estructura de datos que utilizamos consiste en un arreglo de estructuras independientes $\{\Gamma_1, \dots, \Gamma_{|N|}\}$, una por cada vértice de $|N|$. En vértice $v_i$, $\Gamma_i$ se representa como un \texttt{Segment Tree} que opera sobre un arreglo de longitud $Q + 1$ y que en cada posición $q$ guarda el mejor precio de un camino parcial factible que termina en $v_i$ y utiliza exactamente $q$ de demanda total. Esto es mejor que un arreglo común porque ahora consultar el menor precio entre todas las etiquetas $q' \leq q$ tiene una complejidad $\mathcal{O}(\log(Q))$. La complejidad de inserción de una etiqueta en el \texttt{Segment Tree} también es de $\mathcal{O}(\log(Q))$.
 
