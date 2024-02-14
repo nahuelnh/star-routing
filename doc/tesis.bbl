@@ -1,5 +1,12 @@
 \begin{thebibliography}{10}
 
+\bibitem{branch-and-price-source}
+Cynthia Barnhart, Ellis~L. Johnson, George~L. Nemhauser, Martin W.~P.
+  Savelsbergh, and Pamela~H. Vance.
+\newblock Branch-and-price: Column generation for solving huge integer
+  programs.
+\newblock {\em Operations Research}, 46(3):316--329, 1998.
+
 \bibitem{christo-et-al}
 Nicos Christofides, Aristide Mingozzi, and Paolo Toth.
 \newblock Exact algorithms for the vehicle routing problem, based on spanning
@@ -11,6 +18,11 @@ Nicos Christofides, Aristide Mingozzi, and Paolo Toth.
 \newblock State-space relaxation procedures for the computation of bounds to
   routing problems.
 \newblock {\em Networks}, 11(2):145--164, 1981.
+
+\bibitem{chvatal1983linear}
+V.~Chv{\'a}tal.
+\newblock {\em Linear Programming}.
+\newblock A series of books in the mathematical sciences. W. H. Freeman, 1983.
 
 \bibitem{clarke-wright}
 Geoff Clarke and John~W Wright.

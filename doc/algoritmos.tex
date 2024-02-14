@@ -18,7 +18,7 @@ Si bien fue explicado en detalle en \ref{star-vrp}, por motivos de practicidad a
     \item El peso de cada arco $(i, j) \in E$ se nota $w_{ij}$.
 \end{itemize}
 
-El objetivo del problema es obtener un conjunto de rutas de suma mínima que cumpla las siguientes condiciones:
+El objetivo del problema es obtener un conjunto de rutas que tenga suma mínima, donde el costo de una ruta es la suma de los pesos de sus aristas, y que cumpla las siguientes condiciones:
 
 \begin{itemize}
 \label{list:restrictions}
@@ -57,7 +57,7 @@ y_{sk} \in \{0, 1\} \qquad & \forall {s \in S, k \in K} \label{eq:compact9}\\
 u_{ik} \in \mathbb{Z}^{+} \qquad & \forall {i \in N, k \in K} \label{eq:compact10}
 \end{align}
 
-La semántica de las variables es la siguiente: $x_{ijk} = 1$ si y sólo si el vehículo $k$ pasa por el eje $(i, j) \in E$. Por otro lado $y_{sk}$ se interpreta como que el cliente $s$ es atendido por el vehículo $k$. Estas variables \emph{de servicio} se precisan porque el camino de cierto vehículo podría pasar por el cliente pero no atenderlo, por ejemplo, por no tener suficiente capacidad. La clase de variables $u_{ik}$ se utiliza solamente para expresar las condiciones MTZ. 
+La semántica de las variables es la siguiente: $x_{ijk} = 1$ si y sólo si el vehículo $k$ pasa por el eje $(i, j) \in E$. Por otro lado $y_{sk}$ se interpreta como que el cliente $s$ es atendido por el vehículo $k$. Estas variables \emph{de servicio} se precisan porque el camino de cierto vehículo podría pasar por el cliente pero no atenderlo, por ejemplo, por no tener suficiente capacidad. La clase de variables $u_{ik}$ se utiliza solamente para expresar las condiciones MTZ, y cumplen que $u_{jk} > u_{ik}$ si el vehículo $k$ visita $j$ después de visitar $i$, y ambos son diferentes al depósito. 
 
 La ecuación \ref{eq:compact1} garantiza que la cantidad de vehículos que entra al nodo $i$ sea la misma cantidad que sale del nodo $i$. Como explicamos, eso es necesario para que la ruta sea un ciclo. Luego \ref{eq:compact2} asegura que cada cliente es atendido por un y sólo un vehículo. La restricción \ref{eq:compact3} sirve para obligar a cada ruta a pasar por el nodo depósito $d$. La inecuación \ref{eq:compact4} muestra que un cliente $s$ solamente puede ser atendido por el vehículo $k$ si $k$ pasa por alguna parada asociada a $s$, o sea, un nodo $v \in \varrho(s)$. Es importante ver que un vehículo podría visitar a un cliente y sin embargo no atenderlo. La restricción de capacidad se expresa en \ref{eq:compact5}. Por último, \ref{eq:compact6} y \ref{eq:compact7} son las condiciones MTZ para romper subtours.
 
@@ -67,7 +67,7 @@ En esta sección definimos el modelo extendido sobre el cual aplicaremos un algo
 
 \begin{definition}
     (Ruta factible de $G$).
-    Llamamos \emph{ruta} de $G$ a un par $r = (C_r, \tilde{S}_r)$ donde $C_r$ es un camino conexo elemental (no repite vértices) de $G$ y $\tilde{S}_r \subseteq S$ un conjunto de clientes. La ruta $r$ se llama \emph{factible} si $C_r$ es un circuito cerrado que pasa por del depósito $d$ y tanto $C_r$ como $\tilde{S}_r$ cumplen las restricciones del problema.
+    Llamamos \emph{ruta} de $G$ a un par $r = (C_r, \tilde{S}_r)$ donde $C_r$ es un camino conexo elemental (no repite vértices) de $G$ y $\tilde{S}_r \subseteq S$ un conjunto de clientes visitados por $r$. La ruta $r$ se llama \emph{factible} si $C_r$ es un circuito cerrado que pasa por el depósito $d$ y tanto $C_r$ como $\tilde{S}_r$ cumplen las restricciones del problema.
 \end{definition}
 
 Tenemos que introducir algunos parámetros que se usarán a continuación. El conjunto $\Omega$ contiene a todas las rutas factibles. Si $r = (C_r, \tilde{S}_r) \in \Omega$, el parámetro $a_{sr} \in \{0, 1\}$ indica si $s \in \tilde{S}_r$, y el parámetro $c_r$ es el costo del circuito $C_r$. 
@@ -110,11 +110,11 @@ Sujeto a:
 \theta_r \in \{0, 1\} \qquad & \forall{r \in \tilde{\Omega}}
 \end{align}
 
-Observemos que la gran mayoría de las rutas de $\Omega$ son rutas \emph{malas}, en el sentido de que son factibles pero no son razonables y no tienen verdaderas chances de ser consideradas como parte de la base. Entonces suena razonable restringir $\tilde{\Omega}$ a un conjunto de rutas \emph{buenas} y resolver un problema más chico, a pesar de que, a priori, podríamos sacrificar la exactitud del problema. El algoritmo de generación de columnas nos permitirá resolver con exactitud la relajación lineal del Problema Maestro resolviendo solamente algunas instancias del Problema Maestro Restringido. Usualmente se complementa esta idea con un algoritmo de Branch \& Price, si estamos interesados en encontrar el óptimo exacto (es decir, el óptimo del Problema Maestro con restricciones de integralidad y no de la relajación lineal), lo cual queda vacante en esta tesis.	
+Observemos que la gran mayoría de las rutas de $\Omega$ son rutas \emph{malas}, en el sentido de que son factibles pero no son razonables y no tienen verdaderas chances de ser consideradas como parte de la base. Entonces suena razonable restringir $\tilde{\Omega}$ a un conjunto de rutas \emph{buenas} y resolver un problema más chico, a pesar de que, a priori, podríamos sacrificar la exactitud del problema. El algoritmo de generación de columnas nos permitirá resolver con exactitud la relajación lineal del Problema Maestro resolviendo solamente algunas instancias del Problema Maestro Restringido. Usualmente se complementa esta idea con un algoritmo de Branch \& Price \cite{branch-and-price-source}, si estamos interesados en encontrar el óptimo exacto (es decir, el óptimo del Problema Maestro con restricciones de integralidad y no de la relajación lineal), lo cual queda vacante en esta tesis.	
 
-En cada iteración del algoritmo Simplex existe una fase donde se evalúan los costos reducidos de todas las variables y se elige el menor para insertar esa variable en la base. Cada costo reducido se calcula como $\bar{c}_r = c_r - \lambda^{T}a_r$ donde $\lambda$ es el vector de variables duales y $a_r$ es la columna de coeficientes asociados a la variable $r$. Se puede demostrar que introducir en la base la variable $\theta_r$ de costo reducido negativo garantiza que en la próxima iteración de Simplex se obtendrá una solución mejor, y más aún, que si no existen costos reducidos negativos, el problema está resuelto a optimalidad. Supongamos que resolvimos el \problem{RMP}, cuya solución trivialmente también es factible en el Problema Maestro. Si algún costo reducido es negativo, podemos agregar esta variable a $\tilde{\Omega}$ y lo volvemos a resolver; si no existen tales, ya habremos encontrado el óptimo del Problema Maestro. El proceso de encontrar nuevas variables para agregar a $\tilde{\Omega}$ e iterar hasta que no queden más es lo que se conoce como \emph{Generación de Columnas}.
+En cada iteración del algoritmo Simplex existe una fase donde se evalúan los costos reducidos de todas las variables y se elige el menor para insertar esa variable en la base. Cada costo reducido se calcula como $\bar{c}_r = c_r - \lambda^{T}a_r$ donde $\lambda$ es el vector de variables duales, $c_r$ es el costo de la ruta $r$ y $a_r$ es la columna de coeficientes asociados a la variable $r$ en el modelo de Set Partitioning \ref{section:set-partitioning}. Se puede demostrar que introducir en la base una variable $\theta_r$ de costo reducido negativo garantiza que en la próxima iteración de Simplex se obtendrá una solución mejor, y más aún, que si no existen costos reducidos negativos, el problema está resuelto a optimalidad \cite{chvatal1983linear}. Supongamos que resolvimos el \problem{RMP}, cuya solución trivialmente también es factible en el Problema Maestro. Si algún costo reducido es negativo, podemos agregar esta variable a $\tilde{\Omega}$ y lo volvemos a resolver; si no existen tales, ya habremos encontrado el óptimo del Problema Maestro. El proceso de encontrar nuevas variables para agregar a $\tilde{\Omega}$ e iterar hasta que no queden más es lo que se conoce como \emph{Generación de Columnas}.
 
-El problema aún persiste, porque calcular \emph{todos} los costos reducidos explícitamente implica hacer una operación por cada variable de $\Omega$, y eso es inaceptable. Necesitamos conseguir una manera eficiente de saber cuál es el menor $\bar{c}_r$ sin tener que calcularlos todos explícitamente. Este problema se conoce como \emph{subproblema de pricing}. La fortaleza de generación de columnas por lo general subyace en que exista una formulación eficiente para resolver el pricing.
+El problema aún persiste, porque calcular \emph{todos} los costos reducidos explícitamente implica hacer una operación por cada variable de $\Omega$, y eso es inaceptable. Necesitamos conseguir una manera eficiente de saber cuál es el menor $\bar{c}_r$ sin tener que calcularlos a todos explícitamente. Este problema se conoce como \emph{subproblema de pricing}. La fortaleza de generación de columnas por lo general subyace en que exista una formulación relativamente eficiente para resolver el pricing.
 
 \begin{algorithm}[H]
     \caption{Algoritmo de generación de columnas}
@@ -221,7 +221,7 @@ Proponemos dividir la heurística en dos partes: un algoritmo que construye una 
                 \State $i \gets i + 1$
                 \State $\text{demanda} \gets q_s$
             \EndIf
-            \State $S_i = S_i \cup \{s_i\}$
+            \State $S_i = S_i \cup \{s\}$
         \EndFor
         \State $n \gets i$
 	\Return $\mathscr{P} = \{S_1, \dots, S_n\}$
@@ -292,7 +292,7 @@ Ahora estamos intentando encontrar una ruta $r \notin \tilde{\Omega}$, cuyo cost
     (Precio de una ruta factible).
     El precio de una ruta factible se calcula como: 
     \begin{equation}
-        \bar{c}_r = \sum_{(i, j) \in E}{w_{ij}} - \lambda^*_0 - \sum_{s \in \tilde{S}_r}{\lambda^*_s}
+        \bar{c}_r = \sum_{(i, j) \in C_r}{w_{ij}} - \lambda^*_0 - \sum_{s \in \tilde{S}_r}{\lambda^*_s}
     \end{equation}
 \end{definition}
 
@@ -362,7 +362,7 @@ La ecuación \ref{eq:pricing1} indica que la cantidad de arcos que entra al nodo
 \subsection{Modelo de Pricing con un algoritmo de pulsos}
 \label{section:pricing-pulses}
 
-Discutimos en la Sección \ref{section:rmp} que la fortaleza de los algoritmos de generación de columnas por lo general recae en encontrar una formulación eficiente para el problema de pricing. La buena noticia es que como el marco de trabajo es suficientemente flexible, entonces no estamos obligados a resolver este problema de optimización con programación lineal entera. A continuación se detalla un algoritmo sobre grafos, que es a resumidas cuentas un backtracking que utiliza búsqueda en profundidad (DFS), con varias podas eficientes. El trabajo está fuertemente basado en una publicación de Lozano, Duque \& Medaglia \cite{lozano-duque-medaglia} que fue particularmente relevante ya que proponen un algoritmo innovador para resolver \problem{ESPPRC}. Si bien la publicación originalmente se enfoca a instancias de \problem{VRPTW}, no resultará difícil encontrar un algoritmo para \problem{Star VRP}.
+Discutimos en la Sección \ref{section:rmp} que la fortaleza de los algoritmos de generación de columnas por lo general recae en encontrar una formulación relativamente eficiente para el problema de pricing. La buena noticia es que como el marco de trabajo es suficientemente flexible, entonces no estamos obligados a resolver este problema de optimización con programación lineal entera. A continuación se detalla un algoritmo sobre grafos, que es a resumidas cuentas un backtracking que utiliza búsqueda en profundidad (DFS), con varias podas eficientes. El trabajo está fuertemente basado en una publicación de Lozano, Duque \& Medaglia \cite{lozano-duque-medaglia} que fue particularmente relevante ya que proponen un algoritmo innovador para resolver \problem{ESPPRC}. Si bien la publicación originalmente se enfoca a instancias de \problem{VRPTW}, no resultará difícil encontrar un algoritmo para \problem{Star VRP}.
 
 Vamos a utilizar la analogía de un \emph{pulso} se propaga a través de un grafo. La \emph{propagación} comienza en el nodo inicial a todos sus vecinos, que a su vez pueden o bien extenderlo recursivamente, hasta llegar al nodo final, o bien descartarlo si alguna de las restricciones de recursos es violada. El pulso de menor precio que llega hasta el nodo destino sería la solución al problema. Notemos que es un algoritmo exacto y que siempre termina si no se permite que el pulso revisite vértices, ya que la cantidad de caminos elementales del inicio al final es finita y se los recorre a todos. 
 
@@ -687,7 +687,7 @@ Una opción sería olvidarse de las condiciones de que $p(L) \subseteq p(L')$ y 
 
 El almacenamiento de etiquetas $\Gamma$ pasa a ser una matriz de tamaño $\Gamma \in \mathbb{R}^{|N| \times (Q+1)}$ tal que $\Gamma_{iq}$ recuerda cuál es el camino factible de menor precio que visitó $v_i$ con demanda exactamente $q$. La relación de dominancia se reduce a ver que existe otra entrada $\Gamma_{iq'}$ con $q' \leq q$ y precio menor. La implementación directa de este algoritmo implica recorrer todas las etiquetas con $q' \leq q$ para el mismo vértice y tiene una complejidad de inserción de $\mathcal{O}(1)$ y búsqueda de $\mathcal{O}(Q)$. Una estructura de datos apropiada nos permitiría mejorar esta complejidad.
 
-En vez de emplear una matriz para representar a $\Gamma$, la estructura de datos que utilizamos consiste en un arreglo de estructuras independientes $\{\Gamma_1, \dots, \Gamma_{|N|}\}$, una por cada vértice de $|N|$. En vértice $v_i$, $\Gamma_i$ se representa como un \texttt{Segment Tree} que opera sobre un arreglo de longitud $Q + 1$ y que en cada posición $q$ guarda el mejor precio de un camino parcial factible que termina en $v_i$ y utiliza exactamente $q$ de demanda total. Esto es mejor que un arreglo común porque ahora consultar el menor precio entre todas las etiquetas $q' \leq q$ tiene una complejidad $\mathcal{O}(\log(Q))$. La complejidad de inserción de una etiqueta en el \texttt{Segment Tree} también es de $\mathcal{O}(\log(Q))$.
+En vez de emplear una matriz para representar a $\Gamma$, la estructura de datos que utilizamos consiste en un arreglo de estructuras independientes $\{\Gamma_1, \dots, \Gamma_{|N|}\}$, una por cada vértice de $|N|$. En vértice $v_i$, $\Gamma_i$ se representa como un \texttt{Segment Tree} \cite{cormen} que opera sobre un arreglo de longitud $Q + 1$ y que en cada posición $q$ guarda el mejor precio de un camino parcial factible que termina en $v_i$ y utiliza exactamente $q$ de demanda total. Esto es mejor que un arreglo común porque ahora consultar el menor precio entre todas las etiquetas $q' \leq q$ tiene una complejidad $\mathcal{O}(\log(Q))$. La complejidad de inserción de una etiqueta en el \texttt{Segment Tree} también es de $\mathcal{O}(\log(Q))$.
 
 En la práctica, esta heurística no solamente acelera considerablemente la bús\-queda sino que también suele adivinar la ruta óptima global en la mayoría de los casos. Profundizaremos sobre esto en el capítulo de experimentación computacional.
 
@@ -804,7 +804,7 @@ Cuando uno examina la dinámica con la cual va convergiendo la solución incumbe
 
 En un problema de minimización, la solución de cada iteración es monótonamente decreciente, ya que en cada paso agregamos variables a la base que solamente pueden mejorar la solución. Esta solución incumbente es una cota superior del óptimo, por lo que si se pueda establecer una cota inferior, entonces tenemos un techo para la brecha entre el óptimo incumbente y el óptimo real. Por lo tanto, cuando el gap sea menor que un valor aceptable, se puede detener el bucle.
 
-Llamemos $z_{RMP}$ al óptimo incumbente, y $z_{MP}$ al óptimo global. En \cite{desrosiers2005primer} Desrosiers \& Lübbecke proponen una cota ajustada que soluciona este problema. Si tenemos un valor real $\kappa$ que cumple $\sum_{\theta_r \in \Omega} \leq \kappa$ y $\bar{c}^{*}$ es el menor costo reducido, entonces vale
+Llamemos $z_{RMP}$ al óptimo incumbente, y $z_{MP}$ al óptimo global. En \cite{desrosiers2005primer} Desrosiers \& Lübbecke proponen una cota ajustada que soluciona este problema. Si tenemos un valor real $\kappa$ que cumple $\sum_{r \in \Omega}{\theta_r} \leq \kappa$ y $\bar{c}^{*}$ es el menor costo reducido, entonces vale
 \begin{equation}
     z_{RMP} + \kappa \bar{c}^{*} \leq z_{MP} \leq z_{RMP}
 \end{equation}
@@ -818,4 +818,4 @@ Notemos que por \ref{eq:master2}, podemos tomar $\kappa = |K|$. Por lo tanto la 
 
 La única desventaja que tiene este método es que para conseguir el menor costo reducido sigue siendo necesario resolver el problema de pricing a optimalidad. Esta aclaración es importante ya que no vamos a poder combinar esta heurística con algoritmos que resuelvan el pricing de manera aproximada.
 
-En la sección de experimentación hablaremos sobre los parámetros reales con los que configuramos este algoritmo. Resultaría razonable que el umbral esté en el orden del $1\%$.
+En la sección de experimentación hablaremos sobre los parámetros reales con los que configuramos este algoritmo. Resultaría razonable que el umbral sea muy pequeño ya que de esa forma tenemos una buena garantía de que la solución obtenida por este método está cerca del óptimo real.
