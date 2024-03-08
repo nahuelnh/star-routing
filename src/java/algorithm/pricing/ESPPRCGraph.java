@@ -55,7 +55,7 @@ public class ESPPRCGraph {
     }
 
     public void removeEdge(int i, int j) {
-        if(j == instance.getDepot()){
+        if (j == instance.getDepot()) {
             j = end;
         }
         adjacency.get(i).remove(Integer.valueOf(j));

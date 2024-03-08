@@ -88,7 +88,6 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
 
     private void buildModel(boolean integral, Duration remainingTime) throws IloException {
         this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
-        System.out.println("Size: " + activePaths.size() + " from " + allPaths.size());
         cplex = new IloCplex();
         cplex.setOut(null);
         cplex.setParam(IloCplex.Param.TimeLimit, remainingTime.getSeconds() + 1);

@@ -45,7 +45,6 @@ public class BranchAndPrice {
             currentNode = remainingNodes.getFirst();
             remainingNodes.removeFirst();
 
-            System.out.println("Branch: " + currentNode.getBranch() + " parent: " + currentNode.getParent());
             updateSubproblems(lastNode, currentNode);
 
             while (true) {
@@ -55,22 +54,17 @@ public class BranchAndPrice {
                     break;
                 }
                 relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
-                System.out.println("Relaxation Optimal: " + relaxationOptimal);
+
                 PricingProblem.PricingSolution pricingSolution =
                         pricing.solve(rmpSolution, stopwatch.getRemainingTime());
                 if (!pricingSolution.isFeasible() || stopwatch.timedOut()) {
                     break;
                 }
                 columnsToAdd = pricingSolution.getNegativeReducedCostPaths();
-                columnsToAdd.forEach(System.out::println);
                 if (columnsToAdd.isEmpty()) {
                     break;
                 }
             }
-
-            System.out.println("Feasible: " + rmpSolution.isFeasible());
-            System.out.println("Integer: " + rmpSolution.isInteger());
-            System.out.println("Relaxation: " + rmpSolution.getObjectiveValue());
 
             if (rmpSolution.isFeasible() && Math.ceil(rmpSolution.getObjectiveValue()) < upperBound) {
                 if (rmpSolution.isInteger()) {
