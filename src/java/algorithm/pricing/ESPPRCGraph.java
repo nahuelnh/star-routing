@@ -38,16 +38,28 @@ public class ESPPRCGraph {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 if (i != j && i != end && j != start && !(i == start && j == end)) {
-                    adjacency.get(i).add(j);
-                    if (j == end) {
-                        weights[i][j] = instance.getEdgeWeight(i, instance.getDepot());
-                    } else {
-                        weights[i][j] = instance.getEdgeWeight(i, j);
-                    }
+                    addEdge(i, j);
                 }
             }
             reverseNeighborhoods.add(computeReverseNeighborhood(i));
         }
+    }
+
+    public void addEdge(int i, int j) {
+        adjacency.get(i).add(j);
+        if (j == end) {
+            weights[i][j] = instance.getEdgeWeight(i, instance.getDepot());
+        } else {
+            weights[i][j] = instance.getEdgeWeight(i, j);
+        }
+    }
+
+    public void removeEdge(int i, int j) {
+        if(j == instance.getDepot()){
+            j = end;
+        }
+        adjacency.get(i).remove(Integer.valueOf(j));
+        weights[i][j] = -1;
     }
 
     private List<Integer> computeReverseNeighborhood(int node) {

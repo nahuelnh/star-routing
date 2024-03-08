@@ -56,6 +56,18 @@ public class FeasiblePath {
         return customersServed.contains(customer);
     }
 
+    public boolean containsEdge(int start, int end) {
+        if (nodes.size() < 2) {
+            return false;
+        }
+        for (int i = 0; i < nodes.size() - 1; i++) {
+            if (nodes.get(i) == start && nodes.get(i + 1) == end) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void removeCustomer(int customer) {
         customersServed.remove(customer);
     }

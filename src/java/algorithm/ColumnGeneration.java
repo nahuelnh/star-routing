@@ -13,7 +13,6 @@ import java.util.List;
 
 public class ColumnGeneration {
 
-    private static final int NUMBER_OF_ITERATIONS_TO_CHECK_BOUND = 1;
     private final Instance instance;
     private final RestrictedMasterProblem rmp;
     private final PricingProblem pricing;
@@ -37,22 +36,33 @@ public class ColumnGeneration {
         this.numberOfIterations = 0;
     }
 
-    private Solution buildSolution(Stopwatch stopwatch, double relaxationOptimal, double deterministicTime,
+    private Solution buildSolution(Stopwatch stopwatch, double relaxationOptimal,
+                                   RestrictedMasterProblem.RMPSolution rmpSolution, double deterministicTime,
                                    boolean integral) {
         Solution solution;
         if (stopwatch.timedOut()) {
-            solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime());
-        } else if (integral) {
-            RestrictedMasterProblem.RMPIntegerSolution rmpSolution = rmp.solveInteger(stopwatch.getRemainingTime());
-            if (!rmpSolution.isFeasible() || stopwatch.timedOut()) {
-                solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime());
+            if (relaxationOptimal == Double.MAX_VALUE) {
+                solution = new Solution(Solution.Status.UNKNOWN, relaxationOptimal, stopwatch.getElapsedTime(), false);
+
             } else {
-                solution = new Solution(Solution.Status.OPTIMAL, rmpSolution.getObjectiveValue(),
-                        rmpSolution.getUsedPaths(), stopwatch.getElapsedTime());
+                solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime(),
+                        rmpSolution.isInteger());
+            }
+        } else if (integral) {
+            RestrictedMasterProblem.RMPIntegerSolution rmpIntegerSolution =
+                    rmp.solveInteger(stopwatch.getRemainingTime());
+            if (!rmpIntegerSolution.isFeasible()) {
+                solution =
+                        new Solution(Solution.Status.INFEASIBLE, relaxationOptimal, stopwatch.getElapsedTime(), false);
+            } else if (stopwatch.timedOut()) {
+                solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime(), false);
+            } else {
+                solution = new Solution(Solution.Status.OPTIMAL, rmpIntegerSolution.getObjectiveValue(),
+                        rmpIntegerSolution.getUsedPaths(), stopwatch.getElapsedTime());
                 solution.setLowerBound(relaxationOptimal);
             }
         } else {
-            solution = new Solution(Solution.Status.FEASIBLE, relaxationOptimal, stopwatch.getElapsedTime());
+            solution = new Solution(Solution.Status.FEASIBLE, relaxationOptimal, stopwatch.getElapsedTime(), false);
         }
         solution.setDeterministicTime(deterministicTime);
         return solution;
@@ -64,16 +74,17 @@ public class ColumnGeneration {
         List<FeasiblePath> allColumns = new ArrayList<>();
         double relaxationOptimal = Double.MAX_VALUE;
         double deterministicTime = 0.0;
+        RestrictedMasterProblem.RMPSolution rmpSolution;
         while (true) {
             numberOfIterations++;
             allColumns.addAll(columnsToAdd);
             rmp.addPaths(columnsToAdd);
-            RestrictedMasterProblem.RMPSolution rmpSolution = rmp.solveRelaxation(stopwatch.getRemainingTime());
+            rmpSolution = rmp.solveRelaxation(stopwatch.getRemainingTime());
             if (!rmpSolution.isFeasible() || stopwatch.timedOut()) {
                 break;
             }
             relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
-            if (finishEarly && numberOfIterations % NUMBER_OF_ITERATIONS_TO_CHECK_BOUND == 0) {
+            if (finishEarly) {
                 pricing.forceExactSolution();
             }
             PricingProblem.PricingSolution pricingSolution = pricing.solve(rmpSolution, stopwatch.getRemainingTime());
@@ -92,7 +103,7 @@ public class ColumnGeneration {
                 columnsToAdd.addAll(rearrangeCustomersHeuristic.run(allColumns, rmpSolution));
             }
         }
-        return buildSolution(stopwatch, relaxationOptimal, deterministicTime, integral);
+        return buildSolution(stopwatch, relaxationOptimal, rmpSolution, deterministicTime, integral);
     }
 
     private double computeGapToLowerBound(PricingProblem.PricingSolution pricingSolution, double relaxationOptimal) {

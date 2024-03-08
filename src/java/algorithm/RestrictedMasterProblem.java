@@ -4,7 +4,9 @@ import commons.FeasiblePath;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public interface RestrictedMasterProblem {
 
@@ -16,20 +18,33 @@ public interface RestrictedMasterProblem {
 
     List<FeasiblePath> computePathsFromSolution();
 
+    void addBranch(BranchingDirection branch);
+
+    void removeBranch(BranchingDirection branch);
+
+    double fluxOnEdge(int start, int end);
+
     class RMPSolution {
         private final double objectiveValue;
         private final double[] customerDuals;
         private final double vehiclesDual;
+        private final List<Double> fluxDuals;
         private final boolean feasible;
         private final double[] primalValues;
+        private final boolean isInteger;
+        private final Map<Integer, Map<Integer, Double>> flux;
 
-        public RMPSolution(double objectiveValue, double[] customerDuals, double vehiclesDual, double[] primalValues,
-                           boolean feasible) {
+        public RMPSolution(double objectiveValue, double[] customerDuals, double vehiclesDual, List<Double> fluxDuals,
+                           double[] primalValues, boolean feasible, boolean isInteger,
+                           Map<Integer, Map<Integer, Double>> flux) {
             this.objectiveValue = objectiveValue;
             this.customerDuals = customerDuals;
             this.vehiclesDual = vehiclesDual;
+            this.fluxDuals = fluxDuals;
             this.primalValues = primalValues;
             this.feasible = feasible;
+            this.isInteger = isInteger;
+            this.flux = flux;
         }
 
         public RMPSolution() {
@@ -37,7 +52,10 @@ public interface RestrictedMasterProblem {
             this.customerDuals = new double[]{};
             this.primalValues = new double[]{};
             this.vehiclesDual = 0.0;
+            this.fluxDuals = new ArrayList<>();
             this.feasible = false;
+            this.isInteger = false;
+            this.flux = new HashMap<>();
         }
 
         public double getVehiclesDual() {
@@ -58,6 +76,18 @@ public interface RestrictedMasterProblem {
 
         public double getPrimalValue(int route) {
             return primalValues[route];
+        }
+
+        public boolean isInteger() {
+            return isInteger;
+        }
+
+        public double getFlux(int i, int j) {
+            return flux.get(i).get(j);
+        }
+
+        public List<Double> getFluxDuals() {
+            return fluxDuals;
         }
     }
 

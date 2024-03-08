@@ -31,7 +31,7 @@ public class LabelSettingAlgorithm {
     private int labelsProcessed;
     private int solutionsFound;
 
-    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
+    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution, ESPPRCGraph graph,
                                  boolean applyHeuristics) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
@@ -41,7 +41,7 @@ public class LabelSettingAlgorithm {
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
-        this.graph = new ESPPRCGraph(instance);
+        this.graph = graph;
 
         // Heuristic: sort decreasingly by benefit/cost
         this.graph.sortReverseNeighborhoods(
@@ -56,8 +56,9 @@ public class LabelSettingAlgorithm {
         }
     }
 
-    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
-        this(instance, rmpSolution, false);
+    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
+                                 ESPPRCGraph graph) {
+        this(instance, rmpSolution, graph, false);
     }
 
     private double computeCostFactor() {
@@ -107,6 +108,7 @@ public class LabelSettingAlgorithm {
 
     private Label extendNode(Label label, int nextNode) {
         double updatedCost = label.cost() + graph.getWeight(label.node(), nextNode);
+        // TODO substract rmpSolution.getFluxDuals() cuando se atraviesa esta arista
         BitSet updatedVisited = label.copyOfVisitedNodes();
         updatedVisited.set(nextNode);
         return new Label(label.demand(), updatedCost, nextNode, updatedVisited, label.copyOfVisitedCustomers(), label);

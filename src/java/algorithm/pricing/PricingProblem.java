@@ -1,5 +1,6 @@
 package algorithm.pricing;
 
+import algorithm.BranchingDirection;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 
@@ -14,6 +15,10 @@ public interface PricingProblem {
     List<FeasiblePath> computePathsFromSolution();
 
     void forceExactSolution();
+
+    void addBranch(BranchingDirection branch);
+
+    void removeBranch(BranchingDirection branch);
 
     class PricingSolution {
         private final boolean feasible;

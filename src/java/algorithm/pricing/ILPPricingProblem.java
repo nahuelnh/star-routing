@@ -1,5 +1,6 @@
 package algorithm.pricing;
 
+import algorithm.BranchingDirection;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
@@ -211,5 +212,15 @@ public class ILPPricingProblem implements PricingProblem {
 
     @Override
     public void forceExactSolution() {
+    }
+
+    @Override
+    public void addBranch(BranchingDirection branch) {
+
+    }
+
+    @Override
+    public void removeBranch(BranchingDirection branch) {
+
     }
 }

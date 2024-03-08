@@ -12,14 +12,16 @@ public class Solution {
     private final Status status;
     private Optional<Double> lowerBound;
     private Optional<Double> deterministicTime;
+    private boolean isInteger;
 
-    public Solution(Status status, double objValue, Duration elapsedTime) {
+    public Solution(Status status, double objValue, Duration elapsedTime, boolean isInteger) {
         this.status = status;
         this.paths = new ArrayList<>();
         this.objValue = objValue;
         this.elapsedTime = elapsedTime;
         this.lowerBound = Optional.empty();
         this.deterministicTime = Optional.empty();
+        this.isInteger = isInteger;
     }
 
     public Solution(Status status, double objValue, List<FeasiblePath> paths, Duration elapsedTime) {
@@ -29,6 +31,7 @@ public class Solution {
         this.elapsedTime = elapsedTime;
         this.lowerBound = Optional.empty();
         this.deterministicTime = Optional.empty();
+        this.isInteger = true;
     }
 
     public double getObjValue() {
@@ -86,9 +89,19 @@ public class Solution {
         this.deterministicTime = Optional.of(deterministicTime);
     }
 
+    public boolean isInteger() {
+        return isInteger;
+    }
+
+    public boolean isFeasible() {
+        return !(Status.INFEASIBLE.equals(status) || Status.UNKNOWN.equals(status));
+    }
+
     public enum Status {
         OPTIMAL,
         TIMEOUT,
-        FEASIBLE
+        FEASIBLE,
+        INFEASIBLE,
+        UNKNOWN
     }
 }
