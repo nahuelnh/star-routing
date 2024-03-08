@@ -62,11 +62,11 @@ public class LabelSettingPricing implements PricingProblem {
         }
 
         LabelSettingAlgorithm labelSettingAlgorithm =
-                new LabelSettingAlgorithm(instance, rmpSolution, graph, !forceExactSolution);
+                new LabelSettingAlgorithm(instance, rmpSolution, activeBranches, graph, !forceExactSolution);
         paths = labelSettingAlgorithm.run(remainingTime);
         int labelsProcessed = labelSettingAlgorithm.getLabelsProcessed();
         if (paths.isEmpty() && !solveHeuristically) {
-            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, graph, false);
+            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, activeBranches, graph, false);
             paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
             labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
         }
@@ -98,6 +98,16 @@ public class LabelSettingPricing implements PricingProblem {
     private void performBranchOnEdge(BranchOnEdge branch) {
         if (!branch.isLowerBound() && branch.getBound() == 0) {
             graph.removeEdge(branch.getStart(), branch.getEnd());
+        }
+        if (branch.isLowerBound() && branch.getBound() >= 1) {
+            for (int node : graph.getAdjacentNodes(branch.getStart())) {
+                if (branch.getEnd() == instance.getDepot() && node != graph.getEnd()) {
+                    graph.removeEdge(graph.getStart(), node);
+                }
+                if (branch.getEnd() != instance.getDepot() && node != branch.getEnd()) {
+                    graph.removeEdge(graph.getStart(), node);
+                }
+            }
         }
     }
 

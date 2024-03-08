@@ -28,15 +28,15 @@ public interface RestrictedMasterProblem {
         private final double objectiveValue;
         private final double[] customerDuals;
         private final double vehiclesDual;
-        private final List<Double> fluxDuals;
+        private final Map<BranchOnEdge, Double> fluxDuals;
         private final boolean feasible;
         private final double[] primalValues;
         private final boolean isInteger;
         private final Map<Integer, Map<Integer, Double>> flux;
 
-        public RMPSolution(double objectiveValue, double[] customerDuals, double vehiclesDual, List<Double> fluxDuals,
-                           double[] primalValues, boolean feasible, boolean isInteger,
-                           Map<Integer, Map<Integer, Double>> flux) {
+        public RMPSolution(double objectiveValue, double[] customerDuals, double vehiclesDual,
+                           Map<BranchOnEdge, Double> fluxDuals, double[] primalValues, boolean feasible,
+                           boolean isInteger, Map<Integer, Map<Integer, Double>> flux) {
             this.objectiveValue = objectiveValue;
             this.customerDuals = customerDuals;
             this.vehiclesDual = vehiclesDual;
@@ -52,7 +52,7 @@ public interface RestrictedMasterProblem {
             this.customerDuals = new double[]{};
             this.primalValues = new double[]{};
             this.vehiclesDual = 0.0;
-            this.fluxDuals = new ArrayList<>();
+            this.fluxDuals = new HashMap<>();
             this.feasible = false;
             this.isInteger = false;
             this.flux = new HashMap<>();
@@ -86,8 +86,12 @@ public interface RestrictedMasterProblem {
             return flux.get(i).get(j);
         }
 
-        public List<Double> getFluxDuals() {
-            return fluxDuals;
+        public boolean hasFluxDual(BranchOnEdge branch) {
+            return fluxDuals.containsKey(branch);
+        }
+
+        public double getFluxDual(BranchOnEdge branch) {
+            return fluxDuals.get(branch);
         }
     }
 

@@ -55,13 +55,14 @@ public class BranchAndPrice {
                     break;
                 }
                 relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
+                System.out.println("Relaxation Optimal: " + relaxationOptimal);
                 PricingProblem.PricingSolution pricingSolution =
                         pricing.solve(rmpSolution, stopwatch.getRemainingTime());
                 if (!pricingSolution.isFeasible() || stopwatch.timedOut()) {
                     break;
                 }
                 columnsToAdd = pricingSolution.getNegativeReducedCostPaths();
-                //columnsToAdd.forEach(System.out::println);
+                columnsToAdd.forEach(System.out::println);
                 if (columnsToAdd.isEmpty()) {
                     break;
                 }
@@ -71,15 +72,16 @@ public class BranchAndPrice {
             System.out.println("Integer: " + rmpSolution.isInteger());
             System.out.println("Relaxation: " + rmpSolution.getObjectiveValue());
 
-            if (rmpSolution.isFeasible() && rmpSolution.getObjectiveValue() < upperBound) {
+            if (rmpSolution.isFeasible() && Math.ceil(rmpSolution.getObjectiveValue()) < upperBound) {
                 if (rmpSolution.isInteger()) {
                     upperBound = rmpSolution.getObjectiveValue();
                     incumbent = rmpSolution;
                 } else {
-                    RestrictedMasterProblem.RMPIntegerSolution rmpSolution2 = rmp.solveInteger(stopwatch.getRemainingTime());
-                    if(rmpSolution2.getObjectiveValue() < upperBound){
+                    RestrictedMasterProblem.RMPIntegerSolution rmpSolution2 =
+                            rmp.solveInteger(stopwatch.getRemainingTime());
+                    if (rmpSolution2.getObjectiveValue() < upperBound) {
                         upperBound = rmpSolution2.getObjectiveValue();
-                        incumbent= rmpSolution;
+                        incumbent = rmpSolution;
                     }
                     for (BranchingDirection branch : branchingRuleManager.getBranches(rmpSolution)) {
                         remainingNodes.addFirst(new Node(currentNode, branch));

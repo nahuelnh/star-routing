@@ -1,5 +1,7 @@
 package algorithm.pricing;
 
+import algorithm.BranchOnEdge;
+import algorithm.BranchingDirection;
 import algorithm.RestrictedMasterProblem;
 import commons.FeasiblePath;
 import commons.Instance;
@@ -10,6 +12,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +27,7 @@ public class LabelSettingAlgorithm {
     private final RestrictedMasterProblem.RMPSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final Map<Integer, Double> dualValues;
+    private final Map<Integer, Map<Integer, Double>> fluxDuals;
     private final boolean applyHeuristics;
     private final boolean stopEarly = false;
     private final double alpha;
@@ -31,18 +35,29 @@ public class LabelSettingAlgorithm {
     private int labelsProcessed;
     private int solutionsFound;
 
-    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution, ESPPRCGraph graph,
+    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
+                                 Collection<BranchingDirection> activeBranches, ESPPRCGraph graph,
                                  boolean applyHeuristics) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
         this.dualValues = new HashMap<>();
+        this.fluxDuals = new HashMap<>();
         this.labelsProcessed = 0;
         this.solutionsFound = 0;
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
-        this.graph = graph;
 
+        this.graph = graph;
+        for (BranchingDirection branch : activeBranches) {
+            if (branch instanceof BranchOnEdge branchOnEdge) {
+                if (rmpSolution.hasFluxDual(branchOnEdge)) {
+                    fluxDuals.putIfAbsent(branchOnEdge.getStart(), new HashMap<>());
+                    int end = branchOnEdge.getEnd() == instance.getDepot() ? graph.getEnd() : branchOnEdge.getEnd();
+                    fluxDuals.get(branchOnEdge.getStart()).put(end, rmpSolution.getFluxDual(branchOnEdge));
+                }
+            }
+        }
         // Heuristic: sort decreasingly by benefit/cost
         this.graph.sortReverseNeighborhoods(
                 Comparator.comparingDouble(s -> -dualValues.getOrDefault(s, 0.0) / instance.getDemand(s)));
@@ -57,8 +72,8 @@ public class LabelSettingAlgorithm {
     }
 
     public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
-                                 ESPPRCGraph graph) {
-        this(instance, rmpSolution, graph, false);
+                                 Collection<BranchingDirection> activeBranches, ESPPRCGraph graph) {
+        this(instance, rmpSolution, activeBranches, graph, false);
     }
 
     private double computeCostFactor() {
@@ -108,7 +123,10 @@ public class LabelSettingAlgorithm {
 
     private Label extendNode(Label label, int nextNode) {
         double updatedCost = label.cost() + graph.getWeight(label.node(), nextNode);
-        // TODO substract rmpSolution.getFluxDuals() cuando se atraviesa esta arista
+        // Updated RMP condition:
+        if (fluxDuals.containsKey(label.node()) && fluxDuals.get(label.node()).containsKey(nextNode)) {
+            updatedCost -= fluxDuals.get(label.node()).get(nextNode);
+        }
         BitSet updatedVisited = label.copyOfVisitedNodes();
         updatedVisited.set(nextNode);
         return new Label(label.demand(), updatedCost, nextNode, updatedVisited, label.copyOfVisitedCustomers(), label);

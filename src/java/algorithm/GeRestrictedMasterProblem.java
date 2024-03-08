@@ -30,7 +30,7 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
     private IloNumVar[] theta;
     private IloRange[] customerConstraints;
     private IloRange vehiclesConstraint;
-    private List<IloRange> fluxConstraints;
+    private Map<BranchOnEdge, IloRange> fluxConstraints;
 
     public GeRestrictedMasterProblem(Instance instance) {
         this.instance = instance;
@@ -88,6 +88,7 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
 
     private void buildModel(boolean integral, Duration remainingTime) throws IloException {
         this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
+        System.out.println("Size: " + activePaths.size() + " from " + allPaths.size());
         cplex = new IloCplex();
         cplex.setOut(null);
         cplex.setParam(IloCplex.Param.TimeLimit, remainingTime.getSeconds() + 1);
@@ -95,7 +96,7 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
         createCustomerServedConstraints();
         createNumberOfVehiclesConstraint();
         createObjective();
-        fluxConstraints = new ArrayList<>();
+        fluxConstraints = new HashMap<>();
         for (BranchingDirection branch : activeBranches) {
             performBranching(branch);
         }
@@ -117,10 +118,11 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
                 }
             }
 
-            List<Double> fluxDuals = new ArrayList<>();
-            for (IloRange fluxConstraint : fluxConstraints) {
-                fluxDuals.add(cplex.getDual(fluxConstraint));
+            Map<BranchOnEdge, Double> fluxDuals = new HashMap<>();
+            for (Map.Entry<BranchOnEdge, IloRange> entry : fluxConstraints.entrySet()) {
+                fluxDuals.put(entry.getKey(), cplex.getDual(entry.getValue()));
             }
+
             RMPSolution solution = new RMPSolution(cplex.getObjValue(), cplex.getDuals(customerConstraints),
                     cplex.getDual(vehiclesConstraint), fluxDuals, cplex.getValues(theta), feasible, isIntegerSolution(),
                     flux);
@@ -203,9 +205,9 @@ public class GeRestrictedMasterProblem implements RestrictedMasterProblem {
             }
             if (terms > 0) {
                 if (branch.isLowerBound()) {
-                    fluxConstraints.add(cplex.addGe(flux, branch.getBound()));
+                    fluxConstraints.put(branch, cplex.addGe(flux, branch.getBound()));
                 } else {
-                    fluxConstraints.add(cplex.addLe(flux, branch.getBound()));
+                    fluxConstraints.put(branch, cplex.addLe(flux, branch.getBound()));
                 }
             }
         } catch (IloException e) {

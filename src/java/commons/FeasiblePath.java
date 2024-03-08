@@ -72,6 +72,10 @@ public class FeasiblePath {
         customersServed.remove(customer);
     }
 
+    public boolean dominates(FeasiblePath other) {
+        return this.getCost() <= other.getCost() && this.customersServed.containsAll(other.customersServed);
+    }
+
     public FeasiblePath getCopyWithoutCustomers() {
         return new FeasiblePath(List.copyOf(this.nodes), new HashSet<>(), List.copyOf(this.weights));
     }

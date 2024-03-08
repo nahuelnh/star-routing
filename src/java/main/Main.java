@@ -10,7 +10,7 @@ import commons.Solution;
 
 public class Main {
     public static void main(String[] args) {
-        runInstance("instance_n16_s8_k2");
+        runInstance("instance_n25_s10_k2");
     }
 
     private static void runInstance(String instanceName) {

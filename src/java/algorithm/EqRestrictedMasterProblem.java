@@ -110,7 +110,7 @@ public class EqRestrictedMasterProblem implements RestrictedMasterProblem {
             }
 
             RMPSolution solution = new RMPSolution(cplex.getObjValue(), cplex.getDuals(customerConstraints),
-                    cplex.getDual(vehiclesConstraint), new ArrayList<>(), cplex.getValues(theta), feasible, isIntegerSolution(),
+                    cplex.getDual(vehiclesConstraint), new HashMap<>(), cplex.getValues(theta), feasible, isIntegerSolution(),
                     flux);
             cplex.end();
             return solution;
