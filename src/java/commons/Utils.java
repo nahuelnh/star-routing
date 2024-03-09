@@ -146,6 +146,9 @@ public class Utils {
     }
 
     public static boolean isSubset(BitSet b1, BitSet b2) {
+        if(b1.equals(b2)) {
+            return true;
+        }
         BitSet b3 = b2.get(0, b2.length());
         b3.and(b1);
         b3.xor(b1);

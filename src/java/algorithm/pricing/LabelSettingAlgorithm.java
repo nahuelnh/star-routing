@@ -28,6 +28,8 @@ public class LabelSettingAlgorithm {
     private final boolean stopEarly = false;
     private final double alpha;
     private final LabelDump labelDump;
+    private final double[][] completionBounds;
+    private double incumbent;
     private int labelsProcessed;
     private int solutionsFound;
 
@@ -42,6 +44,11 @@ public class LabelSettingAlgorithm {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
         this.graph = new ESPPRCGraph(instance);
+        this.completionBounds = new double[graph.getSize()][instance.getCapacity() + 1];
+        for (int i = 0; i < graph.getSize(); i++) {
+            Arrays.fill(completionBounds[i], -Double.MAX_VALUE);
+        }
+        this.incumbent = 0.0;
 
         // Heuristic: sort decreasingly by benefit/cost
         this.graph.sortReverseNeighborhoods(
@@ -123,6 +130,9 @@ public class LabelSettingAlgorithm {
             // Heuristic: if customer provides no reduction in total cost, can be pruned
             return true;
         }
+        if (label.cost() + completionBounds[label.node()][label.demand()] >= incumbent) {
+            return true;
+        }
         return labelDump.dominates(label);
     }
 
@@ -134,11 +144,23 @@ public class LabelSettingAlgorithm {
         if (label.demand() > instance.getCapacity()) {
             return true;
         }
+        if (label.cost() + completionBounds[label.node()][label.demand()] >= incumbent) {
+            return true;
+        }
         return labelDump.dominates(label);
+    }
+
+    private void updateCompletionBounds(Label label) {
+        //        if(completionBounds[label.node()][label.demand()] < label.cost()){
+        //            completionBounds[label.node()][label.demand()] = label.cost();
+        //        }
     }
 
     private void monoDirectionalBacktracking(Stopwatch stopwatch) {
         Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
+        LabelDump processedLabels =
+                applyHeuristics ? new RelaxedLabelDump(graph.getSize(), instance.getCapacity() + 1) :
+                        new StrictLabelDump(graph.getSize());
         PriorityQueue<Label> queue = new PriorityQueue<>(64, Comparator.comparingDouble(Label::cost));
         labelDump.addLabel(root);
         queue.add(root);
@@ -148,13 +170,20 @@ public class LabelSettingAlgorithm {
                 return;
             }
             Label currentLabel = queue.remove();
-            if (stopEarly && currentLabel.node() == graph.getEnd() && currentLabel.cost() < -EPSILON) {
-                solutionsFound++;
-                if (solutionsFound >= STOP_AFTER_N_SOLUTIONS) {
-                    return;
+            if (currentLabel.node() == graph.getEnd()) {
+                updateCompletionBounds(currentLabel);
+                if (currentLabel.cost() < incumbent) {
+                    incumbent = currentLabel.cost();
+                }
+                if (stopEarly && currentLabel.cost() < -EPSILON) {
+                    solutionsFound++;
+                    if (solutionsFound >= STOP_AFTER_N_SOLUTIONS) {
+                        return;
+                    }
                 }
             }
-            if (!labelDump.dominates(currentLabel)) {
+            if (!processedLabels.dominates(currentLabel)) {
+                processedLabels.addLabel(currentLabel);
                 for (int customer : graph.getReverseNeighborhood(currentLabel.node())) {
                     Label nextLabel = extendCustomer(currentLabel, customer);
                     if (!isCustomerUnreachable(nextLabel, customer, currentLabel, labelDump)) {
@@ -240,7 +269,7 @@ public class LabelSettingAlgorithm {
                     Map<BitSet, Label> bucket = dump.get(l.node()).get(visitedNodes);
                     for (BitSet visitedCustomers : bucket.keySet()) {
                         if (Utils.isSubset(visitedCustomers, l.visitedCustomers())) {
-                            if (bucket.get(visitedCustomers).cost() + EPSILON < l.cost()) {
+                            if (bucket.get(visitedCustomers).cost() <= l.cost()) {
                                 return true;
                             }
                         }

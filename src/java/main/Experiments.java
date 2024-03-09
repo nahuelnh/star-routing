@@ -25,12 +25,12 @@ public class Experiments {
 
     public static void main(String[] args) {
         //        experiment1_compactModelPerformance();
-        //        experiment2_ilpPricingPerformance();
-        //        experiment3_pulsePricingPerformance();
-        //        experiment4_labelSettingPricingPerformance();
-        experiment5_labelSettingHeuristics();
+//        experiment2_ilpPricingPerformance();
+//                        experiment3_pulsePricingPerformance();
+                experiment4_labelSettingPricingPerformance();
+        //        experiment5_labelSettingHeuristics();
         //        experiment6_columnGenerationHeuristics();
-        experiment7_columnGenerationFinishEarly();
+        //        experiment7_columnGenerationFinishEarly();
         //        experiment8_relaxationComparison();
     }
 
@@ -61,9 +61,9 @@ public class Experiments {
     }
 
     private static void experiment2_ilpPricingPerformance() {
-        Table table =
-                new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo (ms)", "#Ticks", "#Iter GC", "Gap"), true,
-                        "experiment2.csv");
+        Table table = new Table(
+                List.of("Instancia", "|N|", "|S|", "|K|", "Obj. Value", "Lower Bound", "Tiempo (ms)", "#Ticks",
+                        "#Iter GC", "Gap"), true, "experiment2.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
@@ -83,9 +83,9 @@ public class Experiments {
     }
 
     private static void experiment3_pulsePricingPerformance() {
-        Table table =
-                new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo (ms)", "#Pulses", "#Iter GC", "Gap"), true,
-                        "experiment3.csv");
+        Table table = new Table(
+                List.of("Instancia", "|N|", "|S|", "|K|", "Obj. Value", "Lower Bound", "Tiempo (ms)", "#Pulses",
+                        "#Iter GC", "Gap"), true, "experiment3.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration =
@@ -106,9 +106,9 @@ public class Experiments {
     }
 
     private static void experiment4_labelSettingPricingPerformance() {
-        Table table =
-                new Table(List.of("Instancia", "|N|", "|S|", "|K|", "Tiempo (ms)", "#Labels", "#Iter GC", "Gap"), true,
-                        "experiment4.csv");
+        Table table = new Table(
+                List.of("Instancia", "|N|", "|S|", "|K|", "Obj. Value", "Lower Bound", "Tiempo (ms)", "#Labels",
+                        "#Iter GC", "Gap"), true, "experiment4.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
@@ -325,8 +325,9 @@ public class Experiments {
         @Override
         public List<String> getFields() {
             return List.of(getInstanceName(instance), getNumberOfNodes(instance), getNumberOfCustomers(instance),
-                    getNumberOfVehicles(instance), getElapsedTime(solution), getDeterministicTime(solution),
-                    getNumberOfIterations(columnGeneration), getGapToLowerBound(solution));
+                    getNumberOfVehicles(instance), getObjValue(solution), getLowerBound(solution),
+                    getElapsedTime(solution), getDeterministicTime(solution), getNumberOfIterations(columnGeneration),
+                    getGapToLowerBound(solution));
         }
     }
 
