@@ -1,7 +1,7 @@
 package algorithm.pricing;
 
-import algorithm.BranchingDirection;
-import algorithm.RestrictedMasterProblem;
+import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchingDirection;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
@@ -115,7 +115,7 @@ public class ILPPricingProblem implements PricingProblem {
         createMTZConstraints();
     }
 
-    private void createObjective(RestrictedMasterProblem.RMPSolution rmpSolution) throws IloException {
+    private void createObjective(RMPLinearSolution rmpSolution) throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
@@ -138,7 +138,7 @@ public class ILPPricingProblem implements PricingProblem {
     }
 
     @Override
-    public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
+    public PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime) {
         try {
             cplex = new IloCplex();
             cplex.setOut(null);

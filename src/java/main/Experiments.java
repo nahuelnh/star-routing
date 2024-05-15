@@ -1,6 +1,6 @@
 package main;
 
-import algorithm.ColumnGeneration;
+import algorithm.ColumnGenerator;
 import algorithm.CompactModel;
 import algorithm.GeRestrictedMasterProblem;
 import algorithm.InitialSolutionHeuristic;
@@ -9,7 +9,7 @@ import algorithm.pricing.LabelSettingPricing;
 import algorithm.pricing.PulsePricing;
 import commons.Instance;
 import commons.InstanceLoader;
-import commons.Solution;
+import commons.StarRoutingSolution;
 import commons.Table;
 
 import java.text.DecimalFormat;
@@ -45,7 +45,7 @@ public class Experiments {
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             if (instance.getNumberOfNodes() <= 20) {
                 CompactModel compactModel = new CompactModel(instance);
-                Solution solution = compactModel.solve(TIMEOUT);
+                StarRoutingSolution solution = compactModel.solve(TIMEOUT);
                 table.addEntry(new SimpleTableEntry(instance, solution));
                 //            if (solution.timedOut()) {
                 //                unfinishedInstances++;
@@ -66,10 +66,10 @@ public class Experiments {
                         "experiment2.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+            ColumnGenerator columnGenerator = new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance),
                     new ILPPricingProblem(instance), new InitialSolutionHeuristic(instance));
-            Solution solution = columnGeneration.solve(TIMEOUT);
-            table.addEntry(new ExtendedTableEntry(instance, solution, columnGeneration));
+            StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
+            table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
             if (solution.timedOut()) {
                 unfinishedInstances++;
             } else {
@@ -88,11 +88,11 @@ public class Experiments {
                         "experiment3.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            ColumnGeneration columnGeneration =
-                    new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
+            ColumnGenerator columnGenerator =
+                    new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
                             new InitialSolutionHeuristic(instance));
-            Solution solution = columnGeneration.solve(TIMEOUT);
-            table.addEntry(new ExtendedTableEntry(instance, solution, columnGeneration));
+            StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
+            table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
             if (solution.timedOut()) {
                 unfinishedInstances++;
             } else {
@@ -111,10 +111,10 @@ public class Experiments {
                         "experiment4.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+            ColumnGenerator columnGenerator = new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-            Solution solution = columnGeneration.solve(TIMEOUT);
-            table.addEntry(new ExtendedTableEntry(instance, solution, columnGeneration));
+            StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
+            table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
             if (solution.timedOut()) {
                 unfinishedInstances++;
             } else {
@@ -136,18 +136,18 @@ public class Experiments {
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
 
-            ColumnGeneration columnGeneration1 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+            ColumnGenerator columnGenerator1 = new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-            Solution solution1 = columnGeneration1.solve(TIMEOUT);
+            StarRoutingSolution solution1 = columnGenerator1.solve(TIMEOUT);
 
             LabelSettingPricing labelSettingPricing = new LabelSettingPricing(instance, true);
-            ColumnGeneration columnGeneration2 =
-                    new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), labelSettingPricing,
+            ColumnGenerator columnGenerator2 =
+                    new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance), labelSettingPricing,
                             new InitialSolutionHeuristic(instance));
-            Solution solution2 = columnGeneration2.solve(TIMEOUT);
+            StarRoutingSolution solution2 = columnGenerator2.solve(TIMEOUT);
 
             table.addEntry(
-                    new ComparisonTableEntry(instance, solution1, solution2, columnGeneration1, columnGeneration2));
+                    new ComparisonTableEntry(instance, solution1, solution2, columnGenerator1, columnGenerator2));
             if (solution1.timedOut() && solution2.timedOut()) {
                 unfinishedInstances++;
             } else {
@@ -168,17 +168,17 @@ public class Experiments {
                         "Gap Aprox."), true, "experiment6.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            ColumnGeneration columnGeneration1 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+            ColumnGenerator columnGenerator1 = new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance, true), new InitialSolutionHeuristic(instance));
-            Solution solution1 = columnGeneration1.solve(TIMEOUT);
+            StarRoutingSolution solution1 = columnGenerator1.solve(TIMEOUT);
 
-            ColumnGeneration columnGeneration2 = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+            ColumnGenerator columnGenerator2 = new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance, true), new InitialSolutionHeuristic(instance));
-            columnGeneration2.applyRearrangeCustomersHeuristic();
-            Solution solution2 = columnGeneration2.solve(TIMEOUT);
+            columnGenerator2.applyRearrangeCustomersHeuristic();
+            StarRoutingSolution solution2 = columnGenerator2.solve(TIMEOUT);
 
             table.addEntry(
-                    new ComparisonTableEntry(instance, solution1, solution2, columnGeneration1, columnGeneration2));
+                    new ComparisonTableEntry(instance, solution1, solution2, columnGenerator1, columnGenerator2));
             if (solution1.timedOut() && solution2.timedOut()) {
                 unfinishedInstances++;
             } else {
@@ -198,19 +198,19 @@ public class Experiments {
                         "Gap Aprox."), true, "experiment7.csv");
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            ColumnGeneration columnGeneration1 =
-                    new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
+            ColumnGenerator columnGenerator1 =
+                    new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
                             new InitialSolutionHeuristic(instance));
-            Solution solution1 = columnGeneration1.solve(TIMEOUT);
+            StarRoutingSolution solution1 = columnGenerator1.solve(TIMEOUT);
 
-            ColumnGeneration columnGeneration2 =
-                    new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
+            ColumnGenerator columnGenerator2 =
+                    new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance), new PulsePricing(instance),
                             new InitialSolutionHeuristic(instance));
-            columnGeneration2.finishEarly(0.05);
-            Solution solution2 = columnGeneration2.solve(TIMEOUT);
+            columnGenerator2.finishEarly(0.05);
+            StarRoutingSolution solution2 = columnGenerator2.solve(TIMEOUT);
 
             table.addEntry(
-                    new ComparisonTableEntry(instance, solution1, solution2, columnGeneration1, columnGeneration2));
+                    new ComparisonTableEntry(instance, solution1, solution2, columnGenerator1, columnGenerator2));
             if (solution1.timedOut() && solution2.timedOut()) {
                 unfinishedInstances++;
             } else {
@@ -230,11 +230,11 @@ public class Experiments {
         int unfinishedInstances = 0;
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
             CompactModel compactModel = new CompactModel(instance);
-            Solution solution1 = compactModel.solveRelaxation(TIMEOUT);
-            ColumnGeneration columnGeneration = new ColumnGeneration(instance, new GeRestrictedMasterProblem(instance),
+            StarRoutingSolution solution1 = compactModel.solveRelaxation(TIMEOUT);
+            ColumnGenerator columnGenerator = new ColumnGenerator(instance, new GeRestrictedMasterProblem(instance),
                     new LabelSettingPricing(instance), new InitialSolutionHeuristic(instance));
-            Solution solution2 = columnGeneration.solveRelaxation(TIMEOUT);
-            table.addEntry(new RelaxationComparisonTableEntry(instance, solution1, solution2, columnGeneration));
+            StarRoutingSolution solution2 = columnGenerator.solveRelaxation(TIMEOUT);
+            table.addEntry(new RelaxationComparisonTableEntry(instance, solution1, solution2, columnGenerator));
             if (solution1.timedOut() && solution2.timedOut()) {
                 unfinishedInstances++;
             } else {
@@ -263,42 +263,42 @@ public class Experiments {
         return String.valueOf(instance.getNumberOfVehicles());
     }
 
-    private static String getElapsedTime(Solution solution) {
+    private static String getElapsedTime(StarRoutingSolution solution) {
         return solution.timedOut() ? TIME_LIMIT_EXCEEDED : String.valueOf(solution.getElapsedTime().toMillis());
     }
 
-    private static String getDeterministicTime(Solution solution) {
+    private static String getDeterministicTime(StarRoutingSolution solution) {
         return solution.hasDeterministicTime() ? FORMATTER.format(solution.getDeterministicTime()) : DEFAULT_FIELD;
     }
 
-    private static String getNumberOfIterations(ColumnGeneration columnGeneration) {
-        return String.valueOf(columnGeneration.getNumberOfIterations());
+    private static String getNumberOfIterations(ColumnGenerator columnGenerator) {
+        return String.valueOf(columnGenerator.getNumberOfIterations());
     }
 
-    private static String getObjValue(Solution solution) {
+    private static String getObjValue(StarRoutingSolution solution) {
         return FORMATTER.format(solution.getObjValue());
     }
 
-    private static String getGapBetweenSolutions(Solution solution1, Solution solution2) {
+    private static String getGapBetweenSolutions(StarRoutingSolution solution1, StarRoutingSolution solution2) {
         return !solution1.timedOut() && !solution2.timedOut() ?
                 FORMATTER.format(gapAsPercent(solution1.getObjValue(), solution2.getObjValue())) + "%" : DEFAULT_FIELD;
     }
 
-    private static String getGapToLowerBound(Solution solution) {
+    private static String getGapToLowerBound(StarRoutingSolution solution) {
         return solution.hasLowerBound() ?
                 FORMATTER.format(gapAsPercent(solution.getObjValue(), solution.getLowerBound())) + "%" : DEFAULT_FIELD;
     }
 
-    private static String getLowerBound(Solution solution) {
+    private static String getLowerBound(StarRoutingSolution solution) {
         return solution.hasLowerBound() ? FORMATTER.format(solution.getLowerBound()) : DEFAULT_FIELD;
     }
 
     private static class SimpleTableEntry implements Table.Entry {
 
         private final Instance instance;
-        private final Solution solution;
+        private final StarRoutingSolution solution;
 
-        public SimpleTableEntry(Instance instance, Solution solution) {
+        public SimpleTableEntry(Instance instance, StarRoutingSolution solution) {
             this.instance = instance;
             this.solution = solution;
         }
@@ -313,46 +313,46 @@ public class Experiments {
     private static class ExtendedTableEntry implements Table.Entry {
 
         private final Instance instance;
-        private final Solution solution;
-        private final ColumnGeneration columnGeneration;
+        private final StarRoutingSolution solution;
+        private final ColumnGenerator columnGenerator;
 
-        public ExtendedTableEntry(Instance instance, Solution solution, ColumnGeneration columnGeneration) {
+        public ExtendedTableEntry(Instance instance, StarRoutingSolution solution, ColumnGenerator columnGenerator) {
             this.instance = instance;
             this.solution = solution;
-            this.columnGeneration = columnGeneration;
+            this.columnGenerator = columnGenerator;
         }
 
         @Override
         public List<String> getFields() {
             return List.of(getInstanceName(instance), getNumberOfNodes(instance), getNumberOfCustomers(instance),
                     getNumberOfVehicles(instance), getElapsedTime(solution), getDeterministicTime(solution),
-                    getNumberOfIterations(columnGeneration), getGapToLowerBound(solution));
+                    getNumberOfIterations(columnGenerator), getGapToLowerBound(solution));
         }
     }
 
     private static class ComparisonTableEntry implements Table.Entry {
 
         private final Instance instance;
-        private final Solution solution1;
-        private final Solution solution2;
-        private final ColumnGeneration columnGeneration1;
-        private final ColumnGeneration columnGeneration2;
+        private final StarRoutingSolution solution1;
+        private final StarRoutingSolution solution2;
+        private final ColumnGenerator columnGenerator1;
+        private final ColumnGenerator columnGenerator2;
 
-        public ComparisonTableEntry(Instance instance, Solution solution, Solution solution2,
-                                    ColumnGeneration columnGeneration1, ColumnGeneration columnGeneration2) {
+        public ComparisonTableEntry(Instance instance, StarRoutingSolution solution, StarRoutingSolution solution2,
+                                    ColumnGenerator columnGenerator1, ColumnGenerator columnGenerator2) {
             this.instance = instance;
             this.solution1 = solution;
             this.solution2 = solution2;
-            this.columnGeneration1 = columnGeneration1;
-            this.columnGeneration2 = columnGeneration2;
+            this.columnGenerator1 = columnGenerator1;
+            this.columnGenerator2 = columnGenerator2;
         }
 
         @Override
         public List<String> getFields() {
             return List.of(getInstanceName(instance), getNumberOfNodes(instance), getNumberOfCustomers(instance),
                     getNumberOfVehicles(instance), getElapsedTime(solution1), getObjValue(solution1),
-                    getNumberOfIterations(columnGeneration1), getElapsedTime(solution2), getObjValue(solution2),
-                    getNumberOfIterations(columnGeneration2), getGapBetweenSolutions(solution2, solution1),
+                    getNumberOfIterations(columnGenerator1), getElapsedTime(solution2), getObjValue(solution2),
+                    getNumberOfIterations(columnGenerator2), getGapBetweenSolutions(solution2, solution1),
                     getLowerBound(solution2), getGapToLowerBound(solution2));
 
         }
@@ -361,23 +361,23 @@ public class Experiments {
     private static class RelaxationComparisonTableEntry implements Table.Entry {
 
         private final Instance instance;
-        private final Solution solution1;
-        private final Solution solution2;
-        private final ColumnGeneration columnGeneration;
+        private final StarRoutingSolution solution1;
+        private final StarRoutingSolution solution2;
+        private final ColumnGenerator columnGenerator;
 
-        public RelaxationComparisonTableEntry(Instance instance, Solution solution, Solution solution2,
-                                              ColumnGeneration columnGeneration) {
+        public RelaxationComparisonTableEntry(Instance instance, StarRoutingSolution solution, StarRoutingSolution solution2,
+                                              ColumnGenerator columnGenerator) {
             this.instance = instance;
             this.solution1 = solution;
             this.solution2 = solution2;
-            this.columnGeneration = columnGeneration;
+            this.columnGenerator = columnGenerator;
         }
 
         @Override
         public List<String> getFields() {
             return List.of(getInstanceName(instance), getNumberOfNodes(instance), getNumberOfCustomers(instance),
                     getNumberOfVehicles(instance), getElapsedTime(solution1), getObjValue(solution1),
-                    getElapsedTime(solution2), getObjValue(solution2), getNumberOfIterations(columnGeneration),
+                    getElapsedTime(solution2), getObjValue(solution2), getNumberOfIterations(columnGenerator),
                     getGapBetweenSolutions(solution1, solution2));
         }
     }

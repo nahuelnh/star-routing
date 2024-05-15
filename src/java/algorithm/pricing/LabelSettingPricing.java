@@ -1,8 +1,8 @@
 package algorithm.pricing;
 
-import algorithm.BranchOnEdge;
-import algorithm.BranchingDirection;
-import algorithm.RestrictedMasterProblem;
+import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchOnEdge;
+import algorithm.branching.BranchingDirection;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
@@ -43,7 +43,7 @@ public class LabelSettingPricing implements PricingProblem {
         return path.getCost() - sum - vehiclesDual;
     }
 
-    private double getMinObjValue(RestrictedMasterProblem.RMPSolution rmpSolution) {
+    private double getMinObjValue(RMPLinearSolution rmpSolution) {
         Map<Integer, Double> dualValues = new HashMap<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
@@ -53,7 +53,7 @@ public class LabelSettingPricing implements PricingProblem {
     }
 
     @Override
-    public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
+    public PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime) {
         Instant start = Instant.now();
         graph = new ESPPRCGraph(instance);
 

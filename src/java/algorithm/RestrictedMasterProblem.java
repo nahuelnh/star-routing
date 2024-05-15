@@ -1,128 +1,126 @@
 package algorithm;
 
+import algorithm.branching.BranchOnEdge;
+import algorithm.branching.BranchingDirection;
 import commons.FeasiblePath;
+import commons.Utils;
+import ilog.concert.IloException;
+import ilog.cplex.IloCplex;
 
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 
-public interface RestrictedMasterProblem {
+public abstract class RestrictedMasterProblem {
 
-    void addPaths(List<FeasiblePath> newPaths);
+    private final List<FeasiblePath> allPaths;
+    private final Deque<BranchingDirection> activeBranches;
+    private RMPLinearSolution linearSolution;
+    private RMPIntegerSolution integerSolution;
+    private List<FeasiblePath> activePaths;
 
-    RMPSolution solveRelaxation(Duration remainingTime);
+    public RestrictedMasterProblem() {
+        this.linearSolution = null;
+        this.integerSolution = null;
+        this.allPaths = new ArrayList<>();
+        this.activePaths = new ArrayList<>();
+        this.activeBranches = new ArrayDeque<>();
 
-    RMPIntegerSolution solveInteger(Duration remainingTime);
+    }
 
-    List<FeasiblePath> computePathsFromSolution();
+    public abstract void buildModel(IloCplex cplex, boolean integral, Duration remainingTime);
 
-    void addBranch(BranchingDirection branch);
+    public abstract RMPLinearSolution buildSolution(IloCplex cplex);
 
-    void removeBranch(BranchingDirection branch);
+    public abstract RMPIntegerSolution buildIntegerSolution(IloCplex cplex);
 
-    double fluxOnEdge(int start, int end);
+    abstract void performBranchOnEdge(IloCplex cplex, BranchOnEdge branch);
 
-    class RMPSolution {
-        private final double objectiveValue;
-        private final double[] customerDuals;
-        private final double vehiclesDual;
-        private final Map<BranchOnEdge, Double> fluxDuals;
-        private final boolean feasible;
-        private final double[] primalValues;
-        private final boolean isInteger;
-        private final Map<Integer, Map<Integer, Double>> flux;
+    public void addColumns(List<FeasiblePath> columns) {
+        allPaths.addAll(columns);
+    }
 
-        public RMPSolution(double objectiveValue, double[] customerDuals, double vehiclesDual,
-                           Map<BranchOnEdge, Double> fluxDuals, double[] primalValues, boolean feasible,
-                           boolean isInteger, Map<Integer, Map<Integer, Double>> flux) {
-            this.objectiveValue = objectiveValue;
-            this.customerDuals = customerDuals;
-            this.vehiclesDual = vehiclesDual;
-            this.fluxDuals = fluxDuals;
-            this.primalValues = primalValues;
-            this.feasible = feasible;
-            this.isInteger = isInteger;
-            this.flux = flux;
+    public void addBranch(BranchingDirection branch) {
+        activeBranches.addLast(branch);
+    }
+
+    public void removeBranch(BranchingDirection branch) {
+        activeBranches.removeLast();
+    }
+
+    public RMPLinearSolution getSolution() {
+        if (linearSolution == null) {
+            throw new IllegalStateException("Should have called solveRelaxation() before");
         }
+        return linearSolution;
+    }
 
-        public RMPSolution() {
-            this.objectiveValue = 0.0;
-            this.customerDuals = new double[]{};
-            this.primalValues = new double[]{};
-            this.vehiclesDual = 0.0;
-            this.fluxDuals = new HashMap<>();
-            this.feasible = false;
-            this.isInteger = false;
-            this.flux = new HashMap<>();
+    public RMPIntegerSolution getIntegerSolution() {
+        if (integerSolution == null) {
+            throw new IllegalStateException("Should have called solveInteger() before");
         }
+        return integerSolution;
+    }
 
-        public double getVehiclesDual() {
-            return vehiclesDual;
-        }
+    private boolean isCompatible(FeasiblePath path) {
+        return activeBranches.stream().allMatch(branch -> branch.isCompatible(path));
+    }
 
-        public double getCustomerDual(int constraintIndex) {
-            return customerDuals[constraintIndex];
-        }
+    public void solveRelaxation() {
+        solveRelaxation(Utils.DEFAULT_TIMEOUT);
+    }
 
-        public double getObjectiveValue() {
-            return objectiveValue;
-        }
-
-        public boolean isFeasible() {
-            return feasible;
-        }
-
-        public double getPrimalValue(int route) {
-            return primalValues[route];
-        }
-
-        public boolean isInteger() {
-            return isInteger;
-        }
-
-        public double getFlux(int i, int j) {
-            return flux.get(i).get(j);
-        }
-
-        public boolean hasFluxDual(BranchOnEdge branch) {
-            return fluxDuals.containsKey(branch);
-        }
-
-        public double getFluxDual(BranchOnEdge branch) {
-            return fluxDuals.get(branch);
+    public void solveRelaxation(Duration remainingTime) {
+        try (IloCplex cplex = new IloCplex()) {
+            this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
+            buildModel(cplex, false, remainingTime);
+            for (BranchingDirection branch : activeBranches) {
+                performBranching(cplex, branch);
+            }
+            cplex.solve();
+            linearSolution = buildSolution(cplex);
+            cplex.end();
+        } catch (IloException e) {
+            linearSolution = new RMPLinearSolution();
         }
     }
 
-    class RMPIntegerSolution {
+    public void solveInteger() {
+        solveInteger(Utils.DEFAULT_TIMEOUT);
+    }
 
-        private final double objectiveValue;
-        private final List<FeasiblePath> usedPaths;
-        private final boolean feasible;
-
-        public RMPIntegerSolution(double objectiveValue, List<FeasiblePath> usedPaths, boolean feasible) {
-            this.objectiveValue = objectiveValue;
-            this.usedPaths = usedPaths;
-            this.feasible = feasible;
+    public void solveInteger(Duration remainingTime) {
+        try (IloCplex cplex = new IloCplex()) {
+            this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
+            buildModel(cplex, true, remainingTime);
+            for (BranchingDirection branch : activeBranches) {
+                performBranching(cplex, branch);
+            }
+            cplex.solve();
+            integerSolution = buildIntegerSolution(cplex);
+            cplex.end();
+        } catch (IloException e) {
+            integerSolution = new RMPIntegerSolution();
         }
+    }
 
-        public RMPIntegerSolution() {
-            this.objectiveValue = 0.0;
-            this.usedPaths = new ArrayList<>();
-            this.feasible = false;
+    private void performBranching(IloCplex cplex, BranchingDirection branch) {
+        if (branch instanceof BranchOnEdge) {
+            performBranchOnEdge(cplex, (BranchOnEdge) branch);
         }
+    }
 
-        public List<FeasiblePath> getUsedPaths() {
-            return usedPaths;
-        }
+    public List<FeasiblePath> getAllPaths() {
+        return allPaths;
+    }
 
-        public double getObjectiveValue() {
-            return objectiveValue;
-        }
+    public Deque<BranchingDirection> getActiveBranches() {
+        return activeBranches;
+    }
 
-        public boolean isFeasible() {
-            return feasible;
-        }
+    public List<FeasiblePath> getActivePaths() {
+        return activePaths;
     }
 }

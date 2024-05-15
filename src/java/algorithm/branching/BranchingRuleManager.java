@@ -1,5 +1,6 @@
-package algorithm;
+package algorithm.branching;
 
+import algorithm.RMPLinearSolution;
 import commons.Instance;
 
 import java.util.ArrayList;
@@ -14,14 +15,14 @@ public class BranchingRuleManager {
         this.instance = instance;
     }
 
-    public List<BranchingDirection> getBranches(RestrictedMasterProblem.RMPSolution rmpSolution) {
+    public List<BranchingDirection> getBranches(RMPLinearSolution rmpSolution) {
 
         List<BranchingDirection> ret = new ArrayList<>();
         double maxFractionalPart = 0.0;
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
             for (int j = 0; j < instance.getNumberOfNodes(); j++) {
                 if (i != j) {
-                    double flux = rmpSolution.getFlux(i, j);
+                    double flux = rmpSolution.getFlow(i, j);
                     double fractionalPart = Math.abs(flux - (int) (flux + 0.5));
                     if (fractionalPart > EPSILON && fractionalPart > maxFractionalPart) {
                         maxFractionalPart = fractionalPart;

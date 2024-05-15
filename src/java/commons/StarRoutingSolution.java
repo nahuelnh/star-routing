@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class Solution {
+public class StarRoutingSolution {
     private final List<FeasiblePath> paths;
     private final double objValue;
     private final Duration elapsedTime;
@@ -14,7 +14,7 @@ public class Solution {
     private Optional<Double> deterministicTime;
     private boolean isInteger;
 
-    public Solution(Status status, double objValue, Duration elapsedTime, boolean isInteger) {
+    public StarRoutingSolution(Status status, double objValue, Duration elapsedTime, boolean isInteger) {
         this.status = status;
         this.paths = new ArrayList<>();
         this.objValue = objValue;
@@ -24,7 +24,7 @@ public class Solution {
         this.isInteger = isInteger;
     }
 
-    public Solution(Status status, double objValue, List<FeasiblePath> paths, Duration elapsedTime) {
+    public StarRoutingSolution(Status status, double objValue, List<FeasiblePath> paths, Duration elapsedTime) {
         this.status = status;
         this.paths = paths;
         this.objValue = objValue;
@@ -45,15 +45,15 @@ public class Solution {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Solution{cost=").append(objValue).append(", elapsedTime=").append(elapsedTime.toMillis())
-                .append("ms, paths=[");
+        builder.append("StarRoutingSolution{status=").append(status.toString()).append(", cost=").append(objValue).append(", elapsedTime=")
+                .append(elapsedTime.toMillis()).append("ms, lowerBound=").append(lowerBound.map(String::valueOf).orElse("null")).append(", paths=[");
         if (!paths.isEmpty()) {
             builder.append('\n');
-        }
-        for (FeasiblePath path : paths) {
-            builder.append("\t");
-            builder.append(path);
-            builder.append('\n');
+            for (FeasiblePath path : paths) {
+                builder.append("\t");
+                builder.append(path);
+                builder.append('\n');
+            }
         }
         builder.append("]}");
         return builder.toString();

@@ -2,7 +2,7 @@ package algorithm;
 
 import commons.FeasiblePath;
 import commons.Instance;
-import commons.Solution;
+import commons.StarRoutingSolution;
 import commons.Utils;
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
@@ -36,41 +36,41 @@ public class CompactModel {
         starRoutingModel.solve();
     }
 
-    private Solution solve(boolean integral, Duration timeout) {
+    private StarRoutingSolution solve(boolean integral, Duration timeout) {
         Instant start = Instant.now();
         try {
             buildModel(integral, timeout);
             cplex.solve();
             Duration elapsedTime = Utils.getElapsedTime(start);
             cplex.writeSolution("src/resources/star_routing_model.sol");
-            Solution.Status status = IloCplex.Status.Optimal.equals(cplex.getStatus()) ? Solution.Status.OPTIMAL :
-                    Solution.Status.TIMEOUT;
+            StarRoutingSolution.Status status = IloCplex.Status.Optimal.equals(cplex.getStatus()) ? StarRoutingSolution.Status.OPTIMAL :
+                    StarRoutingSolution.Status.TIMEOUT;
             List<FeasiblePath> paths =
-                    integral && Solution.Status.OPTIMAL.equals(status) ? getPathsFromSolution() : new ArrayList<>();
-            Solution solution = new Solution(status, cplex.getObjValue(), paths, elapsedTime);
+                    integral && StarRoutingSolution.Status.OPTIMAL.equals(status) ? getPathsFromSolution() : new ArrayList<>();
+            StarRoutingSolution solution = new StarRoutingSolution(status, cplex.getObjValue(), paths, elapsedTime);
             solution.setDeterministicTime(cplex.getDetTime());
             cplex.end();
             return solution;
         } catch (IloException e) {
             cplex.end();
-            return new Solution(Solution.Status.TIMEOUT, 0.0, new ArrayList<>(), Utils.getElapsedTime(start));
+            return new StarRoutingSolution(StarRoutingSolution.Status.TIMEOUT, 0.0, new ArrayList<>(), Utils.getElapsedTime(start));
         }
 
     }
 
-    public Solution solve() {
+    public StarRoutingSolution solve() {
         return solve(true, Utils.DEFAULT_TIMEOUT);
     }
 
-    public Solution solve(Duration timeout) {
+    public StarRoutingSolution solve(Duration timeout) {
         return solve(true, timeout);
     }
 
-    public Solution solveRelaxation() {
+    public StarRoutingSolution solveRelaxation() {
         return solve(false, Utils.DEFAULT_TIMEOUT);
     }
 
-    public Solution solveRelaxation(Duration timeout) {
+    public StarRoutingSolution solveRelaxation(Duration timeout) {
         return solve(false, timeout);
     }
 

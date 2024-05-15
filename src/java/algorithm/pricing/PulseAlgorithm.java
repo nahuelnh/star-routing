@@ -1,6 +1,6 @@
 package algorithm.pricing;
 
-import algorithm.RestrictedMasterProblem;
+import algorithm.RMPLinearSolution;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Stopwatch;
@@ -19,7 +19,7 @@ public class PulseAlgorithm {
     private static final double EPSILON = 1e-6;
     private static final int STEP = 1; // ~(Q / |S|)
     private final Instance instance;
-    private final RestrictedMasterProblem.RMPSolution rmpSolution;
+    private final RMPLinearSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final int numberOfNodes;
     private final Map<Integer, Double> dualValues;
@@ -30,7 +30,7 @@ public class PulseAlgorithm {
     private boolean saveSolution;
     private int pulsesPropagated;
 
-    public PulseAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution) {
+    public PulseAlgorithm(Instance instance, RMPLinearSolution rmpSolution) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
         this.graph = new ESPPRCGraph(instance);

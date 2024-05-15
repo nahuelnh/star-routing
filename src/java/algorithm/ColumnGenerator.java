@@ -1,9 +1,10 @@
 package algorithm;
 
 import algorithm.pricing.PricingProblem;
+import algorithm.pricing.PricingSolution;
 import commons.FeasiblePath;
 import commons.Instance;
-import commons.Solution;
+import commons.StarRoutingSolution;
 import commons.Stopwatch;
 import commons.Utils;
 
@@ -11,7 +12,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ColumnGeneration {
+public class ColumnGenerator {
 
     private final Instance instance;
     private final RestrictedMasterProblem rmp;
@@ -23,8 +24,8 @@ public class ColumnGeneration {
     private boolean finishEarly;
     private double gapThreshold;
 
-    public ColumnGeneration(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
-                            InitialSolutionHeuristic initialSolutionHeuristic) {
+    public ColumnGenerator(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricingProblem,
+                           InitialSolutionHeuristic initialSolutionHeuristic) {
         this.instance = instance;
         this.rmp = rmp;
         this.pricing = pricingProblem;
@@ -36,50 +37,49 @@ public class ColumnGeneration {
         this.numberOfIterations = 0;
     }
 
-    private Solution buildSolution(Stopwatch stopwatch, double relaxationOptimal,
-                                   RestrictedMasterProblem.RMPSolution rmpSolution, double deterministicTime,
-                                   boolean integral) {
-        Solution solution;
+    private StarRoutingSolution buildSolution(Stopwatch stopwatch, double relaxationOptimal, RMPLinearSolution rmpSolution,
+                                              double deterministicTime, boolean integral) {
+        StarRoutingSolution solution;
         if (stopwatch.timedOut()) {
             if (relaxationOptimal == Double.MAX_VALUE) {
-                solution = new Solution(Solution.Status.UNKNOWN, relaxationOptimal, stopwatch.getElapsedTime(), false);
-
+                solution = new StarRoutingSolution(StarRoutingSolution.Status.UNKNOWN, relaxationOptimal, stopwatch.getElapsedTime(), false);
             } else {
-                solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime(),
+                solution = new StarRoutingSolution(StarRoutingSolution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime(),
                         rmpSolution.isInteger());
             }
         } else if (integral) {
-            RestrictedMasterProblem.RMPIntegerSolution rmpIntegerSolution =
-                    rmp.solveInteger(stopwatch.getRemainingTime());
+            rmp.solveInteger(stopwatch.getRemainingTime());
+            RMPIntegerSolution rmpIntegerSolution = rmp.getIntegerSolution();
             if (!rmpIntegerSolution.isFeasible()) {
                 solution =
-                        new Solution(Solution.Status.INFEASIBLE, relaxationOptimal, stopwatch.getElapsedTime(), false);
+                        new StarRoutingSolution(StarRoutingSolution.Status.INFEASIBLE, relaxationOptimal, stopwatch.getElapsedTime(), false);
             } else if (stopwatch.timedOut()) {
-                solution = new Solution(Solution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime(), false);
+                solution = new StarRoutingSolution(StarRoutingSolution.Status.TIMEOUT, relaxationOptimal, stopwatch.getElapsedTime(), false);
             } else {
-                solution = new Solution(Solution.Status.OPTIMAL, rmpIntegerSolution.getObjectiveValue(),
+                solution = new StarRoutingSolution(StarRoutingSolution.Status.OPTIMAL, rmpIntegerSolution.getObjectiveValue(),
                         rmpIntegerSolution.getUsedPaths(), stopwatch.getElapsedTime());
                 solution.setLowerBound(relaxationOptimal);
             }
         } else {
-            solution = new Solution(Solution.Status.FEASIBLE, relaxationOptimal, stopwatch.getElapsedTime(), false);
+            solution = new StarRoutingSolution(StarRoutingSolution.Status.FEASIBLE, relaxationOptimal, stopwatch.getElapsedTime(), false);
         }
         solution.setDeterministicTime(deterministicTime);
         return solution;
     }
 
-    private Solution generateColumns(boolean integral, Duration timeout) {
+    private StarRoutingSolution generateColumns(boolean integral, Duration timeout) {
         Stopwatch stopwatch = new Stopwatch(timeout);
         List<FeasiblePath> columnsToAdd = initialSolutionHeuristic.run();
         List<FeasiblePath> allColumns = new ArrayList<>();
         double relaxationOptimal = Double.MAX_VALUE;
         double deterministicTime = 0.0;
-        RestrictedMasterProblem.RMPSolution rmpSolution;
+        RMPLinearSolution rmpSolution;
         while (true) {
             numberOfIterations++;
             allColumns.addAll(columnsToAdd);
-            rmp.addPaths(columnsToAdd);
-            rmpSolution = rmp.solveRelaxation(stopwatch.getRemainingTime());
+            rmp.addColumns(columnsToAdd);
+            rmp.solveRelaxation(stopwatch.getRemainingTime());
+            rmpSolution = rmp.getSolution();
             if (!rmpSolution.isFeasible() || stopwatch.timedOut()) {
                 break;
             }
@@ -87,7 +87,7 @@ public class ColumnGeneration {
             if (finishEarly) {
                 pricing.forceExactSolution();
             }
-            PricingProblem.PricingSolution pricingSolution = pricing.solve(rmpSolution, stopwatch.getRemainingTime());
+            PricingSolution pricingSolution = pricing.solve(rmpSolution, stopwatch.getRemainingTime());
             if (!pricingSolution.isFeasible() || stopwatch.timedOut()) {
                 break;
             }
@@ -106,23 +106,23 @@ public class ColumnGeneration {
         return buildSolution(stopwatch, relaxationOptimal, rmpSolution, deterministicTime, integral);
     }
 
-    private double computeGapToLowerBound(PricingProblem.PricingSolution pricingSolution, double relaxationOptimal) {
+    private double computeGapToLowerBound(PricingSolution pricingSolution, double relaxationOptimal) {
         return Math.abs(instance.getNumberOfVehicles() * pricingSolution.getObjectiveValue() / relaxationOptimal);
     }
 
-    public Solution solve(Duration timeout) {
+    public StarRoutingSolution solve(Duration timeout) {
         return generateColumns(true, timeout);
     }
 
-    public Solution solve() {
+    public StarRoutingSolution solve() {
         return solve(Utils.DEFAULT_TIMEOUT);
     }
 
-    public Solution solveRelaxation(Duration timeout) {
+    public StarRoutingSolution solveRelaxation(Duration timeout) {
         return generateColumns(false, timeout);
     }
 
-    public Solution solveRelaxation() {
+    public StarRoutingSolution solveRelaxation() {
         return solveRelaxation(Utils.DEFAULT_TIMEOUT);
     }
 

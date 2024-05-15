@@ -2,7 +2,7 @@ package algorithm;
 
 import commons.FeasiblePath;
 import commons.Instance;
-import commons.Solution;
+import commons.StarRoutingSolution;
 import commons.Utils;
 import ilog.concert.IloException;
 import ilog.concert.IloIntExpr;
@@ -40,15 +40,15 @@ public class DFJCompactModel {
         }
     }
 
-    public Solution solve() throws IloException {
+    public StarRoutingSolution solve() throws IloException {
         Instant start = Instant.now();
         buildModel();
         cplex.solve();
         Instant finish = Instant.now();
-        Solution.Status status =
-                cplex.getStatus() == IloCplex.Status.Error ? Solution.Status.TIMEOUT : Solution.Status.OPTIMAL;
-        Solution solution =
-                new Solution(status, cplex.getObjValue(), getPathsFromSolution(), Duration.between(start, finish));
+        StarRoutingSolution.Status status =
+                cplex.getStatus() == IloCplex.Status.Error ? StarRoutingSolution.Status.TIMEOUT : StarRoutingSolution.Status.OPTIMAL;
+        StarRoutingSolution solution =
+                new StarRoutingSolution(status, cplex.getObjValue(), getPathsFromSolution(), Duration.between(start, finish));
         cplex.end();
         return solution;
     }

@@ -1,4 +1,4 @@
-package algorithm;
+package algorithm.branching;
 
 import commons.FeasiblePath;
 

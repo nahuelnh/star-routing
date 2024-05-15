@@ -1,8 +1,8 @@
 package algorithm.pricing;
 
-import algorithm.BranchOnEdge;
-import algorithm.BranchingDirection;
-import algorithm.RestrictedMasterProblem;
+import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchOnEdge;
+import algorithm.branching.BranchingDirection;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Stopwatch;
@@ -24,7 +24,7 @@ public class LabelSettingAlgorithm {
     private static final double EPSILON = 1e-6;
     private static final int STOP_AFTER_N_SOLUTIONS = 5;
     private final Instance instance;
-    private final RestrictedMasterProblem.RMPSolution rmpSolution;
+    private final RMPLinearSolution rmpSolution;
     private final ESPPRCGraph graph;
     private final Map<Integer, Double> dualValues;
     private final Map<Integer, Map<Integer, Double>> fluxDuals;
@@ -35,7 +35,7 @@ public class LabelSettingAlgorithm {
     private int labelsProcessed;
     private int solutionsFound;
 
-    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
+    public LabelSettingAlgorithm(Instance instance, RMPLinearSolution rmpSolution,
                                  Collection<BranchingDirection> activeBranches, ESPPRCGraph graph,
                                  boolean applyHeuristics) {
         this.instance = instance;
@@ -51,10 +51,10 @@ public class LabelSettingAlgorithm {
         this.graph = graph;
         for (BranchingDirection branch : activeBranches) {
             if (branch instanceof BranchOnEdge branchOnEdge) {
-                if (rmpSolution.hasFluxDual(branchOnEdge)) {
+                if (rmpSolution.hasFlowDual(branchOnEdge)) {
                     fluxDuals.putIfAbsent(branchOnEdge.getStart(), new HashMap<>());
                     int end = branchOnEdge.getEnd() == instance.getDepot() ? graph.getEnd() : branchOnEdge.getEnd();
-                    fluxDuals.get(branchOnEdge.getStart()).put(end, rmpSolution.getFluxDual(branchOnEdge));
+                    fluxDuals.get(branchOnEdge.getStart()).put(end, rmpSolution.getFlowDual(branchOnEdge));
                 }
             }
         }
@@ -71,7 +71,7 @@ public class LabelSettingAlgorithm {
         }
     }
 
-    public LabelSettingAlgorithm(Instance instance, RestrictedMasterProblem.RMPSolution rmpSolution,
+    public LabelSettingAlgorithm(Instance instance, RMPLinearSolution rmpSolution,
                                  Collection<BranchingDirection> activeBranches, ESPPRCGraph graph) {
         this(instance, rmpSolution, activeBranches, graph, false);
     }

@@ -1,16 +1,15 @@
 package algorithm.pricing;
 
-import algorithm.BranchingDirection;
-import algorithm.RestrictedMasterProblem;
+import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchingDirection;
 import commons.FeasiblePath;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 
 public interface PricingProblem {
 
-    PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime);
+    PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime);
 
     List<FeasiblePath> computePathsFromSolution();
 
@@ -20,38 +19,4 @@ public interface PricingProblem {
 
     void removeBranch(BranchingDirection branch);
 
-    class PricingSolution {
-        private final boolean feasible;
-        private final double objectiveValue;
-        private final List<FeasiblePath> negativeReducedCostPaths;
-        private final double deterministicTime;
-
-        public PricingSolution(double objectiveValue, List<FeasiblePath> negativeReducedCostPaths,
-                               double deterministicTime, boolean feasible) {
-            this.feasible = feasible;
-            this.objectiveValue = objectiveValue;
-            this.negativeReducedCostPaths = negativeReducedCostPaths;
-            this.deterministicTime = deterministicTime;
-        }
-
-        public PricingSolution() {
-            this(0.0, new ArrayList<>(), 0.0, false);
-        }
-
-        public List<FeasiblePath> getNegativeReducedCostPaths() {
-            return negativeReducedCostPaths;
-        }
-
-        public boolean isFeasible() {
-            return feasible;
-        }
-
-        public double getObjectiveValue() {
-            return objectiveValue;
-        }
-
-        public double getDeterministicTime() {
-            return deterministicTime;
-        }
-    }
 }

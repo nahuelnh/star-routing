@@ -29,7 +29,7 @@ public class RearrangeCustomersHeuristic {
     }
 
     private List<FeasiblePath> getPathsInBasis(List<FeasiblePath> paths,
-                                               RestrictedMasterProblem.RMPSolution rmpSolution) {
+                                               RMPLinearSolution rmpSolution) {
         List<FeasiblePath> sortedPaths = new ArrayList<>();
         for (int i = 0; i < paths.size(); i++) {
             if (rmpSolution.getPrimalValue(i) > EPSILON) {
@@ -94,7 +94,7 @@ public class RearrangeCustomersHeuristic {
         return ret;
     }
 
-    public List<FeasiblePath> run(List<FeasiblePath> paths, RestrictedMasterProblem.RMPSolution rmpSolution) {
+    public List<FeasiblePath> run(List<FeasiblePath> paths, RMPLinearSolution rmpSolution) {
         List<FeasiblePath> ret = new ArrayList<>();
         BitSet visited = new BitSet(instance.getNumberOfNodes());
         for (FeasiblePath path : getPathsInBasis(paths, rmpSolution)) {

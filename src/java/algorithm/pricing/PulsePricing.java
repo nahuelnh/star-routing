@@ -1,7 +1,7 @@
 package algorithm.pricing;
 
-import algorithm.BranchingDirection;
-import algorithm.RestrictedMasterProblem;
+import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchingDirection;
 import commons.FeasiblePath;
 import commons.Instance;
 
@@ -26,7 +26,7 @@ public class PulsePricing implements PricingProblem {
         return path.getCost() - sum - vehiclesDual;
     }
 
-    private double getMinObjValue(RestrictedMasterProblem.RMPSolution rmpSolution) {
+    private double getMinObjValue(RMPLinearSolution rmpSolution) {
         Map<Integer, Double> dualValues = new HashMap<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
@@ -36,7 +36,7 @@ public class PulsePricing implements PricingProblem {
     }
 
     @Override
-    public PricingSolution solve(RestrictedMasterProblem.RMPSolution rmpSolution, Duration remainingTime) {
+    public PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime) {
         PulseAlgorithm pulseAlgorithm = new PulseAlgorithm(instance, rmpSolution);
         paths = pulseAlgorithm.run(remainingTime);
         return new PricingSolution(getMinObjValue(rmpSolution), paths, pulseAlgorithm.getPulsesPropagated(), true);
