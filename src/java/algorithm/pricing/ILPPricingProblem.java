@@ -1,7 +1,7 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
-import algorithm.branching.BranchingDirection;
+import algorithm.branching.Branch;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
@@ -215,12 +215,12 @@ public class ILPPricingProblem implements PricingProblem {
     }
 
     @Override
-    public void addBranch(BranchingDirection branch) {
+    public void addBranch(Branch branch) {
 
     }
 
     @Override
-    public void removeBranch(BranchingDirection branch) {
+    public void removeBranch(Branch branch) {
 
     }
 }

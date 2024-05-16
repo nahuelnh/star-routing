@@ -89,7 +89,7 @@ public class BranchAndPrice {
                         upperBound = rmpIntegerSolution.getObjectiveValue();
                         incumbent = rmpIntegerSolution;
                     }
-                    for (BranchingDirection branch : branchingRuleManager.getBranches(rmpSolution)) {
+                    for (Branch branch : branchingRuleManager.getBranches(rmpSolution)) {
                         remainingNodes.addFirst(new Node(currentNode, branch));
                     }
                 }
@@ -147,9 +147,9 @@ public class BranchAndPrice {
 
     private static class Node {
         private final Node parent;
-        private final BranchingDirection branch;
+        private final Branch branch;
 
-        public Node(Node parent, BranchingDirection branch) {
+        public Node(Node parent, Branch branch) {
             this.parent = parent;
             this.branch = branch;
         }
@@ -168,7 +168,7 @@ public class BranchAndPrice {
             return ret;
         }
 
-        public BranchingDirection getBranch() {
+        public Branch getBranch() {
             return branch;
         }
     }

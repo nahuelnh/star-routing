@@ -2,7 +2,7 @@ package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
 import algorithm.branching.BranchOnEdge;
-import algorithm.branching.BranchingDirection;
+import algorithm.branching.Branch;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
@@ -20,7 +20,7 @@ public class LabelSettingPricing implements PricingProblem {
 
     private final Instance instance;
     private final boolean solveHeuristically;
-    private final Deque<BranchingDirection> activeBranches;
+    private final Deque<Branch> activeBranches;
     private boolean forceExactSolution;
     private List<FeasiblePath> paths;
     private ESPPRCGraph graph;
@@ -57,7 +57,7 @@ public class LabelSettingPricing implements PricingProblem {
         Instant start = Instant.now();
         graph = new ESPPRCGraph(instance);
 
-        for (BranchingDirection branch : activeBranches) {
+        for (Branch branch : activeBranches) {
             performBranching(branch);
         }
 
@@ -85,18 +85,18 @@ public class LabelSettingPricing implements PricingProblem {
     }
 
     @Override
-    public void addBranch(BranchingDirection branch) {
+    public void addBranch(Branch branch) {
         activeBranches.add(branch);
     }
 
-    private void performBranching(BranchingDirection branch) {
+    private void performBranching(Branch branch) {
         if (branch instanceof BranchOnEdge) {
             performBranchOnEdge((BranchOnEdge) branch);
         }
     }
 
     private void performBranchOnEdge(BranchOnEdge branch) {
-        if (!branch.isLowerBound() && branch.getBound() == 0) {
+        if (branch.isUpperBound() && branch.getBound() == 0) {
             graph.removeEdge(branch.getStart(), branch.getEnd());
         }
         if (branch.isLowerBound() && branch.getBound() >= 1) {
@@ -112,7 +112,7 @@ public class LabelSettingPricing implements PricingProblem {
     }
 
     @Override
-    public void removeBranch(BranchingDirection branch) {
+    public void removeBranch(Branch branch) {
         activeBranches.removeLast();
     }
 }

@@ -1,7 +1,7 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
-import algorithm.branching.BranchingDirection;
+import algorithm.branching.Branch;
 import commons.FeasiblePath;
 
 import java.time.Duration;
@@ -15,8 +15,8 @@ public interface PricingProblem {
 
     void forceExactSolution();
 
-    void addBranch(BranchingDirection branch);
+    void addBranch(Branch branch);
 
-    void removeBranch(BranchingDirection branch);
+    void removeBranch(Branch branch);
 
 }

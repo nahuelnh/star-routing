@@ -1,7 +1,8 @@
 package algorithm;
 
+import algorithm.branching.Branch;
 import algorithm.branching.BranchOnEdge;
-import algorithm.branching.BranchingDirection;
+import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Utils;
 import ilog.concert.IloException;
@@ -16,7 +17,7 @@ import java.util.List;
 public abstract class RestrictedMasterProblem {
 
     private final List<FeasiblePath> allPaths;
-    private final Deque<BranchingDirection> activeBranches;
+    private final Deque<Branch> activeBranches;
     private RMPLinearSolution linearSolution;
     private RMPIntegerSolution integerSolution;
     private List<FeasiblePath> activePaths;
@@ -30,6 +31,10 @@ public abstract class RestrictedMasterProblem {
 
     }
 
+    public void addColumns(List<FeasiblePath> columns) {
+        allPaths.addAll(columns);
+    }
+
     public abstract void buildModel(IloCplex cplex, boolean integral, Duration remainingTime);
 
     public abstract RMPLinearSolution buildSolution(IloCplex cplex);
@@ -38,15 +43,13 @@ public abstract class RestrictedMasterProblem {
 
     abstract void performBranchOnEdge(IloCplex cplex, BranchOnEdge branch);
 
-    public void addColumns(List<FeasiblePath> columns) {
-        allPaths.addAll(columns);
-    }
+    abstract void performBranchOnVisitFlow(IloCplex cplex, BranchOnVisitFlow branch);
 
-    public void addBranch(BranchingDirection branch) {
+    public void addBranch(Branch branch) {
         activeBranches.addLast(branch);
     }
 
-    public void removeBranch(BranchingDirection branch) {
+    public void removeBranch(Branch branch) {
         activeBranches.removeLast();
     }
 
@@ -76,7 +79,7 @@ public abstract class RestrictedMasterProblem {
         try (IloCplex cplex = new IloCplex()) {
             this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
             buildModel(cplex, false, remainingTime);
-            for (BranchingDirection branch : activeBranches) {
+            for (Branch branch : activeBranches) {
                 performBranching(cplex, branch);
             }
             cplex.solve();
@@ -95,7 +98,7 @@ public abstract class RestrictedMasterProblem {
         try (IloCplex cplex = new IloCplex()) {
             this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
             buildModel(cplex, true, remainingTime);
-            for (BranchingDirection branch : activeBranches) {
+            for (Branch branch : activeBranches) {
                 performBranching(cplex, branch);
             }
             cplex.solve();
@@ -106,7 +109,7 @@ public abstract class RestrictedMasterProblem {
         }
     }
 
-    private void performBranching(IloCplex cplex, BranchingDirection branch) {
+    private void performBranching(IloCplex cplex, Branch branch) {
         if (branch instanceof BranchOnEdge) {
             performBranchOnEdge(cplex, (BranchOnEdge) branch);
         }
@@ -116,7 +119,7 @@ public abstract class RestrictedMasterProblem {
         return allPaths;
     }
 
-    public Deque<BranchingDirection> getActiveBranches() {
+    public Deque<Branch> getActiveBranches() {
         return activeBranches;
     }
 

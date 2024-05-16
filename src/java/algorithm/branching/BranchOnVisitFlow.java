@@ -2,16 +2,17 @@ package algorithm.branching;
 
 import commons.FeasiblePath;
 
-public class BranchOnEdge implements Branch {
-
+public class BranchOnVisitFlow implements Branch {
     private final int start;
     private final int end;
+    private final int customer;
     private final int bound;
     private final Direction direction;
 
-    public BranchOnEdge(int start, int end, int bound, Direction direction) {
+    public BranchOnVisitFlow(int start, int end, int customer, int bound, Direction direction) {
         this.start = start;
         this.end = end;
+        this.customer = customer;
         this.bound = bound;
         this.direction = direction;
     }
@@ -22,6 +23,10 @@ public class BranchOnEdge implements Branch {
 
     public int getEnd() {
         return end;
+    }
+
+    public int getCustomer() {
+        return customer;
     }
 
     @Override
@@ -44,12 +49,13 @@ public class BranchOnEdge implements Branch {
         if (isLowerBound() || bound > 0) {
             return true;
         }
-        return !path.containsEdge(start, end);
+        return !(path.containsEdge(start, end) && path.isCustomerServed(customer));
     }
 
     @Override
     public String toString() {
-        return "BranchOnEdge{" + "start=" + start + ", end=" + end + ", bound=" + bound + ", direction=" + direction +
-                '}';
+        return "BranchOnVisitFlow{" + "start=" + start + ", end=" + end + ", customer=" + customer + ", bound=" +
+                bound + ", direction=" + direction + '}';
     }
+
 }

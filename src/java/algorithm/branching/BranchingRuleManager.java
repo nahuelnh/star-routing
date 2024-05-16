@@ -15,24 +15,41 @@ public class BranchingRuleManager {
         this.instance = instance;
     }
 
-    public List<BranchingDirection> getBranches(RMPLinearSolution rmpSolution) {
-
-        List<BranchingDirection> ret = new ArrayList<>();
+    public List<Branch> getBranches(RMPLinearSolution rmpSolution) {
+        List<Branch> ret = new ArrayList<>();
         double maxFractionalPart = 0.0;
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
             for (int j = 0; j < instance.getNumberOfNodes(); j++) {
                 if (i != j) {
-                    double flux = rmpSolution.getFlow(i, j);
-                    double fractionalPart = Math.abs(flux - (int) (flux + 0.5));
+                    double flow = rmpSolution.getFlow(i, j);
+                    double fractionalPart = Math.abs(flow - (int) (flow + 0.5));
                     if (fractionalPart > EPSILON && fractionalPart > maxFractionalPart) {
                         maxFractionalPart = fractionalPart;
-                        ret = List.of(new BranchOnEdge(i, j, (int) Math.floor(flux), false),
-                                new BranchOnEdge(i, j, (int) Math.ceil(flux), true));
+                        ret = List.of(new BranchOnEdge(i, j, (int) Math.floor(flow), Branch.Direction.DOWN),
+                                new BranchOnEdge(i, j, (int) Math.ceil(flow), Branch.Direction.UP));
                     }
                 }
             }
         }
+        return ret;
+    }
 
+    public List<Branch> getBranches(RMPLinearSolution rmpSolution, boolean ignore) {
+        List<Branch> ret = new ArrayList<>();
+        double maxFractionalPart = 0.0;
+        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+            for (int j = 0; j < instance.getNumberOfNodes(); j++) {
+                if (i != j) {
+                    double flow = rmpSolution.getFlow(i, j);
+                    double fractionalPart = Math.abs(flow - (int) (flow + 0.5));
+                    if (fractionalPart > EPSILON && fractionalPart > maxFractionalPart) {
+                        maxFractionalPart = fractionalPart;
+                        ret = List.of(new BranchOnEdge(i, j, (int) Math.floor(flow), Branch.Direction.DOWN),
+                                new BranchOnEdge(i, j, (int) Math.ceil(flow), Branch.Direction.UP));
+                    }
+                }
+            }
+        }
         return ret;
     }
 
