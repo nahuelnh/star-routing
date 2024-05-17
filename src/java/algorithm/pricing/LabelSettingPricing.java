@@ -1,26 +1,21 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
-import algorithm.branching.Branch;
-import algorithm.branching.BranchOnEdge;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LabelSettingPricing implements PricingProblem {
+public class LabelSettingPricing extends PricingProblem {
 
     private final Instance instance;
     private final boolean solveHeuristically;
-    private final Deque<Branch> activeBranches;
     private boolean forceExactSolution;
     private List<FeasiblePath> paths;
     private ESPPRCGraph graph;
@@ -34,7 +29,6 @@ public class LabelSettingPricing implements PricingProblem {
         this.paths = new ArrayList<>();
         this.solveHeuristically = solveHeuristically;
         this.forceExactSolution = false;
-        this.activeBranches = new ArrayDeque<>();
         this.graph = new ESPPRCGraph(instance);
     }
 
@@ -55,18 +49,15 @@ public class LabelSettingPricing implements PricingProblem {
     @Override
     public PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime) {
         Instant start = Instant.now();
-        graph = new ESPPRCGraph(instance);
 
-        for (Branch branch : activeBranches) {
-            performBranching(branch);
-        }
+        performBranching();
 
         LabelSettingAlgorithm labelSettingAlgorithm =
-                new LabelSettingAlgorithm(instance, rmpSolution, activeBranches, graph, !forceExactSolution);
+                new LabelSettingAlgorithm(instance, rmpSolution, getActiveBranches(), !forceExactSolution);
         paths = labelSettingAlgorithm.run(remainingTime);
         int labelsProcessed = labelSettingAlgorithm.getLabelsProcessed();
         if (paths.isEmpty() && !solveHeuristically) {
-            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, activeBranches, graph, false);
+            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, getActiveBranches(), false);
             paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
             labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
         }
@@ -75,44 +66,8 @@ public class LabelSettingPricing implements PricingProblem {
     }
 
     @Override
-    public List<FeasiblePath> computePathsFromSolution() {
-        return paths;
-    }
-
-    @Override
     public void forceExactSolution() {
         this.forceExactSolution = true;
     }
 
-    @Override
-    public void addBranch(Branch branch) {
-        activeBranches.add(branch);
-    }
-
-    private void performBranching(Branch branch) {
-        if (branch instanceof BranchOnEdge) {
-            performBranchOnEdge((BranchOnEdge) branch);
-        }
-    }
-
-    private void performBranchOnEdge(BranchOnEdge branch) {
-        if (branch.isUpperBound() && branch.getBound() == 0) {
-            graph.removeEdge(branch.getStart(), graph.translateToESPPRCNode(branch.getEnd()));
-        }
-        if (branch.isLowerBound() && branch.getBound() >= 1) {
-            for (int node : graph.getAdjacentNodes(branch.getStart())) {
-                if (branch.getEnd() == instance.getDepot() && node != graph.getEnd()) {
-                    graph.removeEdge(graph.getStart(), graph.translateToESPPRCNode(node));
-                }
-                if (branch.getEnd() != instance.getDepot() && node != branch.getEnd()) {
-                    graph.removeEdge(graph.getStart(), graph.translateToESPPRCNode(node));
-                }
-            }
-        }
-    }
-
-    @Override
-    public void removeBranch(Branch branch) {
-        activeBranches.removeLast();
-    }
 }

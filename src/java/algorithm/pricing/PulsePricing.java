@@ -1,7 +1,6 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
-import algorithm.branching.Branch;
 import commons.FeasiblePath;
 import commons.Instance;
 
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PulsePricing implements PricingProblem {
+public class PulsePricing extends PricingProblem {
 
     private final Instance instance;
     private List<FeasiblePath> paths;
@@ -37,27 +36,14 @@ public class PulsePricing implements PricingProblem {
 
     @Override
     public PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime) {
+        performBranching();
         PulseAlgorithm pulseAlgorithm = new PulseAlgorithm(instance, rmpSolution);
         paths = pulseAlgorithm.run(remainingTime);
         return new PricingSolution(getMinObjValue(rmpSolution), paths, pulseAlgorithm.getPulsesPropagated(), true);
     }
 
     @Override
-    public List<FeasiblePath> computePathsFromSolution() {
-        return paths;
-    }
-
-    @Override
     public void forceExactSolution() {
     }
 
-    @Override
-    public void addBranch(Branch branch) {
-
-    }
-
-    @Override
-    public void removeBranch(Branch branch) {
-
-    }
 }

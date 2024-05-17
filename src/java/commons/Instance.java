@@ -210,6 +210,10 @@ public class Instance {
         return reverseNeighborhoods.get(node);
     }
 
+    public Graph getGraph() {
+        return graph;
+    }
+
     @Override
     public String toString() {
         return "commons.Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +

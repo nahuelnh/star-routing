@@ -1,7 +1,6 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
-import algorithm.branching.BranchOnEdge;
 import algorithm.branching.Branch;
 import commons.FeasiblePath;
 import commons.Instance;
@@ -35,8 +34,7 @@ public class LabelSettingAlgorithm {
     private int labelsProcessed;
     private int solutionsFound;
 
-    public LabelSettingAlgorithm(Instance instance, RMPLinearSolution rmpSolution,
-                                 Collection<Branch> activeBranches, ESPPRCGraph graph,
+    public LabelSettingAlgorithm(Instance instance, RMPLinearSolution rmpSolution, Collection<Branch> activeBranches,
                                  boolean applyHeuristics) {
         this.instance = instance;
         this.rmpSolution = rmpSolution;
@@ -48,16 +46,16 @@ public class LabelSettingAlgorithm {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
 
-        this.graph = graph;
-        for (Branch branch : activeBranches) {
-            if (branch instanceof BranchOnEdge branchOnEdge) {
-                if (rmpSolution.hasFlowDual(branchOnEdge)) {
-                    flowDuals.putIfAbsent(branchOnEdge.getStart(), new HashMap<>());
-                    int end = branchOnEdge.getEnd() == instance.getDepot() ? graph.getEnd() : branchOnEdge.getEnd();
-                    flowDuals.get(branchOnEdge.getStart()).put(end, rmpSolution.getFlowDual(branchOnEdge));
-                }
-            }
-        }
+        this.graph = new ESPPRCGraph(instance);
+        //        for (Branch branch : activeBranches) {
+        //            if (branch instanceof BranchOnEdge branchOnEdge) {
+        //                if (rmpSolution.hasFlowDual(branchOnEdge)) {
+        //                    flowDuals.putIfAbsent(branchOnEdge.getStart(), new HashMap<>());
+        //                    int end = branchOnEdge.getEnd() == instance.getDepot() ? graph.getEnd() : branchOnEdge.getEnd();
+        //                    flowDuals.get(branchOnEdge.getStart()).put(end, rmpSolution.getFlowDual(branchOnEdge));
+        //                }
+        //            }
+        //        }
 
         this.applyHeuristics = applyHeuristics;
         this.alpha = computeCostFactor();
@@ -68,9 +66,8 @@ public class LabelSettingAlgorithm {
         }
     }
 
-    public LabelSettingAlgorithm(Instance instance, RMPLinearSolution rmpSolution,
-                                 Collection<Branch> activeBranches, ESPPRCGraph graph) {
-        this(instance, rmpSolution, activeBranches, graph, false);
+    public LabelSettingAlgorithm(Instance instance, RMPLinearSolution rmpSolution, Collection<Branch> activeBranches) {
+        this(instance, rmpSolution, activeBranches, false);
     }
 
     private double computeCostFactor() {

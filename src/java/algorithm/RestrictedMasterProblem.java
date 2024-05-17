@@ -1,7 +1,6 @@
 package algorithm;
 
 import algorithm.branching.Branch;
-import algorithm.branching.BranchOnEdge;
 import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Utils;
@@ -40,8 +39,6 @@ public abstract class RestrictedMasterProblem {
     public abstract RMPLinearSolution buildSolution(IloCplex cplex);
 
     public abstract RMPIntegerSolution buildIntegerSolution(IloCplex cplex);
-
-    abstract void performBranchOnEdge(IloCplex cplex, BranchOnEdge branch);
 
     abstract void performBranchOnVisitFlow(IloCplex cplex, BranchOnVisitFlow branch);
 
@@ -110,17 +107,9 @@ public abstract class RestrictedMasterProblem {
     }
 
     private void performBranching(IloCplex cplex, Branch branch) {
-        if (branch instanceof BranchOnEdge) {
-            performBranchOnEdge(cplex, (BranchOnEdge) branch);
+        if (branch instanceof BranchOnVisitFlow) {
+            performBranchOnVisitFlow(cplex, (BranchOnVisitFlow) branch);
         }
-    }
-
-    public List<FeasiblePath> getAllPaths() {
-        return allPaths;
-    }
-
-    public Deque<Branch> getActiveBranches() {
-        return activeBranches;
     }
 
     public List<FeasiblePath> getActivePaths() {

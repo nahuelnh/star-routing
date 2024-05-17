@@ -1,7 +1,6 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
-import algorithm.branching.Branch;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
@@ -19,7 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ILPPricingProblem implements PricingProblem {
+public class ILPPricingProblem extends PricingProblem {
     private static final double EPSILON = 1e-6;
     private final Instance instance;
     private IloCplex cplex;
@@ -146,6 +145,9 @@ public class ILPPricingProblem implements PricingProblem {
             createVariables();
             createConstraints();
             createObjective(rmpSolution);
+
+            performBranching();
+
             cplex.solve();
             boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
             List<FeasiblePath> pathsFromSolution = feasible ? computePathsFromSolution() : new ArrayList<>();
@@ -192,7 +194,6 @@ public class ILPPricingProblem implements PricingProblem {
         return path;
     }
 
-    @Override
     public List<FeasiblePath> computePathsFromSolution() {
         try {
             List<FeasiblePath> ret = new ArrayList<>();
@@ -212,15 +213,5 @@ public class ILPPricingProblem implements PricingProblem {
 
     @Override
     public void forceExactSolution() {
-    }
-
-    @Override
-    public void addBranch(Branch branch) {
-
-    }
-
-    @Override
-    public void removeBranch(Branch branch) {
-
     }
 }

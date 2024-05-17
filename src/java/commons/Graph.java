@@ -24,7 +24,7 @@ public class Graph {
     }
 
     public void addEdge(int i, int j, int weight) {
-        //        assert start < size && end < size;
+        assert i < size && j < size;
         adjacencyList.get(i).add(j);
         Edge e = new Edge(i, j, weight);
         edges.add(e);

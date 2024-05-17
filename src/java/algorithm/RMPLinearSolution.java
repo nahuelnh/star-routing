@@ -1,9 +1,11 @@
 package algorithm;
 
-import algorithm.branching.BranchOnEdge;
 import algorithm.branching.BranchOnVisitFlow;
+import commons.VisitFlow;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RMPLinearSolution {
@@ -13,15 +15,11 @@ public class RMPLinearSolution {
     private final boolean feasible;
     private final double[] primalValues;
     private final boolean isInteger;
-    private final Map<Integer, Map<Integer, Double>> flow;
-    private final Map<BranchOnEdge, Double> flowDuals;
-    private final Map<Integer, Map<Integer, Map<Integer, Double>>> visitFlow;
+    private final List<VisitFlow> visitFlow;
     private final Map<BranchOnVisitFlow, Double> visitFlowDuals;
 
     public RMPLinearSolution(double objectiveValue, double[] customerDuals, double vehiclesDual, boolean feasible,
-                             double[] primalValues, boolean isInteger, Map<Integer, Map<Integer, Double>> flow,
-                             Map<BranchOnEdge, Double> flowDuals,
-                             Map<Integer, Map<Integer, Map<Integer, Double>>> visitFlow,
+                             double[] primalValues, boolean isInteger, List<VisitFlow> visitFlow,
                              Map<BranchOnVisitFlow, Double> visitFlowDuals) {
         this.objectiveValue = objectiveValue;
         this.customerDuals = customerDuals;
@@ -29,8 +27,6 @@ public class RMPLinearSolution {
         this.feasible = feasible;
         this.primalValues = primalValues;
         this.isInteger = isInteger;
-        this.flow = flow;
-        this.flowDuals = flowDuals;
         this.visitFlow = visitFlow;
         this.visitFlowDuals = visitFlowDuals;
     }
@@ -40,11 +36,9 @@ public class RMPLinearSolution {
         this.customerDuals = new double[]{};
         this.primalValues = new double[]{};
         this.vehiclesDual = 0.0;
-        this.flowDuals = new HashMap<>();
         this.feasible = false;
         this.isInteger = false;
-        this.flow = new HashMap<>();
-        this.visitFlow = new HashMap<>();
+        this.visitFlow = new ArrayList<>();
         this.visitFlowDuals = new HashMap<>();
     }
 
@@ -72,15 +66,15 @@ public class RMPLinearSolution {
         return isInteger;
     }
 
-    public double getFlow(int i, int j) {
-        return flow.get(i).get(j);
+    public List<VisitFlow> getVisitFlow() {
+        return visitFlow;
     }
 
-    public boolean hasFlowDual(BranchOnEdge branch) {
-        return flowDuals.containsKey(branch);
+    public boolean hasVisitFlowDual(BranchOnVisitFlow branch) {
+        return visitFlowDuals.containsKey(branch);
     }
 
-    public double getFlowDual(BranchOnEdge branch) {
-        return flowDuals.get(branch);
+    public double getVisitFlowDual(BranchOnVisitFlow branch) {
+        return visitFlowDuals.get(branch);
     }
 }

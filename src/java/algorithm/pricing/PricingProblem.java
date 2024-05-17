@@ -2,21 +2,58 @@ package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
 import algorithm.branching.Branch;
-import commons.FeasiblePath;
+import algorithm.branching.BranchOnVisitFlow;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
-public interface PricingProblem {
+public abstract class PricingProblem {
 
-    PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime);
+    private final Deque<Branch> activeBranches;
 
-    List<FeasiblePath> computePathsFromSolution();
+    public PricingProblem() {
+        this.activeBranches = new ArrayDeque<>();
+    }
 
-    void forceExactSolution();
+    public Deque<Branch> getActiveBranches() {
+        return activeBranches;
+    }
 
-    void addBranch(Branch branch);
+    public abstract PricingSolution solve(RMPLinearSolution rmpSolution, Duration remainingTime);
 
-    void removeBranch(Branch branch);
+    public abstract void forceExactSolution();
+
+    public void addBranch(Branch branch) {
+        activeBranches.add(branch);
+    }
+
+    public void removeBranch(Branch branch) {
+        activeBranches.removeLast();
+    }
+
+    void performBranching() {
+        for (Branch branch : activeBranches) {
+            if (branch instanceof BranchOnVisitFlow) {
+                performBranchOnVisitFlow((BranchOnVisitFlow) branch);
+            }
+        }
+    }
+
+    private void performBranchOnVisitFlow(BranchOnVisitFlow branch) {
+        //        if (branch.isUpperBound() && branch.getBound() == 0) {
+        //            graph.removeEdge(branch.getStart(), graph.translateToESPPRCNode(branch.getEnd()));
+        //        }
+        //        if (branch.isLowerBound() && branch.getBound() >= 1) {
+        //            for (int node : graph.getAdjacentNodes(branch.getStart())) {
+        //                if (branch.getEnd() == instance.getDepot() && node != graph.getEnd()) {
+        //                    graph.removeEdge(graph.getStart(), graph.translateToESPPRCNode(node));
+        //                }
+        //                if (branch.getEnd() != instance.getDepot() && node != branch.getEnd()) {
+        //                    graph.removeEdge(graph.getStart(), graph.translateToESPPRCNode(node));
+        //                }
+        //            }
+        //        }
+    }
 
 }

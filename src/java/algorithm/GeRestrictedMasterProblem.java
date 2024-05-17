@@ -1,10 +1,11 @@
 package algorithm;
 
-import algorithm.branching.BranchOnEdge;
 import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
+import commons.Graph;
 import commons.Instance;
 import commons.Utils;
+import commons.VisitFlow;
 import ilog.concert.IloException;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
@@ -22,12 +23,11 @@ import java.util.Set;
 
 public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
 
-    private static final double EPSILON = 0.01;
+    private static final double EPSILON = 1e-6d;
     private final Instance instance;
     private IloNumVar[] theta;
     private IloRange[] customerConstraints;
     private IloRange vehiclesConstraint;
-    private Map<BranchOnEdge, IloRange> branchOnEdgeConstraints;
     private Map<BranchOnVisitFlow, IloRange> branchOnVisitFlowConstraints;
 
     public GeRestrictedMasterProblem(Instance instance) {
@@ -81,7 +81,6 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
             createCustomerServedConstraints(cplex);
             createNumberOfVehiclesConstraint(cplex);
             createObjective(cplex);
-            branchOnEdgeConstraints = new HashMap<>();
             branchOnVisitFlowConstraints = new HashMap<>();
         } catch (IloException e) {
             throw new RuntimeException(e);
@@ -120,36 +119,13 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
     }
 
     @Override
-    void performBranchOnEdge(IloCplex cplex, BranchOnEdge branch) {
-        try {
-            IloNumExpr flow = cplex.linearNumExpr();
-            int numberOfTerms = 0;
-            for (int route = 0; route < getActivePaths().size(); route++) {
-                if (getActivePaths().get(route).containsEdge(branch.getStart(), branch.getEnd())) {
-                    flow = cplex.sum(flow, theta[route]);
-                    numberOfTerms++;
-                }
-            }
-            if (numberOfTerms > 0) {
-                if (branch.isLowerBound()) {
-                    branchOnEdgeConstraints.put(branch, cplex.addGe(flow, branch.getBound()));
-                } else {
-                    branchOnEdgeConstraints.put(branch, cplex.addLe(flow, branch.getBound()));
-                }
-            }
-        } catch (IloException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     void performBranchOnVisitFlow(IloCplex cplex, BranchOnVisitFlow branch) {
         try {
             IloNumExpr flow = cplex.linearNumExpr();
             int numberOfTerms = 0;
             for (int route = 0; route < getActivePaths().size(); route++) {
                 FeasiblePath currentPath = getActivePaths().get(route);
-                if (currentPath.containsEdge(branch.getStart(), branch.getEnd()) &&
+                if (currentPath.containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd()) &&
                         currentPath.isCustomerServed(branch.getCustomer())) {
                     flow = cplex.sum(flow, theta[route]);
                     numberOfTerms++;
@@ -190,34 +166,29 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
         return flow;
     }
 
-    private Map<Integer, Map<Integer, Map<Integer, Double>>> getVisitFlow(IloCplex cplex) {
-        Map<Integer, Map<Integer, Map<Integer, Double>>> flow = new HashMap<>();
+    private List<VisitFlow> getVisitFlow(IloCplex cplex) {
+        // TODO improve complexity
+        List<VisitFlow> visitFlow = new ArrayList<>();
         try {
-            for (int start = 0; start < instance.getNumberOfNodes(); start++) {
-                for (int end = 0; end < instance.getNumberOfNodes(); end++) {
-                    for (int customer : instance.getCustomers()) {
-                        if (start != end) {
-                            IloNumExpr flowOnEdge = cplex.linearNumExpr();
-                            for (int route = 0; route < getActivePaths().size(); route++) {
-                                FeasiblePath path = getActivePaths().get(route);
-                                if (path.containsEdge(start, end) && path.isCustomerServed(customer)) {
-                                    flowOnEdge = cplex.sum(flowOnEdge, theta[route]);
-                                }
-                            }
-                            double value = cplex.getValue(flowOnEdge);
-                            if (value > EPSILON && value < 1 - EPSILON) {
-                                flow.putIfAbsent(start, new HashMap<>());
-                                flow.get(start).putIfAbsent(end, new HashMap<>());
-                                flow.get(start).get(end).put(customer, value);
-                            }
+            for (Graph.Edge e : instance.getGraph().getEdges()) {
+                for (int customer : instance.getCustomers()) {
+                    IloNumExpr flowOnEdge = cplex.linearNumExpr();
+                    for (int route = 0; route < getActivePaths().size(); route++) {
+                        FeasiblePath path = getActivePaths().get(route);
+                        if (path.containsEdge(e.getStart(), e.getEnd()) && path.isCustomerServed(customer)) {
+                            flowOnEdge = cplex.sum(flowOnEdge, theta[route]);
                         }
+                    }
+                    double value = cplex.getValue(flowOnEdge);
+                    if (value > EPSILON && value < 1 - EPSILON) {
+                        visitFlow.add(new VisitFlow(e, customer, value));
                     }
                 }
             }
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
-        return flow;
+        return visitFlow;
     }
 
     @Override
@@ -228,18 +199,10 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
             }
             return new RMPLinearSolution(cplex.getObjValue(), cplex.getDuals(customerConstraints),
                     cplex.getDual(vehiclesConstraint), true, cplex.getValues(theta), isIntegerSolution(cplex),
-                    getFlowOnEdges(cplex), getFlowDuals(cplex), getVisitFlow(cplex), new HashMap<>());
+               getVisitFlow(cplex), getVisitFlowDuals(cplex));
         } catch (IloException e) {
             return new RMPLinearSolution();
         }
-    }
-
-    private Map<BranchOnEdge, Double> getFlowDuals(IloCplex cplex) throws IloException {
-        Map<BranchOnEdge, Double> flowDuals = new HashMap<>();
-        for (BranchOnEdge branch : branchOnEdgeConstraints.keySet()) {
-            flowDuals.put(branch, cplex.getDual(branchOnEdgeConstraints.get(branch)));
-        }
-        return flowDuals;
     }
 
     private Map<BranchOnVisitFlow, Double> getVisitFlowDuals(IloCplex cplex) throws IloException {
