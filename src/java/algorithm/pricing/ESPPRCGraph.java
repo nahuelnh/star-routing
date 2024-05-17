@@ -1,88 +1,36 @@
 package algorithm.pricing;
 
+import commons.Graph;
 import commons.Instance;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-public class ESPPRCGraph {
+public class ESPPRCGraph extends Graph {
 
     private final Instance instance;
-    private final int size;
     private final int start;
     private final int end;
-    private final List<List<Integer>> adjacency;
-    private final int[][] weights;
-    private final List<List<Integer>> reverseNeighborhoods;
 
     public ESPPRCGraph(Instance instance) {
+        super(instance.getNumberOfNodes() + 1);
         this.instance = instance;
-        this.size = instance.getNumberOfNodes() + 1;
         this.start = instance.getDepot();
-        this.end = size - 1;
-        this.adjacency = new ArrayList<>(size);
-        this.weights = new int[size][size];
-        this.reverseNeighborhoods = new ArrayList<>(size);
+        this.end = instance.getNumberOfNodes();
         createGraph();
     }
 
     private void createGraph() {
-        for (int i = 0; i < size; i++) {
-            adjacency.add(new ArrayList<>(size));
-            for (int j = 0; j < size; j++) {
-                weights[i][j] = -1;
-            }
-        }
-
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < getSize(); i++) {
+            for (int j = 0; j < getSize(); j++) {
                 if (i != j && i != end && j != start && !(i == start && j == end)) {
-                    addEdge(i, j);
+                    if (j == end) {
+                        addEdge(i, j, instance.getEdgeWeight(i, instance.getDepot()));
+                    } else {
+                        addEdge(i, j, instance.getEdgeWeight(i, j));
+                    }
                 }
             }
-            reverseNeighborhoods.add(computeReverseNeighborhood(i));
         }
-    }
-
-    public void addEdge(int i, int j) {
-        adjacency.get(i).add(j);
-        if (j == end) {
-            weights[i][j] = instance.getEdgeWeight(i, instance.getDepot());
-        } else {
-            weights[i][j] = instance.getEdgeWeight(i, j);
-        }
-    }
-
-    public void removeEdge(int i, int j) {
-        if (j == instance.getDepot()) {
-            j = end;
-        }
-        adjacency.get(i).remove(Integer.valueOf(j));
-        weights[i][j] = -1;
-    }
-
-    private List<Integer> computeReverseNeighborhood(int node) {
-        if (node == end) {
-            node = instance.getDepot();
-        }
-        List<Integer> ret = new ArrayList<>();
-        for (int customer : instance.getCustomers()) {
-            if (instance.getNeighbors(customer).contains(node)) {
-                ret.add(customer);
-            }
-        }
-        return ret;
-    }
-
-    public void sortReverseNeighborhoods(Comparator<Integer> comparator) {
-        for (int i = 0; i < size; i++) {
-            reverseNeighborhoods.get(i).sort(comparator);
-        }
-    }
-
-    public int getSize() {
-        return size;
     }
 
     public int getStart() {
@@ -93,20 +41,11 @@ public class ESPPRCGraph {
         return end;
     }
 
-    public List<Integer> getAdjacentNodes(int node) {
-        return adjacency.get(node);
-    }
-
-    public int getWeight(int i, int j) {
-        assert weights[i][j] != -1;
-        return weights[i][j];
-    }
-
-    public boolean edgeExists(int i, int j) {
-        return weights[i][j] != -1;
+    public int translateToESPPRCNode(int node) {
+        return node == instance.getDepot() ? end : node;
     }
 
     public List<Integer> getReverseNeighborhood(int node) {
-        return reverseNeighborhoods.get(node);
+        return instance.getReverseNeighborhood(node == end ? instance.getDepot() : node);
     }
 }

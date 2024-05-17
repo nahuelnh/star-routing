@@ -58,9 +58,6 @@ public class LabelSettingAlgorithm {
                 }
             }
         }
-        // Heuristic: sort decreasingly by benefit/cost
-        this.graph.sortReverseNeighborhoods(
-                Comparator.comparingDouble(s -> -dualValues.getOrDefault(s, 0.0) / instance.getDemand(s)));
 
         this.applyHeuristics = applyHeuristics;
         this.alpha = computeCostFactor();
@@ -80,8 +77,8 @@ public class LabelSettingAlgorithm {
         int sum = 0;
         for (int i = 0; i < graph.getSize(); i++) {
             for (int j = 0; j < graph.getSize(); j++) {
-                if (graph.edgeExists(i, j)) {
-                    sum += graph.getWeight(i, j);
+                if (graph.containsEdge(i, j)) {
+                    sum += graph.getEdge(i, j).getWeight();
                 }
             }
         }
@@ -103,8 +100,8 @@ public class LabelSettingAlgorithm {
     }
 
     private double getLittleFakeCost(Label label, int customer) {
-        if (graph.edgeExists(customer, label.node())) {
-            return graph.getWeight(customer, label.node()) * alpha;
+        if (graph.containsEdge(customer, label.node())) {
+            return graph.getEdge(customer, label.node()).getWeight() * alpha;
         }
         return 0.0;
     }
@@ -122,7 +119,7 @@ public class LabelSettingAlgorithm {
     }
 
     private Label extendNode(Label label, int nextNode) {
-        double updatedCost = label.cost() + graph.getWeight(label.node(), nextNode);
+        double updatedCost = label.cost() + graph.getEdge(label.node(), nextNode).getWeight();
         // Updated RMP condition:
         if (flowDuals.containsKey(label.node()) && flowDuals.get(label.node()).containsKey(nextNode)) {
             updatedCost -= flowDuals.get(label.node()).get(nextNode);

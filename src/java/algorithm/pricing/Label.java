@@ -62,7 +62,7 @@ public record Label(int demand, double cost, int node, BitSet visitedNodes, BitS
             int lastNode = nodes.get(j - 1);
             int currentNode = nodes.get(j);
             int actualNode = currentNode == graph.getEnd() ? graph.getStart() : currentNode;
-            path.addNode(actualNode, graph.getWeight(lastNode, currentNode));
+            path.addNode(actualNode, graph.getEdge(lastNode, currentNode).getWeight());
         }
         path.addCustomers(Utils.bitSetToIntSet(visitedCustomers));
         return path;

@@ -39,9 +39,6 @@ public class PulseAlgorithm {
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
-        // Heuristic: sort decreasingly by benefit/cost
-        this.graph.sortReverseNeighborhoods(
-                Comparator.comparingDouble(s -> -dualValues.getOrDefault(s, 0.0) / instance.getDemand(s)));
         this.pulsesPropagated = 0;
     }
 
@@ -86,7 +83,8 @@ public class PulseAlgorithm {
 
     private boolean pruneWithNodeRule(int nextNode, PartialPath visitedPath) {
         int totalDemand = visitedPath.getTotalDemand();
-        double newEdgeCost = visitedPath.getSize() == 0 ? 0 : graph.getWeight(visitedPath.getLastNode(), nextNode);
+        double newEdgeCost =
+                visitedPath.getSize() == 0 ? 0 : graph.getEdge(visitedPath.getLastNode(), nextNode).getWeight();
         double totalCost = visitedPath.getTotalCost() + newEdgeCost;
         if (!isFeasible(nextNode, visitedPath)) {
             return true;
@@ -208,15 +206,15 @@ public class PulseAlgorithm {
             return false;
         }
         int lastNode = visitedPath.getLastNode();
-        if (!graph.edgeExists(lastNode, nextNode)) {
+        if (!graph.containsEdge(lastNode, nextNode)) {
             return false;
         }
-        double newEdgeCost = graph.getWeight(lastNode, nextNode);
+        double newEdgeCost = graph.getEdge(lastNode, nextNode).getWeight();
         double newTotalCost = visitedPath.getPartialCostAt(size - 1) + newEdgeCost;
         for (int i = size - 2; i >= 0; i--) {
             int innerNode = visitedPath.getNodeAt(i);
-            if (graph.edgeExists(innerNode, nextNode)) {
-                double directEdgeCost = graph.getWeight(innerNode, nextNode);
+            if (graph.containsEdge(innerNode, nextNode)) {
+                double directEdgeCost = graph.getEdge(innerNode, nextNode).getWeight();
                 if (newTotalCost >= visitedPath.getPartialCostAt(i) + directEdgeCost) {
                     return true;
                 }
@@ -274,7 +272,7 @@ public class PulseAlgorithm {
         public void addNode(int node) {
             nodes[size] = node;
             visitedNodes.set(node);
-            totalCost += size == 0 ? 0.0 : graph.getWeight(nodes[size - 1], node);
+            totalCost += size == 0 ? 0.0 : graph.getEdge(nodes[size - 1], node).getWeight();
             partialCosts[size] = totalCost;
             size++;
         }
@@ -283,7 +281,7 @@ public class PulseAlgorithm {
             assert size >= 1;
             partialCosts[size - 1] = 0.0;
             visitedNodes.flip(nodes[size - 1]);
-            totalCost -= size < 2 ? 0.0 : graph.getWeight(nodes[size - 2], nodes[size - 1]);
+            totalCost -= size < 2 ? 0.0 : graph.getEdge(nodes[size - 2], nodes[size - 1]).getWeight();
             nodes[size - 1] = -1;
             size--;
         }

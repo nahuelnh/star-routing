@@ -24,14 +24,14 @@ public class Experiments {
     private static final Duration TIMEOUT = Duration.ofMinutes(10);
 
     public static void main(String[] args) {
-        //        experiment1_compactModelPerformance();
-        //        experiment2_ilpPricingPerformance();
-        //        experiment3_pulsePricingPerformance();
-        //        experiment4_labelSettingPricingPerformance();
+//        experiment1_compactModelPerformance();
+//        experiment2_ilpPricingPerformance();
+//        experiment3_pulsePricingPerformance();
+        experiment4_labelSettingPricingPerformance();
         experiment5_labelSettingHeuristics();
-        //        experiment6_columnGenerationHeuristics();
+        experiment6_columnGenerationHeuristics();
         experiment7_columnGenerationFinishEarly();
-        //        experiment8_relaxationComparison();
+        experiment8_relaxationComparison();
     }
 
     private static double gapAsPercent(double value, double lowerBound) {
@@ -47,14 +47,14 @@ public class Experiments {
                 CompactModel compactModel = new CompactModel(instance);
                 StarRoutingSolution solution = compactModel.solve(TIMEOUT);
                 table.addEntry(new SimpleTableEntry(instance, solution));
-                //            if (solution.timedOut()) {
-                //                unfinishedInstances++;
-                //            } else {
-                //                unfinishedInstances = 0;
-                //            }
-                //            if (unfinishedInstances == 3) {
-                //                break;
-                //            }
+                if (solution.timedOut()) {
+                    unfinishedInstances++;
+                } else {
+                    unfinishedInstances = 0;
+                }
+                if (unfinishedInstances == 3) {
+                    break;
+                }
             }
         }
         table.close();
@@ -365,8 +365,8 @@ public class Experiments {
         private final StarRoutingSolution solution2;
         private final ColumnGenerator columnGenerator;
 
-        public RelaxationComparisonTableEntry(Instance instance, StarRoutingSolution solution, StarRoutingSolution solution2,
-                                              ColumnGenerator columnGenerator) {
+        public RelaxationComparisonTableEntry(Instance instance, StarRoutingSolution solution,
+                                              StarRoutingSolution solution2, ColumnGenerator columnGenerator) {
             this.instance = instance;
             this.solution1 = solution;
             this.solution2 = solution2;

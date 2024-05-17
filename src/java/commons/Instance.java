@@ -1,7 +1,6 @@
 package commons;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,12 +22,11 @@ public class Instance {
     private final int numberOfVehicles;
     private final int capacity;
     private final int depot;
-    private final List<List<Integer>> graphWeights;
     private final List<Integer> customers;
+    private final Graph graph;
     private final Map<Integer, Set<Integer>> neighbors;
     private final Map<Integer, Integer> demand;
     private final List<List<Integer>> reverseNeighborhoods;
-
     private final boolean allowUnusedVehicles;
 
     public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename,
@@ -38,7 +36,7 @@ public class Instance {
 
         List<List<Integer>> adjacencyMatrix = Utils.parseIntegerMatrix(getFullPath(instanceName, graphFilename));
         this.numberOfNodes = getNumberOfNodes(adjacencyMatrix);
-        this.graphWeights = createWeightsMatrix(adjacencyMatrix, numberOfNodes);
+        this.graph = createGraph(adjacencyMatrix, numberOfNodes);
 
         Map<String, Integer> parameterValues = Utils.parseStringToIntMap(getFullPath(instanceName, paramsFilename));
         this.capacity = parameterValues.get(CAPACITY_STRING);
@@ -80,20 +78,17 @@ public class Instance {
         return maxNodeIndexFound + 1;
     }
 
-    private static List<List<Integer>> createWeightsMatrix(List<List<Integer>> adjacencyMatrix, int size) {
-        List<List<Integer>> weightsMatrix = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            weightsMatrix.add(new ArrayList<>(Collections.nCopies(size, -1)));
-        }
+    private static Graph createGraph(List<List<Integer>> adjacencyMatrix, int size) {
+        Graph graph = new Graph(size);
         for (List<Integer> line : adjacencyMatrix) {
             int i = line.get(0) - 1;
             int j = line.get(1) - 1;
             int weight = line.get(2);
             if (weight >= 0 && i != j) {
-                weightsMatrix.get(i).set(j, weight);
+                graph.addEdge(i, j, weight);
             }
         }
-        return weightsMatrix;
+        return graph;
     }
 
     private static Map<Integer, Integer> createDemandMap(List<List<Integer>> customersAndDemand) {
@@ -159,7 +154,7 @@ public class Instance {
             assert 0 <= customer;
             assert customer < numberOfNodes;
         }
-        assert graphWeights.size() == numberOfNodes;
+        assert graph.getSize() == numberOfNodes;
     }
 
     public int getNumberOfNodes() {
@@ -179,8 +174,8 @@ public class Instance {
     }
 
     public Integer getEdgeWeight(int i, int j) {
-        assert graphWeights.get(i).get(j) >= 0;
-        return graphWeights.get(i).get(j);
+        assert graph.containsEdge(i, j);
+        return graph.getEdge(i, j).getWeight();
     }
 
     public List<Integer> getCustomers() {
@@ -207,13 +202,6 @@ public class Instance {
         return allowUnusedVehicles;
     }
 
-    @Override
-    public String toString() {
-        return "commons.Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
-                ", capacity=" + capacity + ", depot=" + depot + ", customers=" + customers + ", neighbors=" +
-                neighbors + ", demand=" + demand + ", allowUnusedVehicles=" + allowUnusedVehicles + '}';
-    }
-
     public String getName() {
         return name;
     }
@@ -221,4 +209,12 @@ public class Instance {
     public List<Integer> getReverseNeighborhood(int node) {
         return reverseNeighborhoods.get(node);
     }
+
+    @Override
+    public String toString() {
+        return "commons.Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
+                ", capacity=" + capacity + ", depot=" + depot + ", customers=" + customers + ", neighbors=" +
+                neighbors + ", demand=" + demand + ", allowUnusedVehicles=" + allowUnusedVehicles + '}';
+    }
+
 }
