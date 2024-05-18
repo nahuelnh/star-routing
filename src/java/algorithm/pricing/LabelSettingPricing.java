@@ -53,11 +53,11 @@ public class LabelSettingPricing extends PricingProblem {
         performBranching();
 
         LabelSettingAlgorithm labelSettingAlgorithm =
-                new LabelSettingAlgorithm(instance, rmpSolution, getActiveBranches(), !forceExactSolution);
+                new LabelSettingAlgorithm(instance, rmpSolution, !forceExactSolution);
         paths = labelSettingAlgorithm.run(remainingTime);
         int labelsProcessed = labelSettingAlgorithm.getLabelsProcessed();
         if (paths.isEmpty() && !solveHeuristically) {
-            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, getActiveBranches(), false);
+            labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, false);
             paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
             labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
         }

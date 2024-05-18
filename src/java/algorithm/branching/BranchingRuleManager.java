@@ -15,28 +15,8 @@ public class BranchingRuleManager {
     public BranchingRuleManager(Instance instance) {
         this.instance = instance;
     }
-/*
-    public List<Branch> getBranches(RMPLinearSolution rmpSolution) {
-        List<Branch> ret = new ArrayList<>();
-        double maxFractionalPart = 0.0;
-        for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-            for (int j = 0; j < instance.getNumberOfNodes(); j++) {
-                if (i != j) {
-                    double flow = rmpSolution.getFlow(i, j);
-                    double fractionalPart = Math.abs(flow - (int) (flow + 0.5));
-                    if (fractionalPart > EPSILON && fractionalPart > maxFractionalPart) {
-                        maxFractionalPart = fractionalPart;
-                        ret = List.of(new BranchOnEdge(i, j, (int) Math.floor(flow), Branch.Direction.DOWN),
-                                new BranchOnEdge(i, j, (int) Math.ceil(flow), Branch.Direction.UP));
-                    }
-                }
-            }
-        }
-        return ret;
-    }
-*/
 
-    public List<Branch> getBranches(RMPLinearSolution rmpSolution) {
+    public List<Branch> applyBranchingRules(RMPLinearSolution rmpSolution) {
         List<Branch> ret = new ArrayList<>();
         double maxFractionalPart = 0.0;
         for (VisitFlow visitFlow : rmpSolution.getVisitFlow()) {
@@ -44,10 +24,8 @@ public class BranchingRuleManager {
             double fractionalPart = Math.abs(flow - (int) (flow + 0.5));
             if (fractionalPart > EPSILON && fractionalPart > maxFractionalPart) {
                 maxFractionalPart = fractionalPart;
-                ret = List.of(new BranchOnVisitFlow(visitFlow.edge(), visitFlow.customer(), (int) Math.floor(flow),
-                                Branch.Direction.DOWN),
-                        new BranchOnVisitFlow(visitFlow.edge(), visitFlow.customer(), (int) Math.ceil(flow),
-                                Branch.Direction.UP));
+                ret = List.of(new BranchOnVisitFlow(visitFlow.edge(), visitFlow.customer(), 0, Branch.Direction.DOWN),
+                        new BranchOnVisitFlow(visitFlow.edge(), visitFlow.customer(), 1, Branch.Direction.UP));
             }
         }
         return ret;

@@ -8,6 +8,7 @@ public class BranchOnVisitFlow implements Branch {
     private final int customer;
     private final int bound;
     private final Direction direction;
+
     public BranchOnVisitFlow(Graph.Edge edge, int customer, int bound, Direction direction) {
         this.edge = edge;
         this.customer = customer;
@@ -40,10 +41,13 @@ public class BranchOnVisitFlow implements Branch {
 
     @Override
     public boolean isCompatible(FeasiblePath path) {
-        if (isLowerBound() || bound > 0) {
-            return true;
+        if (isUpperBound() && bound == 0) {
+            return !(path.isCustomerServed(customer) && path.containsEdge(edge.getStart(), edge.getEnd()));
         }
-        return !(path.containsEdge(edge.getStart(), edge.getEnd()) && path.isCustomerServed(customer));
+        if (isLowerBound() && bound == 1) {
+            return !path.isCustomerServed(customer) || path.containsEdge(edge.getStart(), edge.getEnd());
+        }
+        return true;
     }
 
     @Override

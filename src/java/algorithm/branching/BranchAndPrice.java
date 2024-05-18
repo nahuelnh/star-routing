@@ -78,7 +78,7 @@ public class BranchAndPrice {
                 }
             }
             if (rmpSolution.isFeasible() && Math.ceil(rmpSolution.getObjectiveValue()) < upperBound) {
-                rmp.solveInteger(stopwatch.getRemainingTime());
+                rmp.solveInteger();
                 RMPIntegerSolution rmpIntegerSolution = rmp.getIntegerSolution();
                 if (rmpSolution.isInteger()) {
                     upperBound = rmpSolution.getObjectiveValue();
@@ -89,7 +89,7 @@ public class BranchAndPrice {
                         upperBound = rmpIntegerSolution.getObjectiveValue();
                         incumbent = rmpIntegerSolution;
                     }
-                    for (Branch branch : branchingRuleManager.getBranches(rmpSolution)) {
+                    for (Branch branch : branchingRuleManager.applyBranchingRules(rmpSolution)) {
                         remainingNodes.addFirst(new Node(currentNode, branch));
                     }
                 }

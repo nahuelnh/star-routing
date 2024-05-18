@@ -3,6 +3,7 @@ package algorithm.branching;
 import commons.FeasiblePath;
 
 public interface Branch {
+
     boolean isCompatible(FeasiblePath path);
 
     int getBound();

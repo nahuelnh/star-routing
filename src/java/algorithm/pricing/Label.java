@@ -33,6 +33,35 @@ public record Label(int demand, double cost, int node, BitSet visitedNodes, BitS
         return visitedCustomers.get(0, visitedCustomers.length());
     }
 
+    public boolean containsEdge(int i, int j) {
+        Label lastLabel = this;
+        Label currentLabel = parent;
+        while (currentLabel != null) {
+            if (currentLabel.node == i && lastLabel.node == j) {
+                return true;
+            }
+            lastLabel = currentLabel;
+            currentLabel = currentLabel.parent;
+        }
+        return false;
+    }
+
+    public boolean forbidsEdge(int i, int j) {
+        Label lastLabel = this;
+        Label currentLabel = parent;
+        while (currentLabel != null) {
+            if (currentLabel.node == i && lastLabel.node != j) {
+                return true;
+            }
+            if (currentLabel.node != i && lastLabel.node == j) {
+                return true;
+            }
+            lastLabel = currentLabel;
+            currentLabel = currentLabel.parent;
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         return "Label{" + "demand=" + demand + ", cost=" + cost + ", node=" + node + ", parent=" +
@@ -61,8 +90,7 @@ public record Label(int demand, double cost, int node, BitSet visitedNodes, BitS
         for (int j = 1; j < nodes.size(); j++) {
             int lastNode = nodes.get(j - 1);
             int currentNode = nodes.get(j);
-            int actualNode = currentNode == graph.getEnd() ? graph.getStart() : currentNode;
-            path.addNode(actualNode, graph.getEdge(lastNode, currentNode).getWeight());
+            path.addNode(graph.translateFromESPPRCNode(currentNode), graph.getEdge(lastNode, currentNode).getWeight());
         }
         path.addCustomers(Utils.bitSetToIntSet(visitedCustomers));
         return path;

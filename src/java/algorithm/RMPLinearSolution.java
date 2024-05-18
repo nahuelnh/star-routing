@@ -70,11 +70,8 @@ public class RMPLinearSolution {
         return visitFlow;
     }
 
-    public boolean hasVisitFlowDual(BranchOnVisitFlow branch) {
-        return visitFlowDuals.containsKey(branch);
+    public Map<BranchOnVisitFlow, Double> getVisitFlowDuals() {
+        return visitFlowDuals;
     }
 
-    public double getVisitFlowDual(BranchOnVisitFlow branch) {
-        return visitFlowDuals.get(branch);
-    }
 }

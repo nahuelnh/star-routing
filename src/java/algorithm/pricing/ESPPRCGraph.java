@@ -45,7 +45,11 @@ public class ESPPRCGraph extends Graph {
         return node == instance.getDepot() ? end : node;
     }
 
+    public int translateFromESPPRCNode(int node) {
+        return node == end ? instance.getDepot() : node;
+    }
+
     public List<Integer> getReverseNeighborhood(int node) {
-        return instance.getReverseNeighborhood(node == end ? instance.getDepot() : node);
+        return instance.getReverseNeighborhood(translateFromESPPRCNode(node));
     }
 }
