@@ -1,6 +1,7 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Utils;
@@ -19,18 +20,20 @@ import java.util.List;
 import java.util.Set;
 
 public class ILPPricingProblem extends PricingProblem {
+
     private static final double EPSILON = 1e-6;
     private final Instance instance;
     private IloCplex cplex;
     private IloIntVar[][] x;
     private IloIntVar[] y;
     private IloIntVar[] u;
+    private IloIntVar[] z;
 
     public ILPPricingProblem(Instance instance) {
         this.instance = instance;
     }
 
-    private void createVariables() throws IloException {
+    private void createVariables(RMPLinearSolution rmpSolution) throws IloException {
         int N = instance.getNumberOfNodes();
         int S = instance.getNumberOfCustomers();
 
@@ -49,6 +52,11 @@ public class ILPPricingProblem extends PricingProblem {
         u = new IloIntVar[N];
         for (int i = 0; i < N; i++) {
             u[i] = cplex.intVar(0, N - 1, "u_" + i);
+        }
+
+        z = new IloIntVar[rmpSolution.getVisitFlowDuals().size()];
+        for (int i = 0; i < rmpSolution.getVisitFlowDuals().size(); i++) {
+            z[i] = cplex.boolVar("z_" + i);
         }
     }
 
@@ -103,7 +111,29 @@ public class ILPPricingProblem extends PricingProblem {
         }
     }
 
-    private void createConstraints() throws IloException {
+    private void createBranchingConstraints(RMPLinearSolution rmpSolution) throws IloException {
+        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+            if (branch.isLowerBound() && branch.getBound() == 1) {
+                cplex.addLe(y[branch.getCustomer()], x[branch.getEdge().getStart()][branch.getEdge().getEnd()]);
+            } else if (branch.isUpperBound() && branch.getBound() == 0) {
+                cplex.addLe(x[branch.getEdge().getStart()][branch.getEdge().getEnd()], y[branch.getCustomer()]);
+            }
+        }
+    }
+
+    private void createVisitFlowConstraints(RMPLinearSolution rmpSolution) throws IloException {
+        int branchIndex = 0;
+        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+            int i = branch.getEdge().getStart();
+            int j = branch.getEdge().getEnd();
+            cplex.addLe(z[branchIndex], y[branch.getCustomer()]);
+            cplex.addLe(z[branchIndex], x[i][j]);
+            cplex.addGe(cplex.sum(z[branchIndex], 1), cplex.sum(y[branch.getCustomer()], x[i][j]));
+            branchIndex++;
+        }
+    }
+
+    private void createConstraints(RMPLinearSolution rmpSolution) throws IloException {
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
             cplex.addEq(x[i][i], 0);
         }
@@ -111,6 +141,8 @@ public class ILPPricingProblem extends PricingProblem {
         createDepotConstraints();
         createVisitConstraints();
         createCapacityConstraints();
+        createBranchingConstraints(rmpSolution);
+        createVisitFlowConstraints(rmpSolution);
         createMTZConstraints();
     }
 
@@ -130,8 +162,16 @@ public class ILPPricingProblem extends PricingProblem {
         for (int s = 0; s < S; s++) {
             secondTerm.addTerm(y[s], rmpSolution.getCustomerDual(s));
         }
+        IloLinearNumExpr thirdTerm = cplex.linearNumExpr();
+        int branchIndex = 0;
+        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+            double dual = rmpSolution.getVisitFlowDuals().get(branch);
+            thirdTerm.addTerm(z[branchIndex], dual);
+            branchIndex++;
+        }
 
         IloNumExpr objective = cplex.sum(firstTerm, cplex.negative(secondTerm));
+        objective = cplex.sum(objective, cplex.negative(thirdTerm));
         objective = cplex.sum(objective, -rmpSolution.getVehiclesDual());
         cplex.addMinimize(objective);
     }
@@ -142,8 +182,8 @@ public class ILPPricingProblem extends PricingProblem {
             cplex = new IloCplex();
             cplex.setOut(null);
             cplex.setParam(IloCplex.Param.TimeLimit, remainingTime.getSeconds() + 1);
-            createVariables();
-            createConstraints();
+            createVariables(rmpSolution);
+            createConstraints(rmpSolution);
             createObjective(rmpSolution);
 
             performBranching();

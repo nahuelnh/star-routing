@@ -204,6 +204,7 @@ public class LabelSettingAlgorithm {
             // Update reduced costs by subtracting branching duals
             if (currentLabel.node() == graph.getEnd()) {
                 currentLabel = subtractBranchingDuals(currentLabel);
+                labelDump.addLabel(currentLabel);
             }
 
             if (!labelDump.dominates(currentLabel)) {
