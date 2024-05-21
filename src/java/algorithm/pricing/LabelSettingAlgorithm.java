@@ -110,14 +110,25 @@ public class LabelSettingAlgorithm {
         }
         BitSet updatedVisited = label.copyOfVisitedCustomers();
         updatedVisited.set(customer);
+        // Subtract branching dual variables
+        for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(customer, List.of())) {
+            if (label.containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd())) {
+                updatedCost -= rmpSolution.getVisitFlowDuals().get(branch);
+            }
+        }
         return new Label(updatedDemand, updatedCost, label.node(), label.copyOfVisitedNodes(), updatedVisited, label);
-
     }
 
     private Label extendNode(Label label, int nextNode) {
         double updatedCost = label.cost() + graph.getEdge(label.node(), nextNode).getWeight();
         BitSet updatedVisited = label.copyOfVisitedNodes();
         updatedVisited.set(nextNode);
+        // Subtract branching dual variables
+        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+            if (label.isCustomerVisited(branch.getCustomer()) && branch.getEdge().getStart() == label.node() && branch.getEdge().getEnd() == nextNode) {
+                updatedCost -= rmpSolution.getVisitFlowDuals().get(branch);
+            }
+        }
         return new Label(label.demand(), updatedCost, nextNode, updatedVisited, label.copyOfVisitedCustomers(), label);
     }
 
@@ -153,9 +164,9 @@ public class LabelSettingAlgorithm {
         if (label.demand() > instance.getCapacity()) {
             return true;
         }
-
-        for (int customer : Utils.bitSetToIntSet(label.visitedCustomers())) {
-            for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(customer, List.of())) {
+        // Branching pruning rules
+        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+            if (label.isCustomerVisited(branch.getCustomer())) {
                 int start = branch.getEdge().getStart();
                 int end = branch.getEdge().getEnd();
                 if (branch.getBound() == 1 && start != previousLabel.node() && end == label.node()) {
@@ -171,17 +182,6 @@ public class LabelSettingAlgorithm {
         return labelDump.dominates(label);
     }
 
-    private Label subtractBranchingDuals(Label currentLabel) {
-        double updatedCost = currentLabel.cost();
-        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
-            if (currentLabel.containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd()) &&
-                    currentLabel.visitedCustomers().get(branch.getCustomer())) {
-                updatedCost -= rmpSolution.getVisitFlowDuals().get(branch);
-            }
-        }
-        return new Label(currentLabel.demand(), updatedCost, currentLabel.node(), currentLabel.visitedNodes(),
-                currentLabel.visitedCustomers(), currentLabel.parent());
-    }
 
     private void monoDirectionalBacktracking(Stopwatch stopwatch) {
         Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
@@ -200,13 +200,6 @@ public class LabelSettingAlgorithm {
                     return;
                 }
             }
-
-            // Update reduced costs by subtracting branching duals
-            if (currentLabel.node() == graph.getEnd()) {
-                currentLabel = subtractBranchingDuals(currentLabel);
-                labelDump.addLabel(currentLabel);
-            }
-
             if (!labelDump.dominates(currentLabel)) {
                 for (int customer : graph.getReverseNeighborhood(currentLabel.node())) {
                     Label nextLabel = extendCustomer(currentLabel, customer);

@@ -1,6 +1,7 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Stopwatch;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PulseAlgorithm {
+
     private static final double EPSILON = 1e-6;
     private static final int STEP = 1; // ~(Q / |S|)
     private final Instance instance;
@@ -29,6 +31,8 @@ public class PulseAlgorithm {
     private List<PartialPath> foundPartialPaths;
     private boolean saveSolution;
     private int pulsesPropagated;
+    private final Map<Integer, List<BranchOnVisitFlow>> branchesIndexedByCustomer;
+
 
     public PulseAlgorithm(Instance instance, RMPLinearSolution rmpSolution) {
         this.instance = instance;
@@ -40,6 +44,16 @@ public class PulseAlgorithm {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
         this.pulsesPropagated = 0;
+        this.branchesIndexedByCustomer = getBranchesIndexedByCustomer(rmpSolution);
+    }
+
+    private static Map<Integer, List<BranchOnVisitFlow>> getBranchesIndexedByCustomer(RMPLinearSolution rmpSolution) {
+        Map<Integer, List<BranchOnVisitFlow>> branchesIndexedByCustomer = new HashMap<>();
+        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+            branchesIndexedByCustomer.putIfAbsent(branch.getCustomer(), new ArrayList<>());
+            branchesIndexedByCustomer.get(branch.getCustomer()).add(branch);
+        }
+        return branchesIndexedByCustomer;
     }
 
     private void resetGlobalOptimum() {
@@ -92,8 +106,23 @@ public class PulseAlgorithm {
         if (checkBounds(nextNode, totalCost, totalDemand)) {
             return true;
         }
-        //return false;
-        return rollback(nextNode, visitedPath);
+        if (rollback(nextNode, visitedPath)) {
+            return true;
+        }
+        for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+            if (visitedPath.isCustomerVisited(branch.getCustomer())) {
+                int start = branch.getEdge().getStart();
+                int end = branch.getEdge().getEnd();
+                if (branch.getBound() == 1 && start != visitedPath.getLastNode() && end == nextNode) {
+                    return true;
+                } else if (branch.getBound() == 1 && start == visitedPath.getLastNode() && end != nextNode) {
+                    return true;
+                } else if (branch.getBound() == 0 && start == visitedPath.getLastNode() && end == nextNode) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean pruneWithCustomerRule(int nextCustomer, int currentNode, PartialPath visitedPath) {
@@ -109,7 +138,20 @@ public class PulseAlgorithm {
             // Heuristic: if customer provides no reduction in total cost, can be pruned
             return true;
         }
-        return checkBounds(currentNode, currentCost, currentDemand);
+        if (checkBounds(currentNode, currentCost, currentDemand)) {
+            return true;
+        }
+        // Branching pruning rules
+        for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(nextCustomer, List.of())) {
+            int start = branch.getEdge().getStart();
+            int end = branch.getEdge().getEnd();
+            if (branch.getBound() == 1 && visitedPath.forbidsEdge(start, end)) {
+                return true;
+            } else if (branch.getBound() == 0 && visitedPath.containsEdge(start, end)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void propagate(int currentNode, PartialPath visitedPath) {
@@ -275,6 +317,13 @@ public class PulseAlgorithm {
             totalCost += size == 0 ? 0.0 : graph.getEdge(nodes[size - 1], node).getWeight();
             partialCosts[size] = totalCost;
             size++;
+            if (size > 1) {
+                for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+                    if (isCustomerVisited(branch.getCustomer()) && branch.getEdge().getStart() == nodes[size - 2] && branch.getEdge().getEnd() == node) {
+                        totalCost -= rmpSolution.getVisitFlowDuals().get(branch);
+                    }
+                }
+            }
         }
 
         public void removeLastNode() {
@@ -282,6 +331,13 @@ public class PulseAlgorithm {
             partialCosts[size - 1] = 0.0;
             visitedNodes.flip(nodes[size - 1]);
             totalCost -= size < 2 ? 0.0 : graph.getEdge(nodes[size - 2], nodes[size - 1]).getWeight();
+            if (size > 1) {
+                for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
+                    if (isCustomerVisited(branch.getCustomer()) && branch.getEdge().getStart() == nodes[size - 2] && branch.getEdge().getEnd() == getLastNode()) {
+                        totalCost += rmpSolution.getVisitFlowDuals().get(branch);
+                    }
+                }
+            }
             nodes[size - 1] = -1;
             size--;
         }
@@ -291,6 +347,11 @@ public class PulseAlgorithm {
             totalDemand += instance.getDemand(customer);
             totalCost -= dualValues.get(customer);
             partialCosts[size - 1] = totalCost;
+            for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(customer, List.of())) {
+                if (containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd())) {
+                    totalCost -= rmpSolution.getVisitFlowDuals().get(branch);
+                }
+            }
         }
 
         public void removeCustomer(int customer) {
@@ -298,7 +359,41 @@ public class PulseAlgorithm {
             totalDemand -= instance.getDemand(customer);
             totalCost += dualValues.get(customer);
             partialCosts[size - 1] = totalCost;
+            for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(customer, List.of())) {
+                if (containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd())) {
+                    totalCost += rmpSolution.getVisitFlowDuals().get(branch);
+                }
+            }
         }
+
+
+        public boolean containsEdge(int i, int j) {
+            if (!isNodeVisited(i) || !isNodeVisited(j)) {
+                return false;
+            }
+            for (int node = 1; node < size; node++) {
+                if (nodes[node - 1] == i && nodes[node] == j) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public boolean forbidsEdge(int i, int j) {
+            if (!isNodeVisited(i) && !isNodeVisited(j)) {
+                return false;
+            }
+            for (int node = 1; node < size; node++) {
+                if (nodes[node - 1] == i && nodes[node] != j) {
+                    return true;
+                }
+                if (nodes[node - 1] != i && nodes[node] == j) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
 
         public boolean isCustomerVisited(int customer) {
             return visitedCustomers.get(customer);
