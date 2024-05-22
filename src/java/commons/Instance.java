@@ -216,7 +216,7 @@ public class Instance {
 
     @Override
     public String toString() {
-        return "commons.Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
+        return "Instance{" + "numberOfNodes=" + numberOfNodes + ", numberOfVehicles=" + numberOfVehicles +
                 ", capacity=" + capacity + ", depot=" + depot + ", customers=" + customers + ", neighbors=" +
                 neighbors + ", demand=" + demand + ", allowUnusedVehicles=" + allowUnusedVehicles + '}';
     }
