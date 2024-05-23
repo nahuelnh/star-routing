@@ -5,7 +5,6 @@ import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Instance;
 import commons.Stopwatch;
-import commons.Utils;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -182,9 +181,16 @@ public class LabelSettingAlgorithm {
         return labelDump.dominates(label);
     }
 
+    private double getInitialCost() {
+        double initialCost = -rmpSolution.getVehiclesDual();
+        for (double fleetSizeDual : rmpSolution.getFleetSizeDuals()) {
+            initialCost -= fleetSizeDual;
+        }
+        return initialCost;
+    }
 
     private void monoDirectionalBacktracking(Stopwatch stopwatch) {
-        Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), -rmpSolution.getVehiclesDual());
+        Label root = Label.getRootLabel(graph.getStart(), graph.getSize(), getInitialCost());
         PriorityQueue<Label> queue = new PriorityQueue<>(64, Comparator.comparingDouble(Label::cost));
         labelDump.addLabel(root);
         queue.add(root);

@@ -1,6 +1,7 @@
 package algorithm;
 
 import algorithm.branching.Branch;
+import algorithm.branching.BranchOnFleetSize;
 import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Utils;
@@ -40,7 +41,9 @@ public abstract class RestrictedMasterProblem {
 
     public abstract RMPIntegerSolution buildIntegerSolution(IloCplex cplex);
 
-    abstract void performBranchOnVisitFlow(IloCplex cplex, BranchOnVisitFlow branch);
+    public abstract void performBranchOnVisitFlow(IloCplex cplex, BranchOnVisitFlow branch);
+
+    public abstract void performBranchOnFleetSize(IloCplex cplex, BranchOnFleetSize branch);
 
     public void addBranch(Branch branch) {
         activeBranches.addLast(branch);
@@ -76,9 +79,8 @@ public abstract class RestrictedMasterProblem {
         try (IloCplex cplex = new IloCplex()) {
             this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
             buildModel(cplex, false, remainingTime);
-            for (Branch branch : activeBranches) {
-                performBranching(cplex, branch);
-            }
+            performBranching(cplex);
+
             cplex.solve();
             linearSolution = buildSolution(cplex);
             cplex.end();
@@ -95,9 +97,9 @@ public abstract class RestrictedMasterProblem {
         try (IloCplex cplex = new IloCplex()) {
             this.activePaths = allPaths.stream().filter(this::isCompatible).toList();
             buildModel(cplex, true, remainingTime);
-            for (Branch branch : activeBranches) {
-                performBranching(cplex, branch);
-            }
+
+            performBranching(cplex);
+
             cplex.solve();
             integerSolution = buildIntegerSolution(cplex);
             cplex.end();
@@ -106,9 +108,13 @@ public abstract class RestrictedMasterProblem {
         }
     }
 
-    private void performBranching(IloCplex cplex, Branch branch) {
-        if (branch instanceof BranchOnVisitFlow) {
-            performBranchOnVisitFlow(cplex, (BranchOnVisitFlow) branch);
+    private void performBranching(IloCplex cplex) {
+        for (Branch branch : activeBranches) {
+            if (branch instanceof BranchOnVisitFlow) {
+                performBranchOnVisitFlow(cplex, (BranchOnVisitFlow) branch);
+            } else if (branch instanceof BranchOnFleetSize) {
+                performBranchOnFleetSize(cplex, (BranchOnFleetSize) branch);
+            }
         }
     }
 

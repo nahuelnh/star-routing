@@ -1,6 +1,8 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchOnFleetSize;
+import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Instance;
 
@@ -20,9 +22,17 @@ public class PulsePricing extends PricingProblem {
         this.paths = new ArrayList<>();
     }
 
-    private double getObjValue(FeasiblePath path, Map<Integer, Double> dualValues, double vehiclesDual) {
+    private double getInitialCost(RMPLinearSolution rmpSolution) {
+        double initialCost = -rmpSolution.getVehiclesDual();
+        for (double fleetSizeDual : rmpSolution.getFleetSizeDuals()) {
+            initialCost -= fleetSizeDual;
+        }
+        return initialCost;
+    }
+
+    private double getObjValue(FeasiblePath path, Map<Integer, Double> dualValues, RMPLinearSolution rmpSolution) {
         double sum = path.getCustomersServed().stream().map(dualValues::get).reduce(Double::sum).orElse(0.0);
-        return path.getCost() - sum - vehiclesDual;
+        return path.getCost() - sum + getInitialCost(rmpSolution);
     }
 
     private double getMinObjValue(RMPLinearSolution rmpSolution) {
@@ -30,7 +40,7 @@ public class PulsePricing extends PricingProblem {
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
-        return paths.stream().mapToDouble(path -> getObjValue(path, dualValues, rmpSolution.getVehiclesDual())).min()
+        return paths.stream().mapToDouble(path -> getObjValue(path, dualValues, rmpSolution)).min()
                 .orElse(0.0);
     }
 
@@ -44,6 +54,16 @@ public class PulsePricing extends PricingProblem {
 
     @Override
     public void forceExactSolution() {
+    }
+
+    @Override
+    public void performBranchOnVisitFlow(BranchOnVisitFlow branch) {
+
+    }
+
+    @Override
+    public void performBranchOnFleetSize(BranchOnFleetSize branch) {
+
     }
 
 }

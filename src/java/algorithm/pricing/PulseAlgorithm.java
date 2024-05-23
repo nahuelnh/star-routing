@@ -62,6 +62,14 @@ public class PulseAlgorithm {
         saveSolution = false;
     }
 
+    private double getInitialCost() {
+        double initialCost = -rmpSolution.getVehiclesDual();
+        for (double fleetSizeDual : rmpSolution.getFleetSizeDuals()) {
+            initialCost -= fleetSizeDual;
+        }
+        return initialCost;
+    }
+
     public List<FeasiblePath> run(Duration timeLimit) {
         this.stopwatch = new Stopwatch(timeLimit);
         resetGlobalOptimum();
@@ -69,7 +77,7 @@ public class PulseAlgorithm {
 
         resetGlobalOptimum();
         saveSolution = true;
-        pulseWithNodeRule(graph.getStart(), new PartialPath(-rmpSolution.getVehiclesDual(), 0));
+        pulseWithNodeRule(graph.getStart(), new PartialPath(getInitialCost(), 0));
 
         return translatePulsesToPaths();
     }

@@ -2,7 +2,9 @@ package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
 import algorithm.branching.Branch;
+import algorithm.branching.BranchOnFleetSize;
 import algorithm.branching.BranchOnVisitFlow;
+import ilog.cplex.IloCplex;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -24,6 +26,10 @@ public abstract class PricingProblem {
 
     public abstract void forceExactSolution();
 
+    public abstract void performBranchOnVisitFlow(BranchOnVisitFlow branch);
+
+    public abstract void performBranchOnFleetSize(BranchOnFleetSize branch);
+
     public void addBranch(Branch branch) {
         activeBranches.add(branch);
     }
@@ -36,24 +42,11 @@ public abstract class PricingProblem {
         for (Branch branch : activeBranches) {
             if (branch instanceof BranchOnVisitFlow) {
                 performBranchOnVisitFlow((BranchOnVisitFlow) branch);
+            } else if (branch instanceof BranchOnFleetSize) {
+                performBranchOnFleetSize((BranchOnFleetSize) branch);
             }
         }
     }
 
-    private void performBranchOnVisitFlow(BranchOnVisitFlow branch) {
-        //        if (branch.isUpperBound() && branch.getBound() == 0) {
-        //            graph.removeEdge(branch.getStart(), graph.translateToESPPRCNode(branch.getEnd()));
-        //        }
-        //        if (branch.isLowerBound() && branch.getBound() >= 1) {
-        //            for (int node : graph.getAdjacentNodes(branch.getStart())) {
-        //                if (branch.getEnd() == instance.getDepot() && node != graph.getEnd()) {
-        //                    graph.removeEdge(graph.getStart(), graph.translateToESPPRCNode(node));
-        //                }
-        //                if (branch.getEnd() != instance.getDepot() && node != branch.getEnd()) {
-        //                    graph.removeEdge(graph.getStart(), graph.translateToESPPRCNode(node));
-        //                }
-        //            }
-        //        }
-    }
 
 }

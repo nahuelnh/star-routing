@@ -31,7 +31,7 @@ public class BranchAndPrice {
         this.rmp = rmp;
         this.pricing = pricing;
         this.initialSolutionHeuristic = initialSolutionHeuristic;
-        this.branchingRuleManager = new BranchingRuleManager(instance);
+        this.branchingRuleManager = new BranchingRuleManager();
         this.upperBound = Double.MAX_VALUE;
     }
 

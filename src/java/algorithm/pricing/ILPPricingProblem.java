@@ -1,6 +1,7 @@
 package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
+import algorithm.branching.BranchOnFleetSize;
 import algorithm.branching.BranchOnVisitFlow;
 import commons.FeasiblePath;
 import commons.Instance;
@@ -172,7 +173,7 @@ public class ILPPricingProblem extends PricingProblem {
 
         IloNumExpr objective = cplex.sum(firstTerm, cplex.negative(secondTerm));
         objective = cplex.sum(objective, cplex.negative(thirdTerm));
-        objective = cplex.sum(objective, -rmpSolution.getVehiclesDual());
+        objective = cplex.sum(objective, getInitialCost(rmpSolution));
         cplex.addMinimize(objective);
     }
 
@@ -234,6 +235,14 @@ public class ILPPricingProblem extends PricingProblem {
         return path;
     }
 
+    private double getInitialCost(RMPLinearSolution rmpSolution) {
+        double initialCost = -rmpSolution.getVehiclesDual();
+        for (double fleetSizeDual : rmpSolution.getFleetSizeDuals()) {
+            initialCost -= fleetSizeDual;
+        }
+        return initialCost;
+    }
+
     public List<FeasiblePath> computePathsFromSolution() {
         try {
             List<FeasiblePath> ret = new ArrayList<>();
@@ -253,5 +262,15 @@ public class ILPPricingProblem extends PricingProblem {
 
     @Override
     public void forceExactSolution() {
+    }
+
+    @Override
+    public void performBranchOnVisitFlow(BranchOnVisitFlow branch) {
+
+    }
+
+    @Override
+    public void performBranchOnFleetSize(BranchOnFleetSize branch) {
+
     }
 }
