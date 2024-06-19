@@ -8,13 +8,13 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 
-public record Label(int demand, double cost, int node, BitSet visitedNodes, BitSet visitedCustomers, Label parent) {
+public record Label(ESPPRCGraph.ESPPRCNode node, double cost, int demand, BitSet visitedNodes, BitSet visitedCustomers, Label parent) {
 
-    public static Label getRootLabel(int startNode, int numberOfNodes, double cost) {
-        BitSet visitedNodes = new BitSet(numberOfNodes);
-        BitSet visitedCustomers = new BitSet(numberOfNodes);
-        visitedNodes.set(startNode);
-        return new Label(0, cost, startNode, visitedNodes, visitedCustomers, null);
+    public static Label getRootLabel(ESPPRCGraph.ESPPRCNode startNode, int numberOfSRNodes, double cost) {
+        BitSet visitedNodes = new BitSet(numberOfSRNodes);
+        BitSet visitedCustomers = new BitSet(numberOfSRNodes);
+        visitedNodes.set(startNode.getSrNodeId());
+        return new Label(startNode, cost, 0, visitedNodes, visitedCustomers, null);
     }
 
     public boolean isNodeVisited(int node) {
@@ -61,7 +61,6 @@ public record Label(int demand, double cost, int node, BitSet visitedNodes, BitS
         }
         return false;
     }
-
     @Override
     public String toString() {
         return "Label{" + "demand=" + demand + ", cost=" + cost + ", node=" + node + ", parent=" +
@@ -96,5 +95,12 @@ public record Label(int demand, double cost, int node, BitSet visitedNodes, BitS
         return path;
 
     }
+
+    public static class Resources{
+        private int cost;
+        private BitSet nodes;
+        private BitSet customers;
+    }
+
 }
 

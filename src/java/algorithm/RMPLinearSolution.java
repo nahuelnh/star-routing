@@ -25,6 +25,9 @@ public class RMPLinearSolution {
                              double[] primalValues, double numberOfVehicles, List<Double> fleetSizeDuals, boolean isInteger, List<VisitFlow> visitFlow,
                              Map<BranchOnVisitFlow, Double> visitFlowDuals) {
         this.objectiveValue = objectiveValue;
+        for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
+            dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
+        }
         this.customerDuals = customerDuals;
         this.vehiclesDual = vehiclesDual;
         this.feasible = feasible;

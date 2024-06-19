@@ -2,22 +2,29 @@ package algorithm.branching;
 
 import commons.FeasiblePath;
 import commons.Graph;
+import commons.StarRoutingGraph;
 
 public class BranchOnVisitFlow implements Branch {
-    private final Graph.Edge edge;
+    private final StarRoutingGraph.SRNode startNode;
+    private final StarRoutingGraph.SRNode endNode;
     private final int customer;
     private final int bound;
     private final Direction direction;
 
-    public BranchOnVisitFlow(Graph.Edge edge, int customer, int bound, Direction direction) {
-        this.edge = edge;
+    public BranchOnVisitFlow(StarRoutingGraph.SRNode startNode, StarRoutingGraph.SRNode endNode, int customer, int bound, Direction direction) {
+        this.startNode = startNode;
+        this.endNode = endNode;
         this.customer = customer;
         this.bound = bound;
         this.direction = direction;
     }
 
-    public Graph.Edge getEdge() {
-        return edge;
+    public StarRoutingGraph.SRNode getStartNode() {
+        return startNode;
+    }
+
+    public StarRoutingGraph.SRNode getEndNode() {
+        return endNode;
     }
 
     public int getCustomer() {
@@ -55,5 +62,6 @@ public class BranchOnVisitFlow implements Branch {
         return "BranchOnVisitFlow{" + "start=" + edge.getStart() + ", end=" + edge.getEnd() + ", customer=" + customer +
                 ", bound=" + bound + ", direction=" + direction + '}';
     }
+
 
 }

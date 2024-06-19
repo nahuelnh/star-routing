@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +76,7 @@ public class PulseAlgorithm {
 
         resetGlobalOptimum();
         saveSolution = true;
-        pulseWithNodeRule(graph.getStart(), new PartialPath(getInitialCost(), 0));
+        pulseWithNodeRule(graph.getSource(), new PartialPath(getInitialCost(), 0));
 
         return translatePulsesToPaths();
     }
@@ -88,10 +87,10 @@ public class PulseAlgorithm {
             FeasiblePath path = new FeasiblePath();
             int lastNode = currentPulse.getNodeAt(0);
             assert lastNode == instance.getDepot();
-            assert lastNode == graph.getStart();
+            assert lastNode == graph.getSource();
             for (int j = 1; j < currentPulse.getSize(); j++) {
                 int currentNode = currentPulse.getNodeAt(j);
-                if (currentNode == graph.getEnd()) {
+                if (currentNode == graph.getSink()) {
                     currentNode = instance.getDepot();
                 }
                 path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
@@ -167,7 +166,7 @@ public class PulseAlgorithm {
         if (stopwatch.timedOut()) {
             return;
         }
-        if (currentNode == graph.getEnd()) {
+        if (currentNode == graph.getSink()) {
             if (visitedPath.getTotalCost() < bestSolutionFound) {
                 bestSolutionFound = visitedPath.getTotalCost();
                 if (saveSolution && bestSolutionFound < -EPSILON) {

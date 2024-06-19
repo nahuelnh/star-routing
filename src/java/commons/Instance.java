@@ -22,11 +22,8 @@ public class Instance {
     private final int numberOfVehicles;
     private final int capacity;
     private final int depot;
-    private final List<Integer> customers;
-    private final Graph graph;
-    private final Map<Integer, Set<Integer>> neighbors;
-    private final Map<Integer, Integer> demand;
-    private final List<List<Integer>> reverseNeighborhoods;
+    private final List<Customer> customers;
+    private final Graph<StarRoutingGraph.SRNode, StarRoutingGraph.SREdge> graph;
     private final boolean allowUnusedVehicles;
 
     public Instance(String instanceName, String graphFilename, String neighborsFilename, String packagesFilename,
@@ -36,7 +33,7 @@ public class Instance {
 
         List<List<Integer>> adjacencyMatrix = Utils.parseIntegerMatrix(getFullPath(instanceName, graphFilename));
         this.numberOfNodes = getNumberOfNodes(adjacencyMatrix);
-        this.graph = createGraph(adjacencyMatrix, numberOfNodes);
+        this.graph = createGraph(adjacencyMatrix);
 
         Map<String, Integer> parameterValues = Utils.parseStringToIntMap(getFullPath(instanceName, paramsFilename));
         this.capacity = parameterValues.get(CAPACITY_STRING);
@@ -45,10 +42,10 @@ public class Instance {
 
         List<List<Integer>> customersAndDemand = Utils.parseIntegerMatrix(getFullPath(instanceName, packagesFilename));
         this.customers = createCustomerList(customersAndDemand);
-        this.demand = createDemandMap(customersAndDemand);
+
 
         List<List<Integer>> neighbors = Utils.parseIntegerMatrix(getFullPath(instanceName, neighborsFilename));
-        this.neighbors = createNeighborsMap(neighbors, this.customers);
+        createNeighborsMap(neighbors, this.customers);
 
         this.reverseNeighborhoods = computeReverseNeighborhoods(this.numberOfNodes, this.customers, this.neighbors);
 
@@ -78,14 +75,21 @@ public class Instance {
         return maxNodeIndexFound + 1;
     }
 
-    private static Graph createGraph(List<List<Integer>> adjacencyMatrix, int size) {
-        Graph graph = new Graph(size);
+    private static Graph<StarRoutingGraph.SRNode, StarRoutingGraph.SREdge> createGraph(List<List<Integer>> adjacencyMatrix) {
+        Graph<StarRoutingGraph.SRNode, StarRoutingGraph.SREdge> graph = new Graph<>();
+
+        StarRoutingGraph.SRNode[] nodes = new StarRoutingGraph.SRNode[adjacencyMatrix.size()];
+        for (int i = 0; i < adjacencyMatrix.size(); i++) {
+            nodes[i] = new StarRoutingGraph.SRNode(i);
+            graph.addNode(nodes[i]);
+        }
+
         for (List<Integer> line : adjacencyMatrix) {
             int i = line.get(0) - 1;
             int j = line.get(1) - 1;
             int weight = line.get(2);
             if (weight >= 0 && i != j) {
-                graph.addEdge(i, j, weight);
+                graph.addEdge(new StarRoutingGraph.SREdge(nodes[i], nodes[j], weight));
             }
         }
         return graph;
@@ -101,32 +105,35 @@ public class Instance {
         return customerToDemand;
     }
 
-    private static List<Integer> createCustomerList(List<List<Integer>> customersAndDemand) {
-        List<Integer> customers = new ArrayList<>();
+    private static List<Customer> createCustomerList(List<List<Integer>> customersAndDemand) {
+        List<Customer> customers = new ArrayList<>();
+        int count = 0;
         for (List<Integer> line : customersAndDemand) {
             int customer = line.get(0) - 1;
-            customers.add(customer);
+            int demand = line.get(1);
+            customers.add(new Customer(count, customer, demand));
+            count++;
         }
-        return customers.stream().distinct().sorted().toList();
+        return customers;
     }
 
-    private static Map<Integer, Set<Integer>> createNeighborsMap(List<List<Integer>> customersAndDemand,
-                                                                 List<Integer> customers) {
+    private static void createNeighborsMap(List<List<Integer>> customerAndNeighbor, List<Customer> customers) {
         Map<Integer, Set<Integer>> neighbors = new HashMap<>();
-        for (int customer : customers) {
-            neighbors.put(customer, new HashSet<>());
-            neighbors.get(customer).add(customer);
-        }
-        for (List<Integer> line : customersAndDemand) {
+        for (List<Integer> line : customerAndNeighbor) {
             int customer = line.get(0) - 1;
             int neighbor = line.get(1) - 1;
+            neighbors.putIfAbsent(customer, new HashSet<>());
             if (!neighbors.containsKey(customer)) {
                 System.out.printf("Trying to add non existing customer: %d %n", customer);
             } else {
                 neighbors.get(customer).add(neighbor);
             }
         }
-        return neighbors;
+        for (Customer c : customers) {
+            for (int neighbor : neighbors.get(c.getId())) {
+                c.addNeighbor(neighbor);
+            }
+        }
     }
 
     private static List<List<Integer>> computeReverseNeighborhoods(int numberOfNodes, List<Integer> customers,
@@ -147,7 +154,7 @@ public class Instance {
         assert customers.size() == demand.size();
         assert customers.size() == neighbors.size();
         assert customers.size() < numberOfNodes;
-        for (int customer : customers) {
+        for (Customer customer : customers) {
             assert demand.containsKey(customer);
             assert neighbors.containsKey(customer);
             assert customer != depot;
@@ -178,7 +185,7 @@ public class Instance {
         return graph.getEdge(i, j).getWeight();
     }
 
-    public List<Integer> getCustomers() {
+    public List<Customer> getCustomers() {
         return customers;
     }
 
