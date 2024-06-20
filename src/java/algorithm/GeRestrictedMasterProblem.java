@@ -35,7 +35,7 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
     private void createVariables(IloCplex cplex, boolean integral) throws IloException {
         theta = new IloNumVar[getActivePaths().size()];
         for (int i = 0; i < getActivePaths().size(); i++) {
-            theta[i] = integral ? cplex.boolVar("theta_" + i) : cplex.numVar(0, 1, "theta_" + i);
+            theta[i] = integral ? cplex.boolVar("theta_" + i) : cplex.numVar(0, Double.MAX_VALUE, "theta_" + i);
         }
     }
 
@@ -125,7 +125,7 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
             for (int route = 0; route < getActivePaths().size(); route++) {
                 FeasiblePath currentPath = getActivePaths().get(route);
                 if (currentPath.containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd()) &&
-                        currentPath.isCustomerServed(branch.getCustomer())) {
+                    currentPath.isCustomerServed(branch.getCustomer())) {
                     flow = cplex.sum(flow, theta[route]);
                     numberOfTerms++;
                 }
@@ -227,9 +227,16 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
             if (!Utils.isSolutionFeasible(cplex)) {
                 return new RMPLinearSolution();
             }
-            return new RMPLinearSolution(cplex.getObjValue(), cplex.getDuals(customerConstraints),
-                    cplex.getDual(vehiclesConstraint), true, cplex.getValues(theta), getNumberOfVehicles(cplex), getFleetSizeDuals(cplex), isIntegerSolution(cplex),
-                    getVisitFlow(cplex), getVisitFlowDuals(cplex));
+            return new RMPLinearSolution(cplex.getObjValue(),
+                                         cplex.getDuals(customerConstraints),
+                                         cplex.getDual(vehiclesConstraint),
+                                         true,
+                                         cplex.getValues(theta),
+                                         getNumberOfVehicles(cplex),
+                                         getFleetSizeDuals(cplex),
+                                         isIntegerSolution(cplex),
+                                         getVisitFlow(cplex),
+                                         getVisitFlowDuals(cplex));
         } catch (IloException e) {
             return new RMPLinearSolution();
         }
