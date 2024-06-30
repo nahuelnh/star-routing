@@ -3,7 +3,7 @@ package algorithm;
 import algorithm.branching.Branch;
 import algorithm.branching.BranchOnFleetSize;
 import algorithm.branching.BranchOnVisitFlow;
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Utils;
 import ilog.concert.IloException;
 import ilog.cplex.IloCplex;
@@ -16,11 +16,11 @@ import java.util.List;
 
 public abstract class RestrictedMasterProblem {
 
-    private final List<FeasiblePath> allPaths;
+    private final List<Route>   allPaths;
     private final Deque<Branch> activeBranches;
     private RMPLinearSolution linearSolution;
-    private RMPIntegerSolution integerSolution;
-    private List<FeasiblePath> activePaths;
+    private RMPIntegerSolution  integerSolution;
+    private List<Route>         activePaths;
 
     public RestrictedMasterProblem() {
         this.linearSolution = null;
@@ -31,7 +31,7 @@ public abstract class RestrictedMasterProblem {
 
     }
 
-    public void addColumns(List<FeasiblePath> columns) {
+    public void addColumns(List<Route> columns) {
         allPaths.addAll(columns);
     }
 
@@ -67,7 +67,7 @@ public abstract class RestrictedMasterProblem {
         return integerSolution;
     }
 
-    private boolean isCompatible(FeasiblePath path) {
+    private boolean isCompatible(Route path) {
         return activeBranches.stream().allMatch(branch -> branch.isCompatible(path));
     }
 
@@ -118,7 +118,7 @@ public abstract class RestrictedMasterProblem {
         }
     }
 
-    public List<FeasiblePath> getActivePaths() {
+    public List<Route> getActivePaths() {
         return activePaths;
     }
 }

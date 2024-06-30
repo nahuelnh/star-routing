@@ -2,7 +2,7 @@ package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
 import algorithm.branching.BranchOnVisitFlow;
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Instance;
 import commons.Stopwatch;
 import commons.Utils;
@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,31 +18,33 @@ import java.util.Map;
 public class PulseAlgorithm {
 
     private static final double EPSILON = 1e-6;
-    private static final int STEP = 1; // ~(Q / |S|)
-    private final Instance instance;
-    private final RMPLinearSolution rmpSolution;
-    private final ESPPRCGraph graph;
-    private final int numberOfNodes;
-    private final Map<Integer, Double> dualValues;
-    private Stopwatch stopwatch;
-    private double[][] lowerBounds;
-    private double bestSolutionFound;
-    private List<PartialPath> foundPartialPaths;
-    private boolean saveSolution;
-    private int pulsesPropagated;
+    private static final int    STEP    = 1; // ~(Q / |S|)
+
+    private final Instance                              instance;
+    private final RMPLinearSolution                     rmpSolution;
+    private final ESPPRCGraph                           graph;
+    private final int                                   numberOfNodes;
+    private final Map<Integer, Double>                  dualValues;
     private final Map<Integer, List<BranchOnVisitFlow>> branchesIndexedByCustomer;
+
+    private Stopwatch         stopwatch;
+    private double[][]        lowerBounds;
+    private double            bestSolutionFound;
+    private List<PartialPath> foundPartialPaths;
+    private boolean           saveSolution;
+    private int               pulsesPropagated;
 
 
     public PulseAlgorithm(Instance instance, RMPLinearSolution rmpSolution) {
-        this.instance = instance;
-        this.rmpSolution = rmpSolution;
-        this.graph = new ESPPRCGraph(instance);
+        this.instance      = instance;
+        this.rmpSolution   = rmpSolution;
+        this.graph         = new ESPPRCGraph(instance);
         this.numberOfNodes = graph.getSize();
-        this.dualValues = new HashMap<>();
+        this.dualValues    = new HashMap<>();
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
             dualValues.put(instance.getCustomer(s), rmpSolution.getCustomerDual(s));
         }
-        this.pulsesPropagated = 0;
+        this.pulsesPropagated          = 0;
         this.branchesIndexedByCustomer = getBranchesIndexedByCustomer(rmpSolution);
     }
 
@@ -59,7 +60,7 @@ public class PulseAlgorithm {
     private void resetGlobalOptimum() {
         bestSolutionFound = Double.MAX_VALUE;
         foundPartialPaths = new ArrayList<>();
-        saveSolution = false;
+        saveSolution      = false;
     }
 
     private double getInitialCost() {
@@ -70,28 +71,28 @@ public class PulseAlgorithm {
         return initialCost;
     }
 
-    public List<FeasiblePath> run(Duration timeLimit) {
+    public List<Route> run(Duration timeLimit) {
         this.stopwatch = new Stopwatch(timeLimit);
         resetGlobalOptimum();
         bound();
 
         resetGlobalOptimum();
         saveSolution = true;
-        pulseWithNodeRule(graph.getStart(), new PartialPath(getInitialCost(), 0));
+        pulseWithNodeRule(graph.getSource(), new PartialPath(getInitialCost(), 0));
 
         return translatePulsesToPaths();
     }
 
-    private List<FeasiblePath> translatePulsesToPaths() {
-        List<FeasiblePath> ret = new ArrayList<>();
+    private List<Route> translatePulsesToPaths() {
+        List<Route> ret = new ArrayList<>();
         for (PartialPath currentPulse : foundPartialPaths) {
-            FeasiblePath path = new FeasiblePath();
-            int lastNode = currentPulse.getNodeAt(0);
+            Route path     = new Route();
+            int   lastNode = currentPulse.getNodeAt(0);
             assert lastNode == instance.getDepot();
-            assert lastNode == graph.getStart();
+            assert lastNode == graph.getSource();
             for (int j = 1; j < currentPulse.getSize(); j++) {
                 int currentNode = currentPulse.getNodeAt(j);
-                if (currentNode == graph.getEnd()) {
+                if (currentNode == graph.getSink()) {
                     currentNode = instance.getDepot();
                 }
                 path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
@@ -104,10 +105,10 @@ public class PulseAlgorithm {
     }
 
     private boolean pruneWithNodeRule(int nextNode, PartialPath visitedPath) {
-        int totalDemand = visitedPath.getTotalDemand();
+        int    totalDemand = visitedPath.getTotalDemand();
         double newEdgeCost =
-                visitedPath.getSize() == 0 ? 0 : graph.getEdge(visitedPath.getLastNode(), nextNode).getWeight();
-        double totalCost = visitedPath.getTotalCost() + newEdgeCost;
+            visitedPath.getSize() == 0 ? 0 : graph.getEdge(visitedPath.getLastNode(), nextNode).getWeight();
+        double totalCost   = visitedPath.getTotalCost() + newEdgeCost;
         if (!isFeasible(nextNode, visitedPath)) {
             return true;
         }
@@ -120,7 +121,7 @@ public class PulseAlgorithm {
         for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
             if (visitedPath.isCustomerVisited(branch.getCustomer())) {
                 int start = branch.getEdge().getStart();
-                int end = branch.getEdge().getEnd();
+                int end   = branch.getEdge().getEnd();
                 if (branch.getBound() == 1 && start != visitedPath.getLastNode() && end == nextNode) {
                     return true;
                 } else if (branch.getBound() == 1 && start == visitedPath.getLastNode() && end != nextNode) {
@@ -134,8 +135,8 @@ public class PulseAlgorithm {
     }
 
     private boolean pruneWithCustomerRule(int nextCustomer, int currentNode, PartialPath visitedPath) {
-        int currentDemand = visitedPath.getTotalDemand() + instance.getDemand(nextCustomer);
-        double currentCost = visitedPath.getTotalCost() - dualValues.get(nextCustomer);
+        int    currentDemand = visitedPath.getTotalDemand() + instance.getDemand(nextCustomer);
+        double currentCost   = visitedPath.getTotalCost() - dualValues.get(nextCustomer);
         if (visitedPath.isCustomerVisited(nextCustomer)) {
             return true;
         }
@@ -152,7 +153,7 @@ public class PulseAlgorithm {
         // Branching pruning rules
         for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(nextCustomer, List.of())) {
             int start = branch.getEdge().getStart();
-            int end = branch.getEdge().getEnd();
+            int end   = branch.getEdge().getEnd();
             if (branch.getBound() == 1 && visitedPath.forbidsEdge(start, end)) {
                 return true;
             } else if (branch.getBound() == 0 && visitedPath.containsEdge(start, end)) {
@@ -167,7 +168,7 @@ public class PulseAlgorithm {
         if (stopwatch.timedOut()) {
             return;
         }
-        if (currentNode == graph.getEnd()) {
+        if (currentNode == graph.getSink()) {
             if (visitedPath.getTotalCost() < bestSolutionFound) {
                 bestSolutionFound = visitedPath.getTotalCost();
                 if (saveSolution && bestSolutionFound < -EPSILON) {
@@ -259,7 +260,7 @@ public class PulseAlgorithm {
         if (!graph.containsEdge(lastNode, nextNode)) {
             return false;
         }
-        double newEdgeCost = graph.getEdge(lastNode, nextNode).getWeight();
+        double newEdgeCost  = graph.getEdge(lastNode, nextNode).getWeight();
         double newTotalCost = visitedPath.getPartialCostAt(size - 1) + newEdgeCost;
         for (int i = size - 2; i >= 0; i--) {
             int innerNode = visitedPath.getNodeAt(i);
@@ -278,33 +279,33 @@ public class PulseAlgorithm {
     }
 
     private class PartialPath {
-        private final int[] nodes;
-        private final BitSet visitedCustomers;
-        private final BitSet visitedNodes;
+        private final int[]    nodes;
+        private final BitSet   visitedCustomers;
+        private final BitSet   visitedNodes;
         private final double[] partialCosts;
-        private int size;
-        private double totalCost;
-        private int totalDemand;
+        private       int      size;
+        private       double   totalCost;
+        private       int      totalDemand;
 
         public PartialPath(double totalCost, int totalDemand) {
-            this.nodes = new int[numberOfNodes];
-            this.size = 0;
-            this.totalCost = totalCost;
-            this.totalDemand = totalDemand;
+            this.nodes            = new int[numberOfNodes];
+            this.size             = 0;
+            this.totalCost        = totalCost;
+            this.totalDemand      = totalDemand;
             this.visitedCustomers = new BitSet(numberOfNodes);
-            this.visitedNodes = new BitSet(numberOfNodes);
-            this.partialCosts = new double[numberOfNodes];
+            this.visitedNodes     = new BitSet(numberOfNodes);
+            this.partialCosts     = new double[numberOfNodes];
             Arrays.fill(partialCosts, 0.0);
         }
 
         public PartialPath(PartialPath p) {
-            this.nodes = Arrays.copyOf(p.nodes, numberOfNodes);
+            this.nodes            = Arrays.copyOf(p.nodes, numberOfNodes);
             this.visitedCustomers = (BitSet) p.visitedCustomers.clone();
-            this.visitedNodes = (BitSet) p.visitedNodes.clone();
-            this.partialCosts = Arrays.copyOf(p.partialCosts, numberOfNodes);
-            this.size = p.size;
-            this.totalCost = p.totalCost;
-            this.totalDemand = p.totalDemand;
+            this.visitedNodes     = (BitSet) p.visitedNodes.clone();
+            this.partialCosts     = Arrays.copyOf(p.partialCosts, numberOfNodes);
+            this.size             = p.size;
+            this.totalCost        = p.totalCost;
+            this.totalDemand      = p.totalDemand;
         }
 
         public BitSet getVisitedCustomers() {
@@ -322,12 +323,14 @@ public class PulseAlgorithm {
         public void addNode(int node) {
             nodes[size] = node;
             visitedNodes.set(node);
-            totalCost += size == 0 ? 0.0 : graph.getEdge(nodes[size - 1], node).getWeight();
+                                 totalCost += size == 0 ? 0.0 : graph.getEdge(nodes[size - 1], node).getWeight();
             partialCosts[size] = totalCost;
             size++;
             if (size > 1) {
                 for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
-                    if (isCustomerVisited(branch.getCustomer()) && branch.getEdge().getStart() == nodes[size - 2] && branch.getEdge().getEnd() == node) {
+                    if (isCustomerVisited(branch.getCustomer())
+                        && branch.getEdge().getStart() == nodes[size - 2]
+                        && branch.getEdge().getEnd() == node) {
                         totalCost -= rmpSolution.getVisitFlowDuals().get(branch);
                     }
                 }
@@ -341,7 +344,9 @@ public class PulseAlgorithm {
             totalCost -= size < 2 ? 0.0 : graph.getEdge(nodes[size - 2], nodes[size - 1]).getWeight();
             if (size > 1) {
                 for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
-                    if (isCustomerVisited(branch.getCustomer()) && branch.getEdge().getStart() == nodes[size - 2] && branch.getEdge().getEnd() == getLastNode()) {
+                    if (isCustomerVisited(branch.getCustomer())
+                        && branch.getEdge().getStart() == nodes[size - 2]
+                        && branch.getEdge().getEnd() == getLastNode()) {
                         totalCost += rmpSolution.getVisitFlowDuals().get(branch);
                     }
                 }
@@ -352,8 +357,8 @@ public class PulseAlgorithm {
 
         public void addCustomer(int customer) {
             visitedCustomers.set(customer);
-            totalDemand += instance.getDemand(customer);
-            totalCost -= dualValues.get(customer);
+                                     totalDemand += instance.getDemand(customer);
+                                     totalCost -= dualValues.get(customer);
             partialCosts[size - 1] = totalCost;
             for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(customer, List.of())) {
                 if (containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd())) {
@@ -364,8 +369,8 @@ public class PulseAlgorithm {
 
         public void removeCustomer(int customer) {
             visitedCustomers.flip(customer);
-            totalDemand -= instance.getDemand(customer);
-            totalCost += dualValues.get(customer);
+                                     totalDemand -= instance.getDemand(customer);
+                                     totalCost += dualValues.get(customer);
             partialCosts[size - 1] = totalCost;
             for (BranchOnVisitFlow branch : branchesIndexedByCustomer.getOrDefault(customer, List.of())) {
                 if (containsEdge(branch.getEdge().getStart(), branch.getEdge().getEnd())) {
@@ -429,8 +434,16 @@ public class PulseAlgorithm {
 
         @Override
         public String toString() {
-            return "PartialPath{" + "nodes=" + Arrays.toString(nodes) + ", size=" + size + ", totalCost=" + totalCost +
-                    ", totalDemand=" + totalDemand + '}';
+            return "PartialPath{"
+                   + "nodes="
+                   + Arrays.toString(nodes)
+                   + ", size="
+                   + size
+                   + ", totalCost="
+                   + totalCost
+                   + ", totalDemand="
+                   + totalDemand
+                   + '}';
         }
     }
 }

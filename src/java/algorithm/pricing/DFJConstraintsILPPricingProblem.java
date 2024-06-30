@@ -3,7 +3,7 @@ package algorithm.pricing;
 import algorithm.RMPLinearSolution;
 import algorithm.branching.BranchOnFleetSize;
 import algorithm.branching.BranchOnVisitFlow;
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Instance;
 import commons.Utils;
 import ilog.concert.IloException;
@@ -170,8 +170,8 @@ public class DFJConstraintsILPPricingProblem extends PricingProblem {
 
             cplex.solve();
 
-            boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
-            List<FeasiblePath> pathsFromSolution = feasible ? computePathsFromSolution() : new ArrayList<>();
+            boolean     feasible          = IloCplex.Status.Optimal.equals(cplex.getStatus());
+            List<Route> pathsFromSolution = feasible ? computePathsFromSolution() : new ArrayList<>();
             PricingSolution pricingSolution =
                     new PricingSolution(cplex.getObjValue(), pathsFromSolution, cplex.getDetTime(), feasible);
             cplex.end();
@@ -201,10 +201,10 @@ public class DFJConstraintsILPPricingProblem extends PricingProblem {
         return visitedCustomers;
     }
 
-    private FeasiblePath getPathFromFeasibleSolution() throws IloException {
-        FeasiblePath path = new FeasiblePath();
-        int lastNode = instance.getDepot();
-        int currentNode = getNextNodeInPath(lastNode);
+    private Route getPathFromFeasibleSolution() throws IloException {
+        Route path        = new Route();
+        int   lastNode    = instance.getDepot();
+        int   currentNode = getNextNodeInPath(lastNode);
         while (currentNode != instance.getDepot()) {
             path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
             lastNode = currentNode;
@@ -223,9 +223,9 @@ public class DFJConstraintsILPPricingProblem extends PricingProblem {
         return initialCost;
     }
 
-    public List<FeasiblePath> computePathsFromSolution() {
+    public List<Route> computePathsFromSolution() {
         try {
-            List<FeasiblePath> ret = new ArrayList<>();
+            List<Route> ret = new ArrayList<>();
             if (!Utils.isSolutionFeasible(cplex)) {
                 return ret;
             }

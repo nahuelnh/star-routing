@@ -1,10 +1,10 @@
 package algorithm.branching;
 
-import commons.FeasiblePath;
+import commons.Route;
 
 public interface Branch {
 
-    boolean isCompatible(FeasiblePath path);
+    boolean isCompatible(Route path);
 
     int getBound();
 

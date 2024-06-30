@@ -6,7 +6,7 @@ import algorithm.RMPLinearSolution;
 import algorithm.RestrictedMasterProblem;
 import algorithm.pricing.PricingProblem;
 import algorithm.pricing.PricingSolution;
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Instance;
 import commons.StarRoutingSolution;
 import commons.Stopwatch;
@@ -20,19 +20,24 @@ import java.util.List;
 public class BranchAndPrice {
 
     private static final Double EPSILON = 0.01;
-    private final RestrictedMasterProblem rmp;
-    private final PricingProblem pricing;
+
+    private final RestrictedMasterProblem  rmp;
+    private final PricingProblem           pricing;
     private final InitialSolutionHeuristic initialSolutionHeuristic;
-    private final BranchingRuleManager branchingRuleManager;
+    private final BranchingRuleManager     branchingRuleManager;
+
     private double upperBound;
 
-    public BranchAndPrice(Instance instance, RestrictedMasterProblem rmp, PricingProblem pricing,
-                          InitialSolutionHeuristic initialSolutionHeuristic) {
-        this.rmp = rmp;
-        this.pricing = pricing;
+    public BranchAndPrice(Instance instance,
+                          RestrictedMasterProblem rmp,
+                          PricingProblem pricing,
+                          InitialSolutionHeuristic initialSolutionHeuristic
+                         ) {
+        this.rmp                      = rmp;
+        this.pricing                  = pricing;
         this.initialSolutionHeuristic = initialSolutionHeuristic;
-        this.branchingRuleManager = new BranchingRuleManager();
-        this.upperBound = Double.MAX_VALUE;
+        this.branchingRuleManager     = new BranchingRuleManager();
+        this.upperBound               = Double.MAX_VALUE;
     }
 
     public StarRoutingSolution solve() {
@@ -40,21 +45,22 @@ public class BranchAndPrice {
     }
 
     public StarRoutingSolution solve(Duration timeout) {
-        Stopwatch stopwatch = new Stopwatch(timeout);
-        List<FeasiblePath> columnsToAdd = initialSolutionHeuristic.run();
-        double relaxationOptimal = Double.MAX_VALUE;
-        this.upperBound = Double.MAX_VALUE;
-        RMPLinearSolution rmpSolution = null;
-        RMPIntegerSolution incumbent = null;
+        Stopwatch         stopwatch    = new Stopwatch(timeout);
+        List<Route>       columnsToAdd = initialSolutionHeuristic.run();
+        RMPLinearSolution rmpSolution  = null;
+        RMPIntegerSolution incumbent         = null;
+        double             relaxationOptimal = Double.MAX_VALUE;
+        ArrayDeque<Node>   openNodes         = new ArrayDeque<>();
+        Node               lastNode;
+        Node               currentNode       = null;
 
-        ArrayDeque<Node> remainingNodes = new ArrayDeque<>();
-        remainingNodes.add(new Node(null, null));
+        upperBound = Double.MAX_VALUE;
 
-        Node lastNode;
-        Node currentNode = null;
-        while (!remainingNodes.isEmpty()) {
-            lastNode = currentNode;
-            currentNode = remainingNodes.removeFirst();
+        openNodes.add(new Node(null, null));
+
+        while (!openNodes.isEmpty()) {
+            lastNode    = currentNode;
+            currentNode = openNodes.removeFirst();
 
             updateSubproblems(lastNode, currentNode);
 
@@ -67,8 +73,7 @@ public class BranchAndPrice {
                 }
                 relaxationOptimal = Math.min(relaxationOptimal, rmpSolution.getObjectiveValue());
 
-                PricingSolution pricingSolution =
-                        pricing.solve(rmpSolution, stopwatch.getRemainingTime());
+                PricingSolution pricingSolution = pricing.solve(rmpSolution, stopwatch.getRemainingTime());
                 if (!pricingSolution.isFeasible() || stopwatch.timedOut()) {
                     break;
                 }
@@ -82,15 +87,15 @@ public class BranchAndPrice {
                 RMPIntegerSolution rmpIntegerSolution = rmp.getIntegerSolution();
                 if (rmpSolution.isInteger()) {
                     upperBound = rmpSolution.getObjectiveValue();
-                    incumbent = rmpIntegerSolution;
+                    incumbent  = rmpIntegerSolution;
                     assert Math.abs(rmpIntegerSolution.getObjectiveValue() - rmpSolution.getObjectiveValue()) < EPSILON;
                 } else {
                     if (rmpIntegerSolution.getObjectiveValue() < upperBound) {
                         upperBound = rmpIntegerSolution.getObjectiveValue();
-                        incumbent = rmpIntegerSolution;
+                        incumbent  = rmpIntegerSolution;
                     }
                     for (Branch branch : branchingRuleManager.applyBranchingRules(rmpSolution)) {
-                        remainingNodes.addFirst(new Node(currentNode, branch));
+                        openNodes.addFirst(new Node(currentNode, branch));
                     }
                 }
             }
@@ -102,9 +107,9 @@ public class BranchAndPrice {
         if (last == null) {
             return;
         }
-        List<Node> fromLast = last.pathToRoot();
+        List<Node> fromLast    = last.pathToRoot();
         List<Node> fromCurrent = current.pathToRoot();
-        int i = 0;
+        int        i           = 0;
         while (!fromCurrent.contains(fromLast.get(i))) {
             rmp.removeBranch(fromLast.get(i).getBranch());
             pricing.removeBranch(fromLast.get(i).getBranch());
@@ -118,35 +123,50 @@ public class BranchAndPrice {
         }
     }
 
-    private StarRoutingSolution buildSolution(Stopwatch stopwatch, double relaxationOptimal,
-                                              RMPIntegerSolution incumbent) {
+    private StarRoutingSolution buildSolution(Stopwatch stopwatch,
+                                              double relaxationOptimal,
+                                              RMPIntegerSolution incumbent
+                                             ) {
         if (stopwatch.timedOut() && relaxationOptimal == Double.MAX_VALUE) {
-            return new StarRoutingSolution(StarRoutingSolution.Status.UNKNOWN, relaxationOptimal,
-                    stopwatch.getElapsedTime(), false);
+            return new StarRoutingSolution(StarRoutingSolution.Status.UNKNOWN,
+                                           relaxationOptimal,
+                                           stopwatch.getElapsedTime(),
+                                           false
+            );
         }
         if (incumbent == null) {
-            return new StarRoutingSolution(StarRoutingSolution.Status.UNKNOWN, relaxationOptimal,
-                    stopwatch.getElapsedTime(), false);
+            return new StarRoutingSolution(StarRoutingSolution.Status.UNKNOWN,
+                                           relaxationOptimal,
+                                           stopwatch.getElapsedTime(),
+                                           false
+            );
         } else if (stopwatch.timedOut()) {
-            StarRoutingSolution solution =
-                    new StarRoutingSolution(StarRoutingSolution.Status.TIMEOUT, incumbent.getObjectiveValue(),
-                            incumbent.getUsedPaths(), stopwatch.getElapsedTime());
+            StarRoutingSolution solution = new StarRoutingSolution(StarRoutingSolution.Status.TIMEOUT,
+                                                                   incumbent.getObjectiveValue(),
+                                                                   incumbent.getUsedPaths(),
+                                                                   stopwatch.getElapsedTime()
+            );
             solution.setLowerBound(relaxationOptimal);
             return solution;
         } else if (!incumbent.isFeasible()) {
-            return new StarRoutingSolution(StarRoutingSolution.Status.INFEASIBLE, relaxationOptimal,
-                    stopwatch.getElapsedTime(), false);
+            return new StarRoutingSolution(StarRoutingSolution.Status.INFEASIBLE,
+                                           relaxationOptimal,
+                                           stopwatch.getElapsedTime(),
+                                           false
+            );
         } else {
-            StarRoutingSolution solution =
-                    new StarRoutingSolution(StarRoutingSolution.Status.OPTIMAL, incumbent.getObjectiveValue(),
-                            incumbent.getUsedPaths(), stopwatch.getElapsedTime());
+            StarRoutingSolution solution = new StarRoutingSolution(StarRoutingSolution.Status.OPTIMAL,
+                                                                   incumbent.getObjectiveValue(),
+                                                                   incumbent.getUsedPaths(),
+                                                                   stopwatch.getElapsedTime()
+            );
             solution.setLowerBound(relaxationOptimal);
             return solution;
         }
     }
 
     private static class Node {
-        private final Node parent;
+        private final Node   parent;
         private final Branch branch;
 
         public Node(Node parent, Branch branch) {
@@ -159,8 +179,8 @@ public class BranchAndPrice {
         }
 
         public List<Node> pathToRoot() {
-            List<Node> ret = new ArrayList<>();
-            Node current = this;
+            List<Node> ret     = new ArrayList<>();
+            Node       current = this;
             while (current != null) {
                 ret.add(current);
                 current = current.parent;

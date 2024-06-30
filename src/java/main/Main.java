@@ -17,7 +17,7 @@ public class Main {
 
     public static void main(String[] args) {
         for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
-            if (instance.getNumberOfNodes() >= 5) {
+            if (instance.getNumberOfNodes() >= 20) {
                 runInstance(instance.getName());
             }
         }

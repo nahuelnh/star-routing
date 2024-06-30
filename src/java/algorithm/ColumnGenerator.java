@@ -2,7 +2,7 @@ package algorithm;
 
 import algorithm.pricing.PricingProblem;
 import algorithm.pricing.PricingSolution;
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Instance;
 import commons.StarRoutingSolution;
 import commons.Stopwatch;
@@ -68,10 +68,10 @@ public class ColumnGenerator {
     }
 
     private StarRoutingSolution generateColumns(boolean integral, Duration timeout) {
-        Stopwatch stopwatch = new Stopwatch(timeout);
-        List<FeasiblePath> columnsToAdd = initialSolutionHeuristic.run();
-        List<FeasiblePath> allColumns = new ArrayList<>();
-        double relaxationOptimal = Double.MAX_VALUE;
+        Stopwatch   stopwatch         = new Stopwatch(timeout);
+        List<Route> columnsToAdd      = initialSolutionHeuristic.run();
+        List<Route> allColumns        = new ArrayList<>();
+        double      relaxationOptimal = Double.MAX_VALUE;
         double deterministicTime = 0.0;
         RMPLinearSolution rmpSolution;
         while (true) {

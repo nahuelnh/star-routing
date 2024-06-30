@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Instance;
 import commons.StarRoutingSolution;
 import commons.Utils;
@@ -206,13 +206,13 @@ public class DFJCompactModel {
         return false;
     }
 
-    private List<FeasiblePath> getPathsFromSolution() throws IloException {
-        List<FeasiblePath> ret = new ArrayList<>();
+    private List<Route> getPathsFromSolution() throws IloException {
+        List<Route> ret = new ArrayList<>();
         for (int k = 0; k < instance.getNumberOfVehicles(); k++) {
             if (isVehicleUsed(k)) {
-                FeasiblePath path = new FeasiblePath();
-                int lastNode = instance.getDepot();
-                int currentNode = getNextNodeInPath(lastNode, k);
+                Route path        = new Route();
+                int   lastNode    = instance.getDepot();
+                int   currentNode = getNextNodeInPath(lastNode, k);
                 while (currentNode != instance.getDepot()) {
                     path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
                     lastNode = currentNode;

@@ -1,6 +1,6 @@
 package algorithm.branching;
 
-import commons.FeasiblePath;
+import commons.Route;
 
 public class BranchOnFleetSize implements Branch {
 
@@ -13,7 +13,7 @@ public class BranchOnFleetSize implements Branch {
     }
 
     @Override
-    public boolean isCompatible(FeasiblePath path) {
+    public boolean isCompatible(Route path) {
         return true;
     }
 

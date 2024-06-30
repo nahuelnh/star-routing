@@ -1,6 +1,6 @@
 package algorithm;
 
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Instance;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public class RearrangeCustomersHeuristic {
         this.instance = instance;
     }
 
-    private Set<Integer> getPotentialCustomers(FeasiblePath path) {
+    private Set<Integer> getPotentialCustomers(Route path) {
         Set<Integer> ret = new TreeSet<>(Comparator.comparingInt(instance::getDemand));
         for (int node : path.getNodes()) {
             ret.addAll(instance.getReverseNeighborhood(node));
@@ -28,23 +28,23 @@ public class RearrangeCustomersHeuristic {
         return ret;
     }
 
-    private List<FeasiblePath> getPathsInBasis(List<FeasiblePath> paths,
-                                               RMPLinearSolution rmpSolution) {
-        List<FeasiblePath> sortedPaths = new ArrayList<>();
+    private List<Route> getPathsInBasis(List<Route> paths,
+                                        RMPLinearSolution rmpSolution) {
+        List<Route> sortedPaths = new ArrayList<>();
         for (int i = 0; i < paths.size(); i++) {
             if (rmpSolution.getPrimalValue(i) > EPSILON) {
                 sortedPaths.add(paths.get(i));
             }
         }
-        sortedPaths.sort(Comparator.comparing(FeasiblePath::getCost));
+        sortedPaths.sort(Comparator.comparing(Route::getCost));
         return sortedPaths;
     }
 
-    private int getTotalDemand(FeasiblePath path) {
+    private int getTotalDemand(Route path) {
         return path.getCustomersServed().stream().map(instance::getDemand).reduce(Integer::sum).orElse(0);
     }
 
-    private boolean canMerge(FeasiblePath path1, FeasiblePath path2, FeasiblePath replacement) {
+    private boolean canMerge(Route path1, Route path2, Route replacement) {
         if (replacement.getCost() < path1.getCost() + path2.getCost()) {
             Set<Integer> potentialCustomers = getPotentialCustomers(replacement);
             return potentialCustomers.containsAll(path1.getCustomersServed()) &&
@@ -53,14 +53,14 @@ public class RearrangeCustomersHeuristic {
         return false;
     }
 
-    private Optional<FeasiblePath> computeReplacement(FeasiblePath path1, FeasiblePath path2,
-                                                      List<FeasiblePath> replacements) {
+    private Optional<Route> computeReplacement(Route path1, Route path2,
+                                               List<Route> replacements) {
         if (getTotalDemand(path1) + getTotalDemand(path2) > instance.getCapacity()) {
             return Optional.empty();
         }
-        for (FeasiblePath replacement : replacements) {
+        for (Route replacement : replacements) {
             if (canMerge(path1, path2, replacement)) {
-                FeasiblePath ret = replacement.getCopyWithoutCustomers();
+                Route ret = replacement.getCopyWithoutCustomers();
                 ret.addCustomers(path1.getCustomersServed());
                 ret.addCustomers(path2.getCustomersServed());
                 return Optional.of(ret);
@@ -69,14 +69,14 @@ public class RearrangeCustomersHeuristic {
         return Optional.empty();
     }
 
-    private List<FeasiblePath> mergeHeuristic(List<FeasiblePath> pathsToBeMerged, List<FeasiblePath> replacements) {
+    private List<Route> mergeHeuristic(List<Route> pathsToBeMerged, List<Route> replacements) {
         BitSet merged = new BitSet(pathsToBeMerged.size());
         for (int i = 0; i < pathsToBeMerged.size(); i++) {
-            FeasiblePath path1 = pathsToBeMerged.get(i);
+            Route path1 = pathsToBeMerged.get(i);
             for (int j = 0; j < i; j++) {
-                FeasiblePath path2 = pathsToBeMerged.get(j);
+                Route path2 = pathsToBeMerged.get(j);
                 if (!merged.get(i) && !merged.get(j)) {
-                    Optional<FeasiblePath> replacement = computeReplacement(path1, path2, replacements);
+                    Optional<Route> replacement = computeReplacement(path1, path2, replacements);
                     if (replacement.isPresent()) {
                         pathsToBeMerged.add(replacement.get());
                         merged.set(i);
@@ -85,7 +85,7 @@ public class RearrangeCustomersHeuristic {
                 }
             }
         }
-        List<FeasiblePath> ret = new ArrayList<>();
+        List<Route> ret = new ArrayList<>();
         for (int i = 0; i < pathsToBeMerged.size(); i++) {
             if (!merged.get(i)) {
                 ret.add(pathsToBeMerged.get(i));
@@ -94,15 +94,15 @@ public class RearrangeCustomersHeuristic {
         return ret;
     }
 
-    public List<FeasiblePath> run(List<FeasiblePath> paths, RMPLinearSolution rmpSolution) {
-        List<FeasiblePath> ret = new ArrayList<>();
-        BitSet visited = new BitSet(instance.getNumberOfNodes());
-        for (FeasiblePath path : getPathsInBasis(paths, rmpSolution)) {
+    public List<Route> run(List<Route> paths, RMPLinearSolution rmpSolution) {
+        List<Route> ret     = new ArrayList<>();
+        BitSet      visited = new BitSet(instance.getNumberOfNodes());
+        for (Route path : getPathsInBasis(paths, rmpSolution)) {
             if (visited.cardinality() >= instance.getNumberOfCustomers()) {
                 break;
             }
-            int cumulativeDemand = 0;
-            FeasiblePath currentPath = path.getCopyWithoutCustomers();
+            int           cumulativeDemand = 0;
+            Route         currentPath      = path.getCopyWithoutCustomers();
             List<Integer> currentCustomers = new ArrayList<>();
             for (int customer : getPotentialCustomers(path)) {
                 if (!visited.get(customer)) {

@@ -7,19 +7,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class FeasiblePath {
+public class Route {
 
     private final List<Integer> nodes;
     private final Set<Integer> customersServed;
     private final List<Integer> weights;
 
-    public FeasiblePath(List<Integer> nodes, Set<Integer> customersServed, List<Integer> weights) {
+    public Route(List<Integer> nodes, Set<Integer> customersServed, List<Integer> weights) {
         this.nodes = nodes;
         this.customersServed = customersServed;
         this.weights = weights;
     }
 
-    public FeasiblePath() {
+    public Route() {
         this.nodes = new ArrayList<>();
         this.customersServed = new HashSet<>();
         this.weights = new ArrayList<>();
@@ -48,7 +48,7 @@ public class FeasiblePath {
 
     @Override
     public String toString() {
-        return "FeasiblePath{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" + weights +
+        return "Route{" + "nodes=" + nodes + ", customersServed=" + customersServed + ", weights=" + weights +
                 '}';
     }
 
@@ -72,12 +72,12 @@ public class FeasiblePath {
         customersServed.remove(customer);
     }
 
-    public boolean dominates(FeasiblePath other) {
+    public boolean dominates(Route other) {
         return this.getCost() <= other.getCost() && this.customersServed.containsAll(other.customersServed);
     }
 
-    public FeasiblePath getCopyWithoutCustomers() {
-        return new FeasiblePath(List.copyOf(this.nodes), new HashSet<>(), List.copyOf(this.weights));
+    public Route getCopyWithoutCustomers() {
+        return new Route(List.copyOf(this.nodes), new HashSet<>(), List.copyOf(this.weights));
     }
 
     @Override
@@ -88,7 +88,7 @@ public class FeasiblePath {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        FeasiblePath that = (FeasiblePath) o;
+        Route that = (Route) o;
         return Objects.equals(nodes, that.nodes) && Objects.equals(customersServed, that.customersServed) &&
                 Objects.equals(weights, that.weights);
     }

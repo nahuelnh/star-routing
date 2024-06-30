@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class StarRoutingSolution {
-    private final List<FeasiblePath> paths;
-    private final double objValue;
+    private final List<Route> paths;
+    private final double      objValue;
     private final Duration elapsedTime;
     private final Status status;
     private Optional<Double> lowerBound;
@@ -24,7 +24,7 @@ public class StarRoutingSolution {
         this.isInteger = isInteger;
     }
 
-    public StarRoutingSolution(Status status, double objValue, List<FeasiblePath> paths, Duration elapsedTime) {
+    public StarRoutingSolution(Status status, double objValue, List<Route> paths, Duration elapsedTime) {
         this.status = status;
         this.paths = paths;
         this.objValue = objValue;
@@ -49,7 +49,7 @@ public class StarRoutingSolution {
                 .append(elapsedTime.toMillis()).append("ms, lowerBound=").append(lowerBound.map(String::valueOf).orElse("null")).append(", paths=[");
         if (!paths.isEmpty()) {
             builder.append('\n');
-            for (FeasiblePath path : paths) {
+            for (Route path : paths) {
                 builder.append("\t");
                 builder.append(path);
                 builder.append('\n');

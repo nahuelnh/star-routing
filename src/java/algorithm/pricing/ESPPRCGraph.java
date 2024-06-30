@@ -8,18 +8,26 @@ import java.util.List;
 public class ESPPRCGraph extends Graph {
 
     private final Instance instance;
-    private final int start;
-    private final int end;
+    private final int      source;
+    private final int      sink;
 
     public ESPPRCGraph(Instance instance) {
-        super(instance.getNumberOfNodes() + 1);
-        this.instance = instance;
-        this.start = instance.getDepot();
-        this.end = instance.getNumberOfNodes();
-        createGraph();
+        this(instance, false);
     }
 
-    private void createGraph() {
+    public ESPPRCGraph(Instance instance, boolean reversed) {
+        super(instance.getNumberOfNodes() + 1);
+        this.instance = instance;
+        this.source   = instance.getDepot();
+        this.sink     = instance.getNumberOfNodes();
+        if (reversed) {
+            createGraph(sink, source);
+        } else {
+            createGraph(source, sink);
+        }
+    }
+
+    private void createGraph(int start, int end) {
         for (int i = 0; i < getSize(); i++) {
             for (int j = 0; j < getSize(); j++) {
                 if (i != j && i != end && j != start && !(i == start && j == end)) {
@@ -33,20 +41,21 @@ public class ESPPRCGraph extends Graph {
         }
     }
 
-    public int getStart() {
-        return start;
+
+    public int getSource() {
+        return source;
     }
 
-    public int getEnd() {
-        return end;
+    public int getSink() {
+        return sink;
     }
 
     public int translateToESPPRCNode(int node) {
-        return node == instance.getDepot() ? end : node;
+        return node == instance.getDepot() ? sink : node;
     }
 
     public int translateFromESPPRCNode(int node) {
-        return node == end ? instance.getDepot() : node;
+        return node == sink ? instance.getDepot() : node;
     }
 
     public List<Integer> getReverseNeighborhood(int node) {

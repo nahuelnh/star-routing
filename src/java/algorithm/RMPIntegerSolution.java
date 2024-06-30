@@ -1,17 +1,17 @@
 package algorithm;
 
-import commons.FeasiblePath;
+import commons.Route;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RMPIntegerSolution {
 
-    private final double objectiveValue;
-    private final List<FeasiblePath> usedPaths;
-    private final boolean feasible;
+    private final double      objectiveValue;
+    private final List<Route> usedPaths;
+    private final boolean     feasible;
 
-    public RMPIntegerSolution(double objectiveValue, List<FeasiblePath> usedPaths, boolean feasible) {
+    public RMPIntegerSolution(double objectiveValue, List<Route> usedPaths, boolean feasible) {
         this.objectiveValue = objectiveValue;
         this.usedPaths = usedPaths;
         this.feasible = feasible;
@@ -23,7 +23,7 @@ public class RMPIntegerSolution {
         this.feasible = false;
     }
 
-    public List<FeasiblePath> getUsedPaths() {
+    public List<Route> getUsedPaths() {
         return usedPaths;
     }
 

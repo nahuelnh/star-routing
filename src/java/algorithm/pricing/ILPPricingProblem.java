@@ -3,7 +3,7 @@ package algorithm.pricing;
 import algorithm.RMPLinearSolution;
 import algorithm.branching.BranchOnFleetSize;
 import algorithm.branching.BranchOnVisitFlow;
-import commons.FeasiblePath;
+import commons.Route;
 import commons.Instance;
 import commons.Utils;
 import ilog.concert.IloException;
@@ -22,13 +22,15 @@ import java.util.Set;
 
 public class ILPPricingProblem extends PricingProblem {
 
-    private static final double EPSILON = 1e-6;
+    private static final double EPSILON = 1.0e-6;
+
     private final Instance instance;
-    private IloCplex cplex;
+
+    private IloCplex      cplex;
     private IloIntVar[][] x;
-    private IloIntVar[] y;
-    private IloIntVar[] u;
-    private IloIntVar[] z;
+    private IloIntVar[]   y;
+    private IloIntVar[]   u;
+    private IloIntVar[]   z;
 
     public ILPPricingProblem(Instance instance) {
         this.instance = instance;
@@ -64,7 +66,7 @@ public class ILPPricingProblem extends PricingProblem {
     private void createFlowConstraints() throws IloException {
         // Vehicle leaves the node that it enters
         for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-            IloIntExpr inFlow = Utils.getRowSum(cplex, x, i);
+            IloIntExpr inFlow  = Utils.getRowSum(cplex, x, i);
             IloIntExpr outFlow = Utils.getColumnSum(cplex, x, i);
             cplex.addEq(inFlow, outFlow, "flow_" + i);
         }
@@ -79,8 +81,8 @@ public class ILPPricingProblem extends PricingProblem {
     private void createVisitConstraints() throws IloException {
         // A vehicle can only serve visited customers
         for (int s = 0; s < instance.getNumberOfCustomers(); s++) {
-            int currentCustomer = instance.getCustomer(s);
-            IloIntExpr rhs = cplex.linearIntExpr();
+            int        currentCustomer = instance.getCustomer(s);
+            IloIntExpr rhs             = cplex.linearIntExpr();
             for (int i = 0; i < instance.getNumberOfNodes(); i++) {
                 for (int neighbor : instance.getNeighbors(currentCustomer)) {
                     rhs = cplex.sum(rhs, x[i][neighbor]);
@@ -163,8 +165,8 @@ public class ILPPricingProblem extends PricingProblem {
         for (int s = 0; s < S; s++) {
             secondTerm.addTerm(y[s], rmpSolution.getCustomerDual(s));
         }
-        IloLinearNumExpr thirdTerm = cplex.linearNumExpr();
-        int branchIndex = 0;
+        IloLinearNumExpr thirdTerm   = cplex.linearNumExpr();
+        int              branchIndex = 0;
         for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
             double dual = rmpSolution.getVisitFlowDuals().get(branch);
             thirdTerm.addTerm(z[branchIndex], dual);
@@ -190,10 +192,10 @@ public class ILPPricingProblem extends PricingProblem {
             performBranching();
 
             cplex.solve();
-            boolean feasible = IloCplex.Status.Optimal.equals(cplex.getStatus());
-            List<FeasiblePath> pathsFromSolution = feasible ? computePathsFromSolution() : new ArrayList<>();
+            boolean     feasible          = IloCplex.Status.Optimal.equals(cplex.getStatus());
+            List<Route> pathsFromSolution = feasible ? computePathsFromSolution() : new ArrayList<>();
             PricingSolution pricingSolution =
-                    new PricingSolution(cplex.getObjValue(), pathsFromSolution, cplex.getDetTime(), feasible);
+                new PricingSolution(cplex.getObjValue(), pathsFromSolution, cplex.getDetTime(), feasible);
             cplex.end();
             return pricingSolution;
         } catch (IloException e) {
@@ -221,13 +223,13 @@ public class ILPPricingProblem extends PricingProblem {
         return visitedCustomers;
     }
 
-    private FeasiblePath getPathFromFeasibleSolutionInPool(int solutionIndex) throws IloException {
-        FeasiblePath path = new FeasiblePath();
-        int lastNode = instance.getDepot();
-        int currentNode = getNextNodeInPath(lastNode, solutionIndex);
+    private Route getPathFromFeasibleSolutionInPool(int solutionIndex) throws IloException {
+        Route path        = new Route();
+        int   lastNode    = instance.getDepot();
+        int   currentNode = getNextNodeInPath(lastNode, solutionIndex);
         while (currentNode != instance.getDepot()) {
             path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
-            lastNode = currentNode;
+            lastNode    = currentNode;
             currentNode = getNextNodeInPath(currentNode, solutionIndex);
         }
         path.addNode(currentNode, instance.getEdgeWeight(lastNode, currentNode));
@@ -243,9 +245,9 @@ public class ILPPricingProblem extends PricingProblem {
         return initialCost;
     }
 
-    public List<FeasiblePath> computePathsFromSolution() {
+    public List<Route> computePathsFromSolution() {
         try {
-            List<FeasiblePath> ret = new ArrayList<>();
+            List<Route> ret = new ArrayList<>();
             if (!Utils.isSolutionFeasible(cplex)) {
                 return ret;
             }
