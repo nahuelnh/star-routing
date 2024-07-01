@@ -28,10 +28,10 @@ public class Experiments {
 //        experiment2_ilpPricingPerformance();
 //        experiment3_pulsePricingPerformance();
         experiment4_labelSettingPricingPerformance();
-        experiment5_labelSettingHeuristics();
-        experiment6_columnGenerationHeuristics();
-        experiment7_columnGenerationFinishEarly();
-        experiment8_relaxationComparison();
+//        experiment5_labelSettingHeuristics();
+//        experiment6_columnGenerationHeuristics();
+//        experiment7_columnGenerationFinishEarly();
+//        experiment8_relaxationComparison();
     }
 
     private static double gapAsPercent(double value, double lowerBound) {

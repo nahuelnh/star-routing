@@ -2,10 +2,7 @@ package algorithm.pricing;
 
 import algorithm.RMPLinearSolution;
 import algorithm.branching.BranchOnVisitFlow;
-import commons.Route;
-import commons.Instance;
-import commons.Stopwatch;
-import commons.Utils;
+import commons.*;
 
 import java.time.Duration;
 import java.util.*;
@@ -144,7 +141,12 @@ public class LabelSettingAlgorithm {
 
   private Label extendToNode(Label label, int nextNode, boolean forward) {
     int currentNode = label.node();
-    double updatedCost = label.cost() + graph.getEdge(currentNode, nextNode).getWeight();
+    double updatedCost = label.cost();
+    if (forward) {
+      updatedCost += graph.getEdge(currentNode, nextNode).getWeight();
+    } else {
+      updatedCost += reversedGraph.getEdge(currentNode, nextNode).getWeight();
+    }
 
     // Subtract branching dual variables
     for (BranchOnVisitFlow branch : rmpSolution.getVisitFlowDuals().keySet()) {
@@ -276,7 +278,7 @@ public class LabelSettingAlgorithm {
     List<Queue<Label>> fwOpenLabels = new ArrayList<>();
     List<Queue<Label>> bwOpenLabels = new ArrayList<>();
 
-    for (int i = 0; i < instance.getNumberOfNodes(); i++) {
+    for (int i = 0; i < graph.getSize(); i++) {
       fwOpenLabels.add(new PriorityQueue<>(LABEL_COMPARATOR));
       bwOpenLabels.add(new PriorityQueue<>(LABEL_COMPARATOR));
     }
@@ -288,26 +290,34 @@ public class LabelSettingAlgorithm {
     fwOpenLabels.get(fwRoot.node()).add(fwRoot);
     bwOpenLabels.get(bwRoot.node()).add(bwRoot);
 
-    while (true) {
-      labelsProcessed++;
+    Queue<Integer> openNodes = new ArrayDeque<>();
+    openNodes.add(fwRoot.node());
+    openNodes.add(bwRoot.node());
+
+    while (!openNodes.isEmpty()) {
+
+      int currentNode = openNodes.remove();
       if (stopwatch.timedOut()) {
         return;
       }
 
-      Optional<Integer> currentNode = selectBestNode(fwOpenLabels, bwOpenLabels);
-      if (currentNode.isEmpty()) {
-        return;
-      }
+      Set<Integer> discovered = forwardSearch(fwOpenLabels, currentNode);
+      discovered.addAll(backwardSearch(bwOpenLabels, currentNode));
 
-      forwardSearch(fwOpenLabels, currentNode.get());
-      backwardSearch(bwOpenLabels, currentNode.get());
+      for (int nextNode : discovered) {
+        if (nextNode != currentNode && !openNodes.contains(nextNode)) {
+          openNodes.add(nextNode);
+        }
+      }
     }
   }
 
-  private void backwardSearch(List<Queue<Label>> bwOpenLabels, int currentNode) {
+  private Set<Integer> backwardSearch(List<Queue<Label>> bwOpenLabels, int currentNode) {
+    Set<Integer> discovered = new HashSet<>();
     Queue<Label> currentOpenLabels = bwOpenLabels.get(currentNode);
     while (!currentOpenLabels.isEmpty()) {
       Label currentLabel = bwOpenLabels.get(currentNode).remove();
+      labelsProcessed++;
 
       // Extend to customers
       for (int customer : reversedGraph.getReverseNeighborhood(currentNode)) {
@@ -322,17 +332,21 @@ public class LabelSettingAlgorithm {
       for (int nextNode : reversedGraph.getAdjacentNodes(currentNode)) {
         Label nextLabel = extendToNode(currentLabel, nextNode, false);
         if (!isNodeUnreachable(nextLabel, false)) {
-          bwNonDominatedLabels[currentNode].addLabel(nextLabel);
+          bwNonDominatedLabels[nextNode].addLabel(nextLabel);
           bwOpenLabels.get(nextNode).add(nextLabel);
+          discovered.add(nextNode);
         }
       }
     }
+    return discovered;
   }
 
-  private void forwardSearch(List<Queue<Label>> fwOpenLabels, int currentNode) {
+  private Set<Integer> forwardSearch(List<Queue<Label>> fwOpenLabels, int currentNode) {
+    Set<Integer> discovered = new HashSet<>();
     Queue<Label> currentOpenLabels = fwOpenLabels.get(currentNode);
     while (!currentOpenLabels.isEmpty()) {
       Label currentLabel = currentOpenLabels.remove();
+      labelsProcessed++;
 
       // Extend to customers
       for (int customer : graph.getReverseNeighborhood(currentNode)) {
@@ -347,11 +361,14 @@ public class LabelSettingAlgorithm {
       for (int nextNode : graph.getAdjacentNodes(currentNode)) {
         Label nextLabel = extendToNode(currentLabel, nextNode, true);
         if (!isNodeUnreachable(nextLabel, true)) {
-          fwNonDominatedLabels[currentNode].addLabel(nextLabel);
+          fwNonDominatedLabels[nextNode].addLabel(nextLabel);
           fwOpenLabels.get(nextNode).add(nextLabel);
+          discovered.add(nextNode);
         }
       }
     }
+
+    return discovered;
   }
 
   /**
@@ -426,10 +443,11 @@ public class LabelSettingAlgorithm {
   private List<Route> join() {
     Set<Route> ret = new HashSet<>();
     int solutionsCount = 0;
-    for (int i = 0; i < instance.getNumberOfNodes(); i++) {
-      double upperBound = Double.MAX_VALUE;
+    for (int i = 0; i < graph.getSize(); i++) {
+      double upperBound = -EPSILON;
       List<Label> fwLabels = fwNonDominatedLabels[i].getLabels();
       List<Label> bwLabels = bwNonDominatedLabels[i].getLabels();
+
       if (fwLabels.getFirst().cost() + bwLabels.getFirst().cost() < upperBound) {
         for (Label forward : fwLabels) {
           if (forward.cost() + bwLabels.getFirst().cost() < upperBound) {
@@ -439,6 +457,7 @@ public class LabelSettingAlgorithm {
                   ret.add(merge(forward, backward));
                   upperBound = forward.cost() + backward.cost();
                   solutionsCount++;
+
                   if (STOP_EARLY && solutionsCount >= STOP_AFTER_N_SOLUTIONS) {
                     return new ArrayList<>(ret);
                   }
@@ -455,14 +474,14 @@ public class LabelSettingAlgorithm {
   private Optional<Integer> selectBestNode(
       List<Queue<Label>> fwOpenLabels, List<Queue<Label>> bwOpenLabels) {
     Optional<Integer> fwBestNode =
-        IntStream.range(0, instance.getNumberOfNodes())
+        IntStream.range(0, graph.getSize())
             .mapToObj(fwOpenLabels::get)
             .filter(q -> !q.isEmpty())
             .map(Queue::peek)
             .min(LABEL_COMPARATOR)
             .map(Label::node);
     Optional<Integer> bwBestNode =
-        IntStream.range(0, instance.getNumberOfNodes())
+        IntStream.range(0, graph.getSize())
             .mapToObj(bwOpenLabels::get)
             .filter(q -> !q.isEmpty())
             .map(Queue::peek)

@@ -10,7 +10,7 @@ class RelaxedLabelContainer implements LabelContainer {
 
   private static final double EPSILON = Utils.DEFAULT_EPSILON;
 
-  private final Label[]     labels;
+  private final Label[] labels;
   private final SegmentTree tree;
 
   public RelaxedLabelContainer(int capacity) {
@@ -45,6 +45,9 @@ class RelaxedLabelContainer implements LabelContainer {
 
   @Override
   public List<Label> getLabels() {
-    return Arrays.stream(labels).sorted(Comparator.comparing(Label::cost)).toList();
+    return Arrays.stream(labels)
+        .filter(Objects::nonNull)
+        .sorted(Comparator.comparing(Label::cost))
+        .toList();
   }
 }
