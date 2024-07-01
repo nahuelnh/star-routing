@@ -7,7 +7,7 @@ from instances import (
     larger_instance,
     other_two_vehicle_instance,
     all_vehicles_do_the_same_instance,
-    random_points_in_plane_instance
+    random_points_in_plane_instance,
 )
 
 INSTANCES = [
@@ -92,8 +92,16 @@ def _dir_naming_convention(instance_name: str):
 
 
 def generate_cases():
-    for instance in INSTANCES:
-        write_to_files(instance)
+    # for instance in INSTANCES:
+    #     write_to_files(instance)
+    for nodes in range(10, 30):
+        cust1 = int(nodes / 4)
+        cust2 = int(nodes / 2)
+        cust3 = int(3 * nodes / 4)
+        k = int(nodes / 5)
+        write_to_files(random_points_in_plane_instance(nodes, cust1, 2, k))
+        write_to_files(random_points_in_plane_instance(nodes, cust2, 3, k))
+        write_to_files(random_points_in_plane_instance(nodes, cust3, 5, k))
 
 
 def _write_params_file(instance: Instance, output_dir: str):

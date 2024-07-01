@@ -147,46 +147,53 @@ def purely_random_instance(size):
     )
 
 
-def random_points_in_plane_instance(nodes, customers, vehicles, k):
-    graph = collections.defaultdict(dict)
-    neighbors = collections.defaultdict(set)
-
-    coordinates = [(None, None)]
-    for i in range(nodes):
-        x, y = random.randint(0, nodes), random.randint(0, nodes)
-        while (x, y) in coordinates:
-            x, y = random.randint(0, nodes), random.randint(0, nodes)
-        coordinates.append((x, y))
-
-    assert customers < nodes
-    for _ in range(customers):
-        rand_int = random.randint(2, nodes)
-        while rand_int in neighbors:
-            rand_int = random.randint(2, nodes)
-        neighbors[rand_int] = set()
-
-    for i in range(1, nodes + 1):
-        for j in range(1, nodes + 1):
-            if i != j:
-                euclidean_distance = math.sqrt(
-                    (coordinates[i][0] - coordinates[j][0]) ** 2 + (coordinates[i][1] - coordinates[j][1]) ** 2)
-                graph[i][j] = euclidean_distance
-                if i in neighbors and euclidean_distance <= k:
-                    neighbors[i].add(j)
-
-    packages = {i: random.randint(1, 100) for i in neighbors}
-
+def random_points_in_plane_instance(nodes, customers, vehicles, k, retries=1):
     capacity = 0
-    cumulative = 0
-    index = math.ceil(customers / vehicles)
-    for q in packages.values():
-        index = index - 1
-        cumulative += q
-        if index == 0:
-            capacity = max(capacity, cumulative)
-            cumulative = 0
-            index = math.ceil(customers / vehicles)
-    capacity = max(capacity, cumulative)
+    graph = {}
+    packages = {}
+    neighbors = {}
+
+    for _ in range(retries):
+        graph = collections.defaultdict(dict)
+        neighbors = collections.defaultdict(set)
+
+        coordinates = [(None, None)]
+        for i in range(nodes):
+            x, y = random.randint(0, nodes), random.randint(0, nodes)
+            while (x, y) in coordinates:
+                x, y = random.randint(0, nodes), random.randint(0, nodes)
+            coordinates.append((x, y))
+
+        assert customers < nodes
+        for _ in range(customers):
+            rand_int = random.randint(2, nodes)
+            while rand_int in neighbors:
+                rand_int = random.randint(2, nodes)
+            neighbors[rand_int] = set()
+
+        for i in range(1, nodes + 1):
+            for j in range(1, nodes + 1):
+                if i != j:
+                    euclidean_distance = math.sqrt(
+                        (coordinates[i][0] - coordinates[j][0]) ** 2 + (coordinates[i][1] - coordinates[j][1]) ** 2
+                    )
+                    graph[i][j] = euclidean_distance
+                    if i in neighbors and euclidean_distance <= k:
+                        neighbors[i].add(j)
+
+        packages = {i: random.randint(1, 100) for i in neighbors}
+
+        capacity = 0
+        cumulative = 0
+        index = math.ceil(customers / vehicles)
+        for q in packages.values():
+            index = index - 1
+            cumulative += q
+            if index == 0:
+                capacity = max(capacity, cumulative)
+                cumulative = 0
+                index = math.ceil(customers / vehicles)
+        capacity = max(capacity, cumulative)
 
     return Instance(
         name="n{}_s{}_k{}".format(nodes, customers, vehicles),
