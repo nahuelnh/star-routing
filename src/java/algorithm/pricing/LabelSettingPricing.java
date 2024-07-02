@@ -18,6 +18,7 @@ public class LabelSettingPricing extends PricingProblem {
 
   private final Instance instance;
   private final boolean solveHeuristically;
+  private final boolean isMono;
   private boolean forceExactSolution;
   private List<Route> paths;
 
@@ -30,6 +31,15 @@ public class LabelSettingPricing extends PricingProblem {
     this.paths = new ArrayList<>();
     this.solveHeuristically = solveHeuristically;
     this.forceExactSolution = false;
+    this.isMono = false;
+  }
+
+  public LabelSettingPricing(Instance instance, boolean solveHeuristically, boolean isMono) {
+    this.instance = instance;
+    this.paths = new ArrayList<>();
+    this.solveHeuristically = solveHeuristically;
+    this.forceExactSolution = false;
+    this.isMono = isMono;
   }
 
   private double getInitialCost(RMPLinearSolution rmpSolution) {
@@ -63,16 +73,32 @@ public class LabelSettingPricing extends PricingProblem {
 
     performBranching();
 
-    LabelSettingAlgorithm labelSettingAlgorithm =
-        new LabelSettingAlgorithm(instance, rmpSolution, !forceExactSolution);
-    paths = labelSettingAlgorithm.run(remainingTime);
-    int labelsProcessed = labelSettingAlgorithm.getLabelsProcessed();
+    int labelsProcessed;
 
-    if (paths.isEmpty() && !solveHeuristically) {
-      labelSettingAlgorithm = new LabelSettingAlgorithm(instance, rmpSolution, false);
-      paths = labelSettingAlgorithm.run(Utils.getRemainingTime(start, remainingTime));
-      labelsProcessed += labelSettingAlgorithm.getLabelsProcessed();
+    if (isMono) {
+      MonoDirectionalLabelingAlgorithm algorithm =
+          new MonoDirectionalLabelingAlgorithm(instance, rmpSolution, !forceExactSolution);
+      paths = algorithm.run(remainingTime);
+      labelsProcessed = algorithm.getLabelsProcessed();
+
+      if (paths.isEmpty() && !solveHeuristically) {
+        algorithm = new MonoDirectionalLabelingAlgorithm(instance, rmpSolution, false);
+        paths = algorithm.run(Utils.getRemainingTime(start, remainingTime));
+        labelsProcessed += algorithm.getLabelsProcessed();
+      }
+    } else {
+      LabelSettingAlgorithm algorithm =
+          new LabelSettingAlgorithm(instance, rmpSolution, !forceExactSolution);
+      paths = algorithm.run(remainingTime);
+      labelsProcessed = algorithm.getLabelsProcessed();
+
+      if (paths.isEmpty() && !solveHeuristically) {
+        algorithm = new LabelSettingAlgorithm(instance, rmpSolution, false);
+        paths = algorithm.run(Utils.getRemainingTime(start, remainingTime));
+        labelsProcessed += algorithm.getLabelsProcessed();
+      }
     }
+
     forceExactSolution = false;
 
     return new PricingSolution(getMinObjValue(rmpSolution), paths, labelsProcessed, true);

@@ -38,17 +38,11 @@ class ExactLabelContainer implements LabelContainer {
 
   @Override
   public List<Label> getNegativeReducedCostLabels() {
-    List<Label> ret = new ArrayList<>();
-    for (BitSet visitedNodes : container.keySet()) {
-      Map<BitSet, Label> bucket = container.get(visitedNodes);
-      for (BitSet visitedCustomers : bucket.keySet()) {
-        Label currentLabel = bucket.get(visitedCustomers);
-        if (currentLabel.cost() < -EPSILON) {
-          ret.add(currentLabel);
-        }
-      }
-    }
-    return ret;
+    return container.values().stream()
+        .map(Map::values)
+        .flatMap(Collection::stream)
+        .filter(l -> l.cost() < -EPSILON)
+        .toList();
   }
 
   @Override

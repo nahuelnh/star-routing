@@ -8,6 +8,10 @@ import java.util.Objects;
 
 public class InstanceLoader {
 
+  private static final Comparator<Instance> INSTANCE_COMPARATOR =
+      Comparator.comparing(Instance::getNumberOfNodes)
+          .thenComparing(Instance::getNumberOfCustomers);
+
   private static List<Instance> allInstances;
   private static InstanceLoader instance;
 
@@ -36,14 +40,14 @@ public class InstanceLoader {
   public List<Instance> getExperimentInstances() {
     return allInstances.stream()
         .filter(i -> i.getName().matches("instance_n[0-9]+_s[0-9]+_k[0-9]+"))
-        .sorted(Comparator.comparing(Instance::getNumberOfNodes))
+        .sorted(INSTANCE_COMPARATOR)
         .toList();
   }
 
   public List<Instance> getTestInstances() {
     return allInstances.stream()
         .filter(i -> !i.getName().matches("instance_n[0-9]+_s[0-9]+_k[0-9]+"))
-        .sorted(Comparator.comparing(Instance::getNumberOfNodes))
+        .sorted(INSTANCE_COMPARATOR)
         .toList();
   }
 }

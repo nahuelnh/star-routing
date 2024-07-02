@@ -1,7 +1,0 @@
-Instancia;|N|;|S|;|K|;Tiempo (ms) s/Heur.;Sol. Óptima;#Iter GC s/Heur.;Tiempo (ms) c/Heur.;Sol. Aprox.;#Iter GC c/Heur.;Gap Exacto;Cota Inferior;Gap Aprox.
-instance_n25_s15_k3;25;15;3;TLE;222;5;TLE;222;5;---;---;---
-instance_n25_s10_k2;25;10;2;200226;65;34;178031;66;19;1.54%;66;0%
-instance_n25_s20_k5;25;20;5;TLE;339.5;6;TLE;339.5;6;---;---;---
-instance_n30_s20_k3;30;20;3;TLE;358;6;TLE;358;6;---;---;---
-instance_n30_s15_k2;30;15;2;TLE;261;8;TLE;261;8;---;---;---
-

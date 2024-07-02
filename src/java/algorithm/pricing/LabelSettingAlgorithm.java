@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 public class LabelSettingAlgorithm {
 
   private static final double EPSILON = Utils.DEFAULT_EPSILON;
-  private static final int STOP_AFTER_N_SOLUTIONS = 100000;
+  private static final int STOP_AFTER_N_SOLUTIONS = 10;
   private static final boolean STOP_EARLY = true;
   private static final Comparator<Label> LABEL_COMPARATOR =
       Comparator.comparing(Label::demand).thenComparing(Label::cost);
@@ -26,7 +26,6 @@ public class LabelSettingAlgorithm {
   private final double alpha;
   private final LabelContainer[] fwNonDominatedLabels;
   private final LabelContainer[] bwNonDominatedLabels;
-
   private int labelsProcessed;
 
   public LabelSettingAlgorithm(
@@ -39,8 +38,8 @@ public class LabelSettingAlgorithm {
     this.reversedGraph = new ESPPRCGraph(instance, true);
     this.dualValues = computeDualVariables(instance, rmpSolution);
     this.alpha = computeCostFactor(graph);
-    this.fwNonDominatedLabels = selectLabelDump(applyHeuristics, graph, instance);
-    this.bwNonDominatedLabels = selectLabelDump(applyHeuristics, graph, instance);
+    this.fwNonDominatedLabels = selectLabelContainer(applyHeuristics, graph, instance);
+    this.bwNonDominatedLabels = selectLabelContainer(applyHeuristics, graph, instance);
     this.branchesIndexedByCustomer = getBranchesIndexedByCustomer(rmpSolution, instance);
   }
 
@@ -70,7 +69,7 @@ public class LabelSettingAlgorithm {
     return branchesIndexedByCustomer;
   }
 
-  private static LabelContainer[] selectLabelDump(
+  private static LabelContainer[] selectLabelContainer(
       boolean applyHeuristics, ESPPRCGraph graph, Instance instance) {
     if (applyHeuristics) {
       RelaxedLabelContainer[] ret = new RelaxedLabelContainer[graph.getSize()];
@@ -442,8 +441,9 @@ public class LabelSettingAlgorithm {
 
   private List<Route> join() {
     Set<Route> ret = new HashSet<>();
-    int solutionsCount = 0;
+
     for (int i = 0; i < graph.getSize(); i++) {
+      int solutionsCount = 0;
       double upperBound = -EPSILON;
       List<Label> fwLabels = fwNonDominatedLabels[i].getLabels();
       List<Label> bwLabels = bwNonDominatedLabels[i].getLabels();
