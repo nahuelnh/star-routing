@@ -78,7 +78,7 @@ public class GeRestrictedMasterProblem extends RestrictedMasterProblem {
   public void buildModel(IloCplex cplex, boolean integral, Duration remainingTime) {
     try {
       cplex.setOut(null);
-      cplex.setParam(IloCplex.Param.TimeLimit, remainingTime.getSeconds() + 1);
+      cplex.setParam(IloCplex.Param.TimeLimit, Math.max(remainingTime.getSeconds(), 1));
       createVariables(cplex, integral);
       createCustomerServedConstraints(cplex);
       createNumberOfVehiclesConstraint(cplex);

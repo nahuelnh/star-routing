@@ -195,6 +195,7 @@ def random_points_in_plane_instance(nodes, customers, vehicles, k, retries=1):
                 index = math.ceil(customers / vehicles)
         capacity = max(capacity, cumulative)
 
+    print(sum((1 + len(x)) for x in neighbors.values()))
     return Instance(
         name="n{}_s{}_k{}".format(nodes, customers, vehicles),
         number_of_vehicles=vehicles,

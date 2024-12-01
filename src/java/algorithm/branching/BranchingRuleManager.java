@@ -1,9 +1,7 @@
 package algorithm.branching;
 
 import algorithm.RMPLinearSolution;
-import commons.Instance;
 import commons.VisitFlow;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +21,7 @@ public class BranchingRuleManager {
 
         double fractionalPart = getFractionalPart(rmpSolution.getNumberOfVehicles());
         if (fractionalPart > EPSILON) {
-            ret = List.of(new BranchOnFleetSize((int) Math.floor(rmpSolution.getNumberOfVehicles()), Branch.Direction.DOWN),
+            return List.of(new BranchOnFleetSize((int) Math.floor(rmpSolution.getNumberOfVehicles()), Branch.Direction.DOWN),
                     new BranchOnFleetSize((int) Math.ceil(rmpSolution.getNumberOfVehicles()), Branch.Direction.UP)
             );
         }

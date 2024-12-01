@@ -4,6 +4,7 @@ import algorithm.ColumnGenerator;
 import algorithm.CompactModel;
 import algorithm.GeRestrictedMasterProblem;
 import algorithm.InitialSolutionHeuristic;
+import algorithm.branching.BranchAndPrice;
 import algorithm.pricing.ILPPricingProblem;
 import algorithm.pricing.LabelSettingPricing;
 import algorithm.pricing.PulsePricing;
@@ -21,15 +22,15 @@ public class Experiments {
   private static final String DEFAULT_FIELD = "---";
   private static final String TIME_LIMIT_EXCEEDED = "TLE";
   private static final DecimalFormat FORMATTER = new DecimalFormat("0.##");
-  private static final Duration TIMEOUT = Duration.ofMinutes(10);
+  private static final Duration TIMEOUT = Duration.ofMinutes(60);
 
   public static void main(String[] args) {
     //        experiment1_compactModelPerformance();
-    experiment2_ilpPricingPerformance();
-    experiment3_pulsePricingPerformance();
+    //    experiment2_ilpPricingPerformance();
+    //    experiment3_pulsePricingPerformance();
     experiment4_labelSettingPricingPerformance();
-    experiment41_monoLabelSettingPricingPerformance();
-    experiment45_labelSettingHeuristicsPerformance();
+    //    experiment41_monoLabelSettingPricingPerformance();
+    //    experiment45_labelSettingHeuristicsPerformance();
     //        experiment5_labelSettingHeuristics();
     //        experiment6_columnGenerationHeuristics();
     //        experiment7_columnGenerationFinishEarly();
@@ -91,7 +92,8 @@ public class Experiments {
                 new ILPPricingProblem(instance),
                 new InitialSolutionHeuristic(instance));
         StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
-        table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
+        table.addEntry(
+            new ExtendedTableEntry(instance, solution, columnGenerator.getNumberOfIterations()));
         if (solution.timedOut()) {
           unfinishedInstances++;
         } else {
@@ -131,7 +133,8 @@ public class Experiments {
                 new PulsePricing(instance),
                 new InitialSolutionHeuristic(instance));
         StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
-        table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
+        table.addEntry(
+            new ExtendedTableEntry(instance, solution, columnGenerator.getNumberOfIterations()));
         if (solution.timedOut()) {
           unfinishedInstances++;
         } else {
@@ -164,14 +167,23 @@ public class Experiments {
     int unfinishedInstances = 0;
     for (Instance instance : InstanceLoader.getInstance().getExperimentInstances()) {
       if (instance.getNumberOfNodes() <= 46) {
-        ColumnGenerator columnGenerator =
-            new ColumnGenerator(
+        //        ColumnGenerator columnGenerator =
+        //            new ColumnGenerator(
+        //                instance,
+        //                new GeRestrictedMasterProblem(instance),
+        //                new LabelSettingPricing(instance),
+        //                new InitialSolutionHeuristic(instance));
+        //        StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
+        BranchAndPrice branchAndPrice =
+            new BranchAndPrice(
                 instance,
                 new GeRestrictedMasterProblem(instance),
                 new LabelSettingPricing(instance),
                 new InitialSolutionHeuristic(instance));
-        StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
-        table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
+        StarRoutingSolution solution = branchAndPrice.solve(TIMEOUT);
+
+        table.addEntry(
+            new ExtendedTableEntry(instance, solution, branchAndPrice.getNumberOfIterations()));
         if (solution.timedOut()) {
           unfinishedInstances++;
         } else {
@@ -211,7 +223,8 @@ public class Experiments {
                 new LabelSettingPricing(instance, false, true),
                 new InitialSolutionHeuristic(instance));
         StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
-        table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
+        table.addEntry(
+            new ExtendedTableEntry(instance, solution, columnGenerator.getNumberOfIterations()));
         if (solution.timedOut()) {
           unfinishedInstances++;
         } else {
@@ -250,7 +263,8 @@ public class Experiments {
               new LabelSettingPricing(instance, true),
               new InitialSolutionHeuristic(instance));
       StarRoutingSolution solution = columnGenerator.solve(TIMEOUT);
-      table.addEntry(new ExtendedTableEntry(instance, solution, columnGenerator));
+      table.addEntry(
+          new ExtendedTableEntry(instance, solution, columnGenerator.getNumberOfIterations()));
       if (solution.timedOut()) {
         unfinishedInstances++;
       } else {
@@ -544,13 +558,13 @@ public class Experiments {
 
     private final Instance instance;
     private final StarRoutingSolution solution;
-    private final ColumnGenerator columnGenerator;
+    private final int numberOfIterations;
 
     public ExtendedTableEntry(
-        Instance instance, StarRoutingSolution solution, ColumnGenerator columnGenerator) {
+        Instance instance, StarRoutingSolution solution, int numberOfIterations) {
       this.instance = instance;
       this.solution = solution;
-      this.columnGenerator = columnGenerator;
+      this.numberOfIterations = numberOfIterations;
     }
 
     @Override
@@ -562,7 +576,7 @@ public class Experiments {
           getNumberOfVehicles(instance),
           getElapsedTime(solution),
           getDeterministicTime(solution),
-          getNumberOfIterations(columnGenerator),
+          String.valueOf(numberOfIterations),
           getObjValue(solution),
           getLowerBound(solution),
           getGapToLowerBound(solution));

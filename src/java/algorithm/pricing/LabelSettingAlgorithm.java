@@ -11,8 +11,8 @@ import java.util.stream.IntStream;
 public class LabelSettingAlgorithm {
 
   private static final double EPSILON = Utils.DEFAULT_EPSILON;
-  private static final int STOP_AFTER_N_SOLUTIONS = 10;
-  private static final boolean STOP_EARLY = true;
+  private static final int STOP_AFTER_N_SOLUTIONS = 1000;
+  private static final boolean STOP_EARLY = false;
   private static final Comparator<Label> LABEL_COMPARATOR =
       Comparator.comparing(Label::demand).thenComparing(Label::cost);
 
